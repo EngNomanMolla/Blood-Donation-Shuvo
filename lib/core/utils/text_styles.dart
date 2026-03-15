@@ -8,5 +8,15 @@ class AllStyles {
     fontWeight: FontWeight.w700
    );
 
+    static final titleTextStyle=TextStyle(
+    fontFamily: 'Poppins',
+    fontSize: 16.0,
+   );
+
+     static final subtitleTextStyle=TextStyle(
+    fontFamily: 'Poppins',
+    fontSize: 14.0,
+   );
+
 
 }

@@ -1,3 +1,6 @@
+import 'package:blood_donation/modules/auth/views/login_view.dart';
+import 'package:blood_donation/modules/home/views/home_view.dart';
+import 'package:blood_donation/modules/onboarding/views/onboarding_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -21,8 +24,8 @@ class MyApp extends StatelessWidget {
         primaryColor: const Color(0xFFE70349),
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFE70349)),
       ),
-      initialBinding: SplashBinding(),
-      home: const SplashView(),
+      //initialBinding: SplashBinding(),
+      home:  HomeView(),
     );
   }
 }
