@@ -1,9 +1,13 @@
 import 'package:blood_donation/modules/auth/views/login_view.dart';
+import 'package:blood_donation/modules/doner_details/views/doner_details_view.dart';
+import 'package:blood_donation/modules/doner_request/views/doner_request_view.dart';
 import 'package:blood_donation/modules/home/views/home_view.dart';
+import 'package:blood_donation/modules/home/widgets/bottom_nav_bar.dart';
 import 'package:blood_donation/modules/onboarding/views/onboarding_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'modules/donor/views/donor_registration_view.dart';
 import 'modules/splash/bindings/splash_binding.dart';
 import 'modules/splash/views/splash_view.dart';
 
@@ -25,7 +29,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFE70349)),
       ),
       //initialBinding: SplashBinding(),
-      home:  HomeView(),
+      home: HomeView()
     );
   }
 }
