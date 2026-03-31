@@ -1,13 +1,32 @@
+import 'package:blood_donation/app/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
 import '../../../core/utils/app_colors.dart';
 import '../../../core/utils/text_styles.dart';
-import '../controllers/splash_controller.dart';
 
-class SplashView extends GetView<SplashController> {
+class SplashView extends StatefulWidget {
   const SplashView({super.key});
+
+  @override
+  State<SplashView> createState() => _SplashViewState();
+}
+
+class _SplashViewState extends State<SplashView> {
+  @override
+  void initState() {
+    super.initState();
+    _navigateToOnboarding();
+  }
+
+  void _navigateToOnboarding() {
+    Future.delayed(const Duration(seconds: 1), () {
+      if (mounted) {
+        Get.offAllNamed(AppRoutes.onboarding);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

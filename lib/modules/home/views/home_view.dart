@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:blood_donation/app/routes/app_routes.dart';
 import 'package:blood_donation/core/utils/app_colors.dart';
+import 'package:get/get.dart';
 import '../constants.dart';
 import '../widgets/banner_slider.dart';
 import '../widgets/blood_request_section.dart';
@@ -61,8 +63,7 @@ class _HomeViewState extends State<HomeView> {
           BloodRequestSection(
             bloodTypes: HomeConstants.bloodTypes,
             selectedBloodType: _selectedBloodType,
-            onBloodTypeChanged: (type) =>
-                setState(() => _selectedBloodType = type),
+            onBloodTypeChanged: _onBloodTypeSelected,
           ),
           const SizedBox(height: HomeConstants.sectionVerticalSpacing),
           BecomeDonorBanner(onTap: () {}),
@@ -85,6 +86,15 @@ class _HomeViewState extends State<HomeView> {
       child: NotificationPanel(
         onClose: () => setState(() => _showNotification = false),
       ),
+    );
+  }
+
+  void _onBloodTypeSelected(String bloodType) {
+    setState(() => _selectedBloodType = bloodType);
+    // Navigate to blood request list view with the selected blood type
+    Get.toNamed(
+      AppRoutes.bloodRequestList,
+      arguments: {'bloodType': bloodType},
     );
   }
 

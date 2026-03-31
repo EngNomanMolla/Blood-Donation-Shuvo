@@ -1,0 +1,83 @@
+import 'package:blood_donation/app/routes/app_routes.dart';
+import 'package:blood_donation/modules/auth/views/login_view.dart';
+import 'package:blood_donation/modules/donor/views/donor_registration_view.dart';
+import 'package:blood_donation/modules/doner_details/views/doner_details_view.dart';
+import 'package:blood_donation/modules/doner_request/views/doner_request_list_view.dart';
+import 'package:blood_donation/modules/home/views/home_view.dart';
+import 'package:blood_donation/modules/onboarding/views/onboarding_view.dart';
+import 'package:blood_donation/modules/profile/views/profile_view.dart';
+import 'package:blood_donation/modules/splash/views/splash_view.dart';
+import 'package:get/get.dart';
+
+/// App page routes and bindings configuration
+class AppPages {
+  static final pages = [
+    // Splash Screen - Entry point
+    GetPage(
+      name: AppRoutes.splash,
+      page: () => const SplashView(),
+      transition: Transition.fade,
+      transitionDuration: const Duration(milliseconds: 500),
+    ),
+
+    // Onboarding Screen
+    GetPage(
+      name: AppRoutes.onboarding,
+      page: () => const OnboardingView(),
+      transition: Transition.fade,
+      transitionDuration: const Duration(milliseconds: 500),
+    ),
+
+    // Login Screen
+    GetPage(
+      name: AppRoutes.login,
+      page: () => const SignInScreen(),
+      transition: Transition.cupertino,
+      transitionDuration: const Duration(milliseconds: 400),
+    ),
+
+    // Home Screen - Main dashboard
+    GetPage(
+      name: AppRoutes.home,
+      page: () => HomeView(),
+      transition: Transition.cupertino,
+      transitionDuration: const Duration(milliseconds: 400),
+    ),
+
+    // Donor Registration Screen
+    GetPage(
+      name: AppRoutes.donor,
+      page: () => const DonerRegistrationView(),
+      transition: Transition.cupertino,
+      transitionDuration: const Duration(milliseconds: 400),
+    ),
+
+    // Donor Details Screen
+    GetPage(
+      name: AppRoutes.donorDetails,
+      page: () => DonerDetailsView(),
+      transition: Transition.cupertino,
+      transitionDuration: const Duration(milliseconds: 400),
+    ),
+
+    // Blood Request List Screen
+    GetPage(
+      name: AppRoutes.bloodRequestList,
+      page: () => DonateScreen(),
+      transition: Transition.cupertino,
+      transitionDuration: const Duration(milliseconds: 400),
+    ),
+
+    // Profile Screen
+    GetPage(
+      name: AppRoutes.profile,
+      page: () => const ProfileView(),
+      transition: Transition.cupertino,
+      transitionDuration: const Duration(milliseconds: 400),
+    ),
+  ];
+
+  /// Get initial route based on app state
+  /// Returns splash as the entry point
+  static String getInitialRoute() => AppRoutes.splash;
+}

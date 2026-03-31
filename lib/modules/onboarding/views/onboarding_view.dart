@@ -1,3 +1,4 @@
+import 'package:blood_donation/app/routes/app_routes.dart';
 import 'package:blood_donation/core/utils/app_colors.dart';
 import 'package:blood_donation/modules/onboarding/views/page_view_models.dart';
 import 'package:flutter/material.dart';
@@ -31,8 +32,13 @@ class OnboardingView extends StatelessWidget {
           ),
         
           onDone: () {
-            /// navigate to login
-            Get.offAllNamed("/login");
+            /// navigate to home
+            Get.offAllNamed(AppRoutes.home);
+          },
+
+          onSkip: () {
+            /// skip to home
+            Get.offAllNamed(AppRoutes.home);
           },
         
           dotsDecorator: const DotsDecorator(

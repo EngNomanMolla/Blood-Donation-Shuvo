@@ -1,9 +1,9 @@
+import 'package:blood_donation/app/routes/app_routes.dart';
 import 'package:blood_donation/modules/doner_request/controllers/doner_request_controller.dart';
 import 'package:blood_donation/modules/doner_request/models/doner_list_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_rx/src/rx_types/rx_types.dart';
-import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
+
 
 class DonateScreen extends StatelessWidget {
   DonateScreen({super.key});
@@ -14,6 +14,9 @@ class DonateScreen extends StatelessWidget {
   static const Color lightPink = Color(0xFFFFF0F3);
   static const Color softPink = Color(0xFFFFE4EA);
  
+  /// Get blood type from route arguments
+  String get _bloodType => Get.arguments?['bloodType'] ?? 'All';
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -69,7 +72,7 @@ class DonateScreen extends StatelessWidget {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.25),
+                    color: Colors.white.withValues(alpha: 0.25),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(
@@ -83,7 +86,7 @@ class DonateScreen extends StatelessWidget {
               // Title
               const Expanded(
                 child: Text(
-                  'Donate',
+                  'Doners',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.white,
@@ -93,24 +96,9 @@ class DonateScreen extends StatelessWidget {
                   ),
                 ),
               ),
- 
-              // Bell icon
-              GestureDetector(
-                onTap: () {},
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.25),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(
-                    Icons.notifications_outlined,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ),
-              ),
+
+              // Empty space (where notification icon was)
+              const SizedBox(width: 36),
             ],
           ),
         ),
@@ -127,7 +115,7 @@ class DonateScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -178,7 +166,7 @@ class DonateScreen extends StatelessWidget {
                 border: Border.all(color: const Color(0xFFFFCDD5), width: 1.5),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.pink.withOpacity(0.06),
+                    color: Colors.pink.withValues(alpha: 0.06),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
@@ -225,32 +213,42 @@ class DonateScreen extends StatelessWidget {
   }
  
   Widget _buildDonorCard(Donor donor, int index) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            // Avatar
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: softPink, width: 2),
-              ),
-              child: ClipOval(
+    return GestureDetector(
+      onTap: () {
+        Get.toNamed(
+          AppRoutes.donorDetails,
+          arguments: {
+            'donor': donor,
+            'bloodType': _bloodType,
+          },
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              // Avatar
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: softPink, width: 2),
+                ),
+                child: ClipOval(
                 child: Image.network(
                   donor.imageUrl,
                   fit: BoxFit.cover,
@@ -289,7 +287,7 @@ class DonateScreen extends StatelessWidget {
                   Row(
                     children: [
                       Icon(Icons.location_on,
-                          size: 12, color: primaryRed.withOpacity(0.8)),
+                          size: 12, color: primaryRed.withValues(alpha: 0.8)),
                       const SizedBox(width: 3),
                       Text(
                         donor.location,
@@ -309,13 +307,14 @@ class DonateScreen extends StatelessWidget {
           ],
         ),
       ),
+      ),
     );
   }
  
   Widget _buildBloodDropIcon() {
     return Container(
-      width: 44,
-      height: 44,
+      width: 50,
+      height: 50,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFFE8194B), Color(0xFFFF5B7A)],
@@ -325,61 +324,31 @@ class DonateScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: primaryRed.withOpacity(0.35),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
+            color: primaryRed.withValues(alpha: 0.4),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Center(
-        child: CustomPaint(
-          size: const Size(22, 26),
-          painter: _BloodDropPainter(),
-        ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.water_drop_rounded,
+            color: Colors.white,
+            size: 18,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            _bloodType,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       ),
     );
   }
-}
- 
-// ─── Blood Drop Painter ───────────────────────────────────────────────────────
- 
-class _BloodDropPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
- 
-    final path = Path();
-    final cx = size.width / 2;
- 
-    // Drop shape
-    path.moveTo(cx, 0);
-    path.cubicTo(
-      cx + size.width * 0.6, size.height * 0.35,
-      cx + size.width * 0.6, size.height * 0.65,
-      cx, size.height,
-    );
-    path.cubicTo(
-      cx - size.width * 0.6, size.height * 0.65,
-      cx - size.width * 0.6, size.height * 0.35,
-      cx, 0,
-    );
- 
-    canvas.drawPath(path, paint);
- 
-    // Inner highlight
-    final highlightPaint = Paint()
-      ..color = Colors.white.withOpacity(0.4)
-      ..style = PaintingStyle.fill;
- 
-    canvas.drawCircle(
-      Offset(cx - size.width * 0.12, size.height * 0.45),
-      size.width * 0.15,
-      highlightPaint,
-    );
-  }
- 
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

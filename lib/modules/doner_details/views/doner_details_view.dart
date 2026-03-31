@@ -11,6 +11,10 @@ class DonerDetailsView extends StatelessWidget {
   static const Color lightPink = Color(0xFFFFF0F3);
   static const Color softPink = Color(0xFFFFDDE5);
 
+  /// Get donor data from route arguments
+  dynamic get _donorData => Get.arguments?['donor'];
+  String get _bloodType => Get.arguments?['bloodType'] ?? 'All';
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -35,7 +39,7 @@ class DonerDetailsView extends StatelessWidget {
             onTap: () => Get.back(),
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.25),
+                color: Colors.white.withValues(alpha: 0.25),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
@@ -93,7 +97,7 @@ class DonerDetailsView extends StatelessWidget {
       children: [
         // Gradient continuation below appbar
         Container(
-          height: 60,
+          height: 80,
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               colors: [Color(0xFFE8194B), Color(0xFFFF6B8A)],
@@ -275,31 +279,37 @@ class DonerDetailsView extends StatelessWidget {
           children: [
             // Header row
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFEEF1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Center(
-                    child: CustomPaint(
-                      size: Size(14, 18),
-                      painter: _BloodDropPainter(color: primaryRed),
+                Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFEEF1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Center(
+                        child: CustomPaint(
+                          size: Size(16, 20),
+                          painter: _BloodDropPainter(color: primaryRed),
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 12),
+                    Text(
+                      donor.name,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1A1A2E),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 10),
-                Text(
-                  donor.name,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF1A1A2E),
-                  ),
-                ),
-                const Spacer(),
                 Container(
                   width: 40,
                   height: 40,
@@ -309,7 +319,7 @@ class DonerDetailsView extends StatelessWidget {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     boxShadow: [
                       BoxShadow(
                         color: primaryRed.withOpacity(0.35),
