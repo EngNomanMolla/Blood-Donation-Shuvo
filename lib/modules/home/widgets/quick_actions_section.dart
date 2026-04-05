@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:blood_donation/app/routes/app_routes.dart';
 import 'package:blood_donation/core/utils/app_colors.dart';
 import '../constants.dart';
 import '../models.dart';
@@ -20,6 +22,7 @@ class QuickActionsSection extends StatelessWidget {
         icon: Icons.phone_callback_rounded,
         iconColor: AppColors.primary,
         iconBg: const Color(0xFFFCECEE),
+        onTap: () => Get.toNamed(AppRoutes.emergencyContacts),
       ),
       QuickActionModel(
         label: "Referral Bonus",

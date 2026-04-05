@@ -7,6 +7,9 @@ import 'package:blood_donation/modules/home/views/home_view.dart';
 import 'package:blood_donation/modules/onboarding/views/onboarding_view.dart';
 import 'package:blood_donation/modules/profile/views/profile_view.dart';
 import 'package:blood_donation/modules/splash/views/splash_view.dart';
+import 'package:blood_donation/modules/emergency_contact/views/emergency_contact_view.dart';
+import 'package:blood_donation/modules/performance/views/performance_view.dart';
+import 'package:blood_donation/modules/wallet/views/wallet_view.dart';
 import 'package:get/get.dart';
 
 /// App page routes and bindings configuration
@@ -72,6 +75,30 @@ class AppPages {
     GetPage(
       name: AppRoutes.profile,
       page: () => const ProfileView(),
+      transition: Transition.cupertino,
+      transitionDuration: const Duration(milliseconds: 400),
+    ),
+
+    // Emergency Contacts Screen
+    GetPage(
+      name: AppRoutes.emergencyContacts,
+      page: () => EmergencyContactView(),
+      transition: Transition.cupertino,
+      transitionDuration: const Duration(milliseconds: 400),
+    ),
+
+    // Performance Screen
+    GetPage(
+      name: AppRoutes.performance,
+      page: () => PerformanceView(),
+      transition: Transition.cupertino,
+      transitionDuration: const Duration(milliseconds: 400),
+    ),
+
+    // Wallet Screen
+    GetPage(
+      name: AppRoutes.wallet,
+      page: () => WalletView(),
       transition: Transition.cupertino,
       transitionDuration: const Duration(milliseconds: 400),
     ),

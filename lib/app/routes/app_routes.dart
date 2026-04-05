@@ -10,5 +10,8 @@ class AppRoutes {
   static const String donor = '/donor';
   static const String donorDetails = '/donor-details';
   static const String bloodRequestList = '/blood-request-list';
+  static const String emergencyContacts = '/emergency-contacts';
+  static const String performance = '/performance';
+  static const String wallet = '/wallet';
   static const String profile = '/profile';
 }

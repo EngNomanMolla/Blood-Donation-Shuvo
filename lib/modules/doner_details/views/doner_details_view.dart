@@ -279,61 +279,32 @@ class DonerDetailsView extends StatelessWidget {
           children: [
             // Header row
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFEEF1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Center(
-                        child: CustomPaint(
-                          size: Size(16, 20),
-                          painter: _BloodDropPainter(color: primaryRed),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      donor.name,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF1A1A2E),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
                 Container(
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFE8194B), Color(0xFFFF5B7A)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(
-                        color: primaryRed.withOpacity(0.35),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
+                    color: const Color(0xFFFFEEF1),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Center(
-                    child: CustomPaint(
-                      size: Size(18, 22),
-                      painter: _BloodDropPainter(color: Colors.white),
+                    child: Icon(
+                      Icons.bloodtype,
+                      color: primaryRed,
+                      size: 20,
                     ),
                   ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  donor.name,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1A1A2E),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
