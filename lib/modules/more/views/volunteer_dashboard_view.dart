@@ -107,7 +107,7 @@ class VolunteerDashboardView extends GetView<MoreController> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => Get.toNamed(AppRoutes.donor),
+          onTap: () => Get.toNamed(AppRoutes.assistedRegistration),
           borderRadius: BorderRadius.circular(24),
           child: Padding(
             padding: const EdgeInsets.all(20),

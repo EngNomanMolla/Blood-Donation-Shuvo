@@ -13,32 +13,49 @@ PageViewModel buildPage({
     bodyWidget: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
-
+          const SizedBox(height: 60),
+          
           /// IMAGE
-          SvgPicture.asset(
-            image,
-            height: 280,
+          Container(
+            height: 300,
+            alignment: Alignment.center,
+            child: SvgPicture.asset(
+              image,
+              fit: BoxFit.contain,
+            ),
           ),
 
-          const SizedBox(height: 40),
+          const SizedBox(height: 50),
 
           /// TITLE
           Text(
             title,
             textAlign: TextAlign.center,
-            style: AllStyles.headingTextStyle
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 26,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1A1A1A),
+              height: 1.2,
+              letterSpacing: -0.5,
+            ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 18),
 
           /// DESCRIPTION
           Text(
             body,
             textAlign: TextAlign.center,
-            style: AllStyles.subtitleTextStyle.copyWith(color: Colors.grey,height: 1.4),
-        
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 15,
+              color: Colors.grey[600],
+              height: 1.6,
+              fontWeight: FontWeight.w400,
+            ),
           ),
         ],
       ),

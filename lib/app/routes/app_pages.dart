@@ -1,4 +1,5 @@
 import 'package:blood_donation/app/routes/app_routes.dart';
+import 'package:blood_donation/modules/auth/bindings/signIn_binding.dart';
 import 'package:blood_donation/modules/auth/views/login_view.dart';
 import 'package:blood_donation/modules/donor/views/donor_registration_view.dart';
 import 'package:blood_donation/modules/doner_details/views/doner_details_view.dart';
@@ -19,6 +20,10 @@ import 'package:blood_donation/modules/feedback_support/views/support_view.dart'
 import 'package:blood_donation/modules/more/views/volunteer_dashboard_view.dart';
 import 'package:blood_donation/modules/volunteer_wallet/bindings/volunteer_wallet_binding.dart';
 import 'package:blood_donation/modules/volunteer_wallet/views/volunteer_wallet_view.dart';
+import 'package:blood_donation/modules/volunteer_registration/bindings/volunteer_registration_binding.dart';
+import 'package:blood_donation/modules/volunteer_registration/views/volunteer_registration_view.dart';
+import 'package:blood_donation/modules/assisted_registration/bindings/assisted_registration_binding.dart';
+import 'package:blood_donation/modules/assisted_registration/views/assisted_registration_view.dart';
 import 'package:get/get.dart';
 
 /// App page routes and bindings configuration
@@ -44,6 +49,7 @@ class AppPages {
     GetPage(
       name: AppRoutes.login,
       page: () => const SignInScreen(),
+      binding: SignInBinding(),
       transition: Transition.cupertino,
       transitionDuration: const Duration(milliseconds: 400),
     ),
@@ -145,6 +151,24 @@ class AppPages {
       name: AppRoutes.volunteerWallet,
       page: () => const VolunteerWalletView(),
       binding: VolunteerWalletBinding(),
+      transition: Transition.cupertino,
+      transitionDuration: const Duration(milliseconds: 400),
+    ),
+
+    // Volunteer Registration Screen
+    GetPage(
+      name: AppRoutes.volunteerRegistration,
+      page: () => const VolunteerRegistrationView(),
+      binding: VolunteerRegistrationBinding(),
+      transition: Transition.cupertino,
+      transitionDuration: const Duration(milliseconds: 400),
+    ),
+
+    // Assisted Donor Registration Screen
+    GetPage(
+      name: AppRoutes.assistedRegistration,
+      page: () => const AssistedRegistrationView(),
+      binding: AssistedRegistrationBinding(),
       transition: Transition.cupertino,
       transitionDuration: const Duration(milliseconds: 400),
     ),

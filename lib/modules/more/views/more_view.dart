@@ -348,7 +348,7 @@ class MoreView extends GetView<MoreController> {
                   icon: Icons.volunteer_activism_rounded,
                   mainColor: accentPurple,
                   accentColor: const Color(0xFF9575CD),
-                  onTap: () {},
+                  onTap: () => Get.toNamed(AppRoutes.volunteerRegistration),
                 ),
               ),
             ],

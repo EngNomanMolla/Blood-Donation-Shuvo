@@ -66,7 +66,7 @@ class _HomeViewState extends State<HomeView> {
             selectedBloodType: _selectedBloodType,
             onBloodTypeChanged: _onBloodTypeSelected,
           ),
-          const SizedBox(height: HomeConstants.sectionVerticalSpacing),
+          const SizedBox(height: 8),
           BecomeDonorBanner(onTap: () => Get.toNamed(AppRoutes.donor)),
           const SizedBox(height: HomeConstants.sectionVerticalSpacing),
           QuickActionsSection(actions: QuickActionsSection.getDefaultActions()),
