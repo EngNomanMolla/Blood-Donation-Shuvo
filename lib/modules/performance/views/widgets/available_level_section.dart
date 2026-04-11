@@ -21,9 +21,10 @@ class AvailableLevelSection extends StatelessWidget {
             fontSize: 17,
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
         Row(
           children: levels
+
               .map(
                 (level) => Expanded(
                   child: Padding(
@@ -52,6 +53,7 @@ class _LevelCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 16, 14, 16),
       decoration: BoxDecoration(
+
         color: AppColors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
@@ -87,7 +89,7 @@ class _LevelCard extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 10),
           Text(
             level.subtitle,
             style: AllStyles.subtitleTextStyle.copyWith(

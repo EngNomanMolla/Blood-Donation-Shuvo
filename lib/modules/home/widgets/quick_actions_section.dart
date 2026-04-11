@@ -35,12 +35,14 @@ class QuickActionsSection extends StatelessWidget {
         icon: Icons.chat_bubble_rounded,
         iconColor: Colors.orange,
         iconBg: const Color(0xFFFFF3E0),
+        onTap: () => Get.toNamed(AppRoutes.peopleReviews),
       ),
       QuickActionModel(
         label: "Support",
         icon: Icons.support_agent_rounded,
         iconColor: Colors.blueGrey,
         iconBg: const Color(0xFFECEFF1),
+        onTap: () => Get.toNamed(AppRoutes.support),
       ),
     ];
   }

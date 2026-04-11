@@ -21,9 +21,9 @@ class MyLevelSection extends StatelessWidget {
             fontSize: 17,
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
         _LevelProgressCard(level: level),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
         _LevelDetailCard(level: level),
       ],
     );
@@ -132,7 +132,7 @@ class _LevelDetailCard extends StatelessWidget {
               valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           ...level.requirements.map(
             (req) => Padding(
               padding: const EdgeInsets.only(bottom: 4),

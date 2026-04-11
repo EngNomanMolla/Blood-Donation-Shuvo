@@ -4,12 +4,19 @@ import 'package:blood_donation/modules/donor/views/donor_registration_view.dart'
 import 'package:blood_donation/modules/doner_details/views/doner_details_view.dart';
 import 'package:blood_donation/modules/doner_request/views/doner_request_list_view.dart';
 import 'package:blood_donation/modules/home/views/home_view.dart';
+import 'package:blood_donation/modules/home/views/main_view.dart';
 import 'package:blood_donation/modules/onboarding/views/onboarding_view.dart';
-import 'package:blood_donation/modules/profile/views/profile_view.dart';
+import 'package:blood_donation/modules/more/views/profile_view.dart';
+import 'package:blood_donation/modules/more/bindings/more_binding.dart';
+import 'package:blood_donation/modules/more/views/more_view.dart';
 import 'package:blood_donation/modules/splash/views/splash_view.dart';
 import 'package:blood_donation/modules/emergency_contact/views/emergency_contact_view.dart';
 import 'package:blood_donation/modules/performance/views/performance_view.dart';
 import 'package:blood_donation/modules/wallet/views/wallet_view.dart';
+import 'package:blood_donation/modules/feedback_support/bindings/feedback_support_binding.dart';
+import 'package:blood_donation/modules/feedback_support/views/people_reviews_view.dart';
+import 'package:blood_donation/modules/feedback_support/views/support_view.dart';
+import 'package:blood_donation/modules/more/views/volunteer_dashboard_view.dart';
 import 'package:get/get.dart';
 
 /// App page routes and bindings configuration
@@ -42,7 +49,8 @@ class AppPages {
     // Home Screen - Main dashboard
     GetPage(
       name: AppRoutes.home,
-      page: () => HomeView(),
+      page: () => const MainView(),
+      binding: MoreBinding(),
       transition: Transition.cupertino,
       transitionDuration: const Duration(milliseconds: 400),
     ),
@@ -99,6 +107,33 @@ class AppPages {
     GetPage(
       name: AppRoutes.wallet,
       page: () => WalletView(),
+      transition: Transition.cupertino,
+      transitionDuration: const Duration(milliseconds: 400),
+    ),
+
+    // People Reviews Screen
+    GetPage(
+      name: AppRoutes.peopleReviews,
+      page: () => const PeopleReviewsView(),
+      binding: FeedbackSupportBinding(),
+      transition: Transition.cupertino,
+      transitionDuration: const Duration(milliseconds: 400),
+    ),
+
+    // Support Screen
+    GetPage(
+      name: AppRoutes.support,
+      page: () => const SupportView(),
+      binding: FeedbackSupportBinding(),
+      transition: Transition.cupertino,
+      transitionDuration: const Duration(milliseconds: 400),
+    ),
+
+    // Volunteer Dashboard Screen
+    GetPage(
+      name: AppRoutes.volunteerDashboard,
+      page: () => const VolunteerDashboardView(),
+      binding: MoreBinding(),
       transition: Transition.cupertino,
       transitionDuration: const Duration(milliseconds: 400),
     ),

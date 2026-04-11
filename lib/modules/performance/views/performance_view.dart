@@ -31,16 +31,16 @@ class PerformanceView extends StatelessWidget {
           Expanded(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 30),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   StatsGridSection(stats: controller.stats),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 16),
                   MyLevelSection(level: controller.currentLevel),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                   AvailableLevelSection(levels: controller.availableLevels),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                   TransactionHistorySection(
                     donationInfo: controller.donationInfo,
                     transactions: controller.transactions,

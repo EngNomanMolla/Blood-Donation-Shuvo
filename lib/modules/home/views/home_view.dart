@@ -37,6 +37,7 @@ class _HomeViewState extends State<HomeView> {
     return Scaffold(
       backgroundColor: AppColors.white,
       body: SafeArea(
+        bottom: false,
         child: Stack(
           children: [
             _buildMainContent(),
@@ -66,10 +67,10 @@ class _HomeViewState extends State<HomeView> {
             onBloodTypeChanged: _onBloodTypeSelected,
           ),
           const SizedBox(height: HomeConstants.sectionVerticalSpacing),
-          BecomeDonorBanner(onTap: () {}),
+          BecomeDonorBanner(onTap: () => Get.toNamed(AppRoutes.donor)),
           const SizedBox(height: HomeConstants.sectionVerticalSpacing),
           QuickActionsSection(actions: QuickActionsSection.getDefaultActions()),
-          const SizedBox(height: HomeConstants.sectionVerticalSpacing),
+          const SizedBox(height: 100), // Space for floating bottom nav
         ],
       ),
     );
@@ -96,28 +97,5 @@ class _HomeViewState extends State<HomeView> {
       AppRoutes.bloodRequestList,
       arguments: {'bloodType': bloodType},
     );
-  }
-
-  void _handleNavigation(int index) {
-    switch (index) {
-      case 0:
-        // Home - already on home view
-        break;
-      case 1:
-        // Message
-        debugPrint('Navigate to Messages');
-        // TODO: Implement navigation to messages
-        break;
-      case 2:
-        // Wallet
-        debugPrint('Navigate to Wallet');
-        // TODO: Implement navigation to wallet
-        break;
-      case 3:
-        // More
-        debugPrint('Navigate to More');
-        // TODO: Implement navigation to more options
-        break;
-    }
   }
 }

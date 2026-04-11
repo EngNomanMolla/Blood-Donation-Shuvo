@@ -29,7 +29,7 @@ class WalletView extends StatelessWidget {
           Expanded(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(16, 20, 16, 30),
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 110),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -38,7 +38,7 @@ class WalletView extends StatelessWidget {
                     onAddMoney: controller.onAddMoney,
                     onWithdraw: controller.onWithdraw,
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 25),
                   WalletTransactionSection(
                     transactions: controller.transactions,
                   ),

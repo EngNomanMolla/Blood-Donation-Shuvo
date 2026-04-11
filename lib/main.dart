@@ -18,11 +18,12 @@ class MyApp extends StatelessWidget {
       title: 'Blood Donation App',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
+        fontFamily: 'Poppins',
         primaryColor: const Color(0xFFE70349),
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFE70349)),
       ),
-      home: WalletView(),
-      //initialRoute: AppPages.getInitialRoute(),
+      // home: MoreView(),
+      initialRoute: AppPages.getInitialRoute(),
       getPages: AppPages.pages,
     );
   }
