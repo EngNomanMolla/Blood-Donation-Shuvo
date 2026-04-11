@@ -1,7 +1,9 @@
+import 'package:blood_donation/app/routes/app_routes.dart';
 import 'package:blood_donation/core/utils/app_colors.dart';
 import 'package:blood_donation/core/utils/text_styles.dart';
 import 'package:blood_donation/widgets/common/primary_button.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class SignInScreen extends StatelessWidget {
   const SignInScreen({super.key});
@@ -137,7 +139,8 @@ class SignInScreen extends StatelessWidget {
             PrimaryButton(
               title: "Login",
               onPressed: () {
-                print("Login clicked");
+                /// Navigate to dashboard (Home)
+                Get.offAllNamed(AppRoutes.home);
               },
             ),
           ],

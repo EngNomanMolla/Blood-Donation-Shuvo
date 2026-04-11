@@ -32,13 +32,13 @@ class OnboardingView extends StatelessWidget {
           ),
         
           onDone: () {
-            /// navigate to home
-            Get.offAllNamed(AppRoutes.home);
+            /// navigate to login
+            Get.offAllNamed(AppRoutes.login);
           },
 
           onSkip: () {
-            /// skip to home
-            Get.offAllNamed(AppRoutes.home);
+            /// skip to login
+            Get.offAllNamed(AppRoutes.login);
           },
         
           dotsDecorator: const DotsDecorator(

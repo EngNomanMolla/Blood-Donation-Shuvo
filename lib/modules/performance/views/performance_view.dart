@@ -41,10 +41,6 @@ class PerformanceView extends StatelessWidget {
                   const SizedBox(height: 16),
                   AvailableLevelSection(levels: controller.availableLevels),
                   const SizedBox(height: 16),
-                  TransactionHistorySection(
-                    donationInfo: controller.donationInfo,
-                    transactions: controller.transactions,
-                  ),
                 ],
               ),
             ),

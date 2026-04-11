@@ -17,6 +17,8 @@ import 'package:blood_donation/modules/feedback_support/bindings/feedback_suppor
 import 'package:blood_donation/modules/feedback_support/views/people_reviews_view.dart';
 import 'package:blood_donation/modules/feedback_support/views/support_view.dart';
 import 'package:blood_donation/modules/more/views/volunteer_dashboard_view.dart';
+import 'package:blood_donation/modules/volunteer_wallet/bindings/volunteer_wallet_binding.dart';
+import 'package:blood_donation/modules/volunteer_wallet/views/volunteer_wallet_view.dart';
 import 'package:get/get.dart';
 
 /// App page routes and bindings configuration
@@ -134,6 +136,15 @@ class AppPages {
       name: AppRoutes.volunteerDashboard,
       page: () => const VolunteerDashboardView(),
       binding: MoreBinding(),
+      transition: Transition.cupertino,
+      transitionDuration: const Duration(milliseconds: 400),
+    ),
+
+    // Volunteer Wallet Screen
+    GetPage(
+      name: AppRoutes.volunteerWallet,
+      page: () => const VolunteerWalletView(),
+      binding: VolunteerWalletBinding(),
       transition: Transition.cupertino,
       transitionDuration: const Duration(milliseconds: 400),
     ),

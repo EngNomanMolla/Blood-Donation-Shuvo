@@ -46,40 +46,4 @@ class PerformanceController extends GetxController {
     LevelModel(prefix: 'Level', letter: 'A', subtitle: 'Reach 1000+\nRegistration'),
     LevelModel(prefix: 'Level', letter: 'B', subtitle: 'Reach 700+\nRegistration'),
   ];
-
-  // ── Donation Info ────────────────────────────────────────────────────────
-
-  final DonationInfoModel donationInfo = const DonationInfoModel(
-    lastDonation: '60 Days Ago',
-    nextDonationDate: '24 Jun 2026',
-  );
-
-  // ── Transactions ─────────────────────────────────────────────────────────
-
-  final List<TransactionModel> transactions = [
-    TransactionModel(
-      type: 'Withdraw',
-      transactionId: '1623831436',
-      status: TransactionStatus.pending,
-      amount: '1000',
-      isCredit: true,
-      date: DateTime(2025, 7, 21, 8, 56),
-    ),
-    TransactionModel(
-      type: 'Recharge',
-      transactionId: '1623831436',
-      status: TransactionStatus.accepted,
-      amount: '100',
-      isCredit: false,
-      date: DateTime(2025, 7, 25, 8, 56),
-    ),
-    TransactionModel(
-      type: 'Withdraw',
-      transactionId: '1623831436',
-      status: TransactionStatus.successful,
-      amount: '1000',
-      isCredit: true,
-      date: DateTime(2025, 7, 21, 8, 56),
-    ),
-  ];
 }
