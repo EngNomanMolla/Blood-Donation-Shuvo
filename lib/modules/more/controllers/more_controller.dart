@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:blood_donation/app/routes/app_routes.dart';
+import 'package:blood_donation/core/services/storage_service.dart';
 
 class MoreMenuItem {
   final IconData icon;
@@ -31,6 +32,34 @@ class MoreController extends GetxController {
 
   void toggleAvailability(bool value) {
     isAvailable.value = value;
+  }
+
+  void logout() async {
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Confirm Logout', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold)),
+        content: const Text('Are you sure you want to logout?', style: TextStyle(fontFamily: 'Poppins')),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Get.back();
+              final storage = Get.find<StorageService>();
+              await storage.clearAuth();
+              Get.offAllNamed(AppRoutes.login);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFE53935),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Logout', style: TextStyle(fontFamily: 'Poppins')),
+          ),
+        ],
+      ),
+    );
   }
 
   void deleteAccount() {

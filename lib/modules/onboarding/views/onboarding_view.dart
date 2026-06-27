@@ -1,4 +1,5 @@
 import 'package:blood_donation/app/routes/app_routes.dart';
+import 'package:blood_donation/core/services/storage_service.dart';
 import 'package:blood_donation/modules/onboarding/views/page_view_models.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -29,8 +30,14 @@ class OnboardingView extends StatelessWidget {
             next: _buildNextButton(),
             done: _buildDoneButton(),
             
-            onDone: () => Get.offAllNamed(AppRoutes.login),
-            onSkip: () => Get.offAllNamed(AppRoutes.login),
+            onDone: () {
+              Get.find<StorageService>().setHasShownOnboarding(true);
+              Get.offAllNamed(AppRoutes.login);
+            },
+            onSkip: () {
+              Get.find<StorageService>().setHasShownOnboarding(true);
+              Get.offAllNamed(AppRoutes.login);
+            },
             
             // Layout Configurations
             curve: Curves.fastOutSlowIn,

@@ -45,8 +45,9 @@ class _BannerSliderState extends State<BannerSlider> {
   }
 
   void _startAutoScroll() {
+    if (widget.images.isEmpty) return;
     _autoScrollTimer = Timer.periodic(widget.autoScrollDuration, (_) {
-      if (mounted) {
+      if (mounted && widget.images.isNotEmpty) {
         _currentIndex = (_currentIndex + 1) % widget.images.length;
         _pageController.animateToPage(
           _currentIndex,

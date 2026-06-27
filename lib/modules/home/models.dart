@@ -125,3 +125,32 @@ class NotificationItem {
     }
   }
 }
+
+class BannerModel {
+  final int id;
+  final String title;
+  final String image;
+  final String link;
+  final bool isActive;
+  final int order;
+
+  BannerModel({
+    required this.id,
+    required this.title,
+    required this.image,
+    required this.link,
+    required this.isActive,
+    required this.order,
+  });
+
+  factory BannerModel.fromJson(Map<String, dynamic> json) {
+    return BannerModel(
+      id: json['id'] ?? 0,
+      title: json['title'] ?? '',
+      image: json['image'] ?? '',
+      link: json['link'] ?? '',
+      isActive: json['is_active'] ?? false,
+      order: json['order'] ?? 0,
+    );
+  }
+}

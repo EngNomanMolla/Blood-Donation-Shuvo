@@ -483,7 +483,9 @@ class MoreView extends GetView<MoreController> {
   Widget _buildMenuItem(MoreMenuItem item) {
     return InkWell(
       onTap: () {
-        if (item.route != null) {
+        if (item.title == 'Logout') {
+          controller.logout();
+        } else if (item.route != null) {
           Get.toNamed(item.route!);
         }
       },

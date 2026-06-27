@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:blood_donation/app/routes/app_routes.dart';
 import 'package:blood_donation/core/utils/app_colors.dart';
 import 'package:get/get.dart';
+import '../controllers/home_controller.dart';
 import '../constants.dart';
 import '../widgets/banner_slider.dart';
 import '../widgets/blood_request_section.dart';
@@ -9,7 +10,6 @@ import '../widgets/home_header.dart';
 import '../widgets/notification_panel.dart';
 import '../widgets/become_donor_banner.dart';
 import '../widgets/quick_actions_section.dart';
-import '../widgets/bottom_nav_bar.dart';
 
 /// Main home view - displays dashboard with blood request, banners, and quick actions
 class HomeView extends StatefulWidget {
@@ -20,15 +20,9 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
+  final HomeController controller = Get.find<HomeController>();
   bool _showNotification = false;
   String _selectedBloodType = 'A+';
-  int _currentNavIndex = 0;
-
-  final List<String> _bannerImages = [
-    "https://picsum.photos/800/400?1",
-    "https://picsum.photos/800/400?2",
-    "https://picsum.photos/800/400?3",
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +53,21 @@ class _HomeViewState extends State<HomeView> {
             onBalanceTap: () {},
           ),
           const SizedBox(height: HomeConstants.sectionVerticalSpacing),
-          BannerSlider(images: _bannerImages),
+          Obx(() {
+            if (controller.isLoading.value) {
+              return const SizedBox(
+                height: HomeConstants.bannerHeight,
+                child: Center(
+                  child: CircularProgressIndicator(color: Colors.red),
+                ),
+              );
+            }
+            if (controller.banners.isEmpty) {
+              return const SizedBox.shrink();
+            }
+            final images = controller.banners.map((b) => b.image).toList();
+            return BannerSlider(images: images);
+          }),
           const SizedBox(height: HomeConstants.sectionVerticalSpacing),
           BloodRequestSection(
             bloodTypes: HomeConstants.bloodTypes,

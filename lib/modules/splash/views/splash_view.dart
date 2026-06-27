@@ -1,4 +1,5 @@
 import 'package:blood_donation/app/routes/app_routes.dart';
+import 'package:blood_donation/core/services/storage_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
@@ -17,13 +18,20 @@ class _SplashViewState extends State<SplashView> {
   @override
   void initState() {
     super.initState();
-    _navigateToOnboarding();
+    _navigateToNextScreen();
   }
 
-  void _navigateToOnboarding() {
+  void _navigateToNextScreen() {
     Future.delayed(const Duration(seconds: 1), () {
       if (mounted) {
-        Get.offAllNamed(AppRoutes.onboarding);
+        final storage = Get.find<StorageService>();
+        if (!storage.hasShownOnboarding) {
+          Get.offAllNamed(AppRoutes.onboarding);
+        } else if (!storage.isLoggedIn) {
+          Get.offAllNamed(AppRoutes.login);
+        } else {
+          Get.offAllNamed(AppRoutes.home);
+        }
       }
     });
   }

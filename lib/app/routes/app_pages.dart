@@ -4,12 +4,12 @@ import 'package:blood_donation/modules/auth/views/login_view.dart';
 import 'package:blood_donation/modules/donor/views/donor_registration_view.dart';
 import 'package:blood_donation/modules/doner_details/views/doner_details_view.dart';
 import 'package:blood_donation/modules/doner_request/views/doner_request_list_view.dart';
-import 'package:blood_donation/modules/home/views/home_view.dart';
+import 'package:blood_donation/modules/doner_request/bindings/doner_request_binding.dart';
 import 'package:blood_donation/modules/home/views/main_view.dart';
 import 'package:blood_donation/modules/onboarding/views/onboarding_view.dart';
 import 'package:blood_donation/modules/more/views/profile_view.dart';
+import 'package:blood_donation/modules/home/bindings/home_binding.dart';
 import 'package:blood_donation/modules/more/bindings/more_binding.dart';
-import 'package:blood_donation/modules/more/views/more_view.dart';
 import 'package:blood_donation/modules/splash/views/splash_view.dart';
 import 'package:blood_donation/modules/emergency_contact/views/emergency_contact_view.dart';
 import 'package:blood_donation/modules/performance/views/performance_view.dart';
@@ -58,7 +58,7 @@ class AppPages {
     GetPage(
       name: AppRoutes.home,
       page: () => const MainView(),
-      binding: MoreBinding(),
+      binding: HomeBinding(),
       transition: Transition.cupertino,
       transitionDuration: const Duration(milliseconds: 400),
     ),
@@ -82,7 +82,8 @@ class AppPages {
     // Blood Request List Screen
     GetPage(
       name: AppRoutes.bloodRequestList,
-      page: () => DonateScreen(),
+      page: () => const DonateScreen(),
+      binding: DonerRequestBinding(),
       transition: Transition.cupertino,
       transitionDuration: const Duration(milliseconds: 400),
     ),

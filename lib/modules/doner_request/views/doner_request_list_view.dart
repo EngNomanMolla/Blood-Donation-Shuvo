@@ -5,10 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 
-class DonateScreen extends StatelessWidget {
-  DonateScreen({super.key});
- 
-  final DonateController controller = Get.put(DonateController());
+class DonateScreen extends GetView<DonateController> {
+  const DonateScreen({super.key});
  
   static const Color primaryRed = Color(0xFFE8194B);
   static const Color lightPink = Color(0xFFFFF0F3);
@@ -26,6 +24,7 @@ class DonateScreen extends StatelessWidget {
           _buildHeader(),
           Expanded(
             child: SingleChildScrollView(
+              controller: controller.scrollController,
               physics: const BouncingScrollPhysics(),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -138,62 +137,238 @@ class DonateScreen extends StatelessWidget {
       ),
     );
   }
- 
-  // ── Filter Row ────────────────────────────────────────────────────────────
- 
+
   Widget _buildFilterRow() {
     return Row(
       children: [
-        _buildDropdown(controller.selectedDistrict),
+        _buildDropdown(
+          selected: controller.selectedDistrict,
+          label: 'District',
+          onTap: () => _showLocationPicker(
+            title: 'Select District',
+            items: controller.districts,
+            selectedValue: controller.selectedDistrict,
+            isLoading: controller.isDistrictsLoading,
+            onSelect: (val) {
+              controller.selectedDistrict.value = val;
+            },
+          ),
+        ),
         const SizedBox(width: 8),
-        _buildDropdown(controller.selectedUpazila),
+        _buildDropdown(
+          selected: controller.selectedUpazila,
+          label: 'Upazila',
+          onTap: () {
+            if (controller.selectedDistrict.value == 'District') {
+              Get.snackbar('Alert', 'Please select a District first',
+                  backgroundColor: Colors.orangeAccent, colorText: Colors.white);
+              return;
+            }
+            _showLocationPicker(
+              title: 'Select Upazila',
+              items: controller.upazilas,
+              selectedValue: controller.selectedUpazila,
+              isLoading: controller.isUpazilasLoading,
+              onSelect: (val) {
+                controller.selectedUpazila.value = val;
+              },
+            );
+          },
+        ),
         const SizedBox(width: 8),
-        _buildDropdown(controller.selectedThana),
+        _buildDropdown(
+          selected: controller.selectedThana,
+          label: 'Thana',
+          onTap: () {
+            if (controller.selectedDistrict.value == 'District') {
+              Get.snackbar('Alert', 'Please select a District first',
+                  backgroundColor: Colors.orangeAccent, colorText: Colors.white);
+              return;
+            }
+            _showLocationPicker(
+              title: 'Select Thana',
+              items: controller.upazilas,
+              selectedValue: controller.selectedThana,
+              isLoading: controller.isUpazilasLoading,
+              onSelect: (val) {
+                controller.selectedThana.value = val;
+              },
+            );
+          },
+        ),
       ],
     );
   }
- 
-  Widget _buildDropdown(RxString selected) {
+
+  Widget _buildDropdown({
+    required RxString selected,
+    required String label,
+    required VoidCallback onTap,
+  }) {
     return Expanded(
-      child: Obx(() => GestureDetector(
-            onTap: () {},
-            child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFFFFCDD5), width: 1.5),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.pink.withValues(alpha: 0.06),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+      child: Obx(() {
+        final isSelected = selected.value != label;
+        return GestureDetector(
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: isSelected ? primaryRed : const Color(0xFFFFCDD5),
+                width: 1.5,
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      selected.value,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: primaryRed,
-                      ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.pink.withValues(alpha: 0.06),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    selected.value,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: isSelected ? primaryRed : Colors.grey.shade600,
                     ),
                   ),
-                  const Icon(
-                    Icons.keyboard_arrow_down_rounded,
-                    color: primaryRed,
-                    size: 18,
+                ),
+                Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: isSelected ? primaryRed : Colors.grey.shade600,
+                  size: 18,
+                ),
+              ],
+            ),
+          ),
+        );
+      }),
+    );
+  }
+
+  void _showLocationPicker({
+    required String title,
+    required List<String> items,
+    required RxString selectedValue,
+    required RxBool isLoading,
+    required Function(String) onSelect,
+  }) {
+    final searchTxt = ''.obs;
+    Get.bottomSheet(
+      Container(
+        height: Get.height * 0.6,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 10),
+            Container(
+              width: 40,
+              height: 5,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1A1A2E),
+                    ),
                   ),
+                  if (selectedValue.value != 'District' && 
+                      selectedValue.value != 'Upazila' && 
+                      selectedValue.value != 'Thana')
+                    TextButton(
+                      onPressed: () {
+                        onSelect(title.contains('District') ? 'District' : (title.contains('Upazila') ? 'Upazila' : 'Thana'));
+                        Get.back();
+                      },
+                      child: const Text('Reset', style: TextStyle(color: primaryRed)),
+                    ),
                 ],
               ),
             ),
-          )),
+            const SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0F0F0),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: TextField(
+                  onChanged: (v) => searchTxt.value = v,
+                  decoration: const InputDecoration(
+                    hintText: 'Search locations...',
+                    prefixIcon: Icon(Icons.search, size: 20, color: Colors.grey),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Expanded(
+              child: Obx(() {
+                if (isLoading.value) {
+                  return const Center(child: CircularProgressIndicator(color: primaryRed));
+                }
+                
+                final query = searchTxt.value.toLowerCase();
+                final filtered = items.where((item) => item.toLowerCase().contains(query)).toList();
+                
+                if (filtered.isEmpty) {
+                  return const Center(
+                    child: Text('No locations found', style: TextStyle(color: Colors.grey)),
+                  );
+                }
+                
+                return ListView.builder(
+                  itemCount: filtered.length,
+                  itemBuilder: (ctx, index) {
+                    final item = filtered[index];
+                    final isChosen = item == selectedValue.value;
+                    return ListTile(
+                      onTap: () {
+                        onSelect(item);
+                        Get.back();
+                      },
+                      title: Text(
+                        item,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: isChosen ? FontWeight.w700 : FontWeight.w500,
+                          color: isChosen ? primaryRed : const Color(0xFF1A1A2E),
+                        ),
+                      ),
+                      trailing: isChosen ? const Icon(Icons.check_circle_rounded, color: primaryRed) : null,
+                    );
+                  },
+                );
+              }),
+            ),
+          ],
+        ),
+      ),
+      isScrollControlled: true,
     );
   }
  
@@ -201,13 +376,44 @@ class DonateScreen extends StatelessWidget {
  
   Widget _buildDonorList() {
     return Obx(() {
+      if (controller.isLoading.value) {
+        return const Center(
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 40),
+            child: CircularProgressIndicator(color: primaryRed),
+          ),
+        );
+      }
+      
       final donors = controller.filteredDonors;
+      if (donors.isEmpty) {
+        return const Center(
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 40),
+            child: Text(
+              'No donors found',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey,
+              ),
+            ),
+          ),
+        );
+      }
+
       return Column(
-        children: donors
-            .asMap()
-            .entries
-            .map((e) => _buildDonorCard(e.value, e.key))
-            .toList(),
+        children: [
+          ...donors
+              .asMap()
+              .entries
+              .map((e) => _buildDonorCard(e.value, e.key)),
+          if (controller.isLoadingMore.value)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: CircularProgressIndicator(color: primaryRed),
+            ),
+        ],
       );
     });
   }

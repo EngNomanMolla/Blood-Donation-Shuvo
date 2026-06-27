@@ -29,7 +29,6 @@ class SignInScreen extends GetView<SignInController> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 40),
-                  
                   // Logo
                   Center(
                     child: SvgPicture.asset(
