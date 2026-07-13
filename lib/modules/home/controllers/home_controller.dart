@@ -1,11 +1,17 @@
-import 'package:get/get.dart';
+﻿import 'package:get/get.dart';
+import '../../../core/services/storage_service.dart';
 import '../../../data/repositories/home_repository.dart';
+import '../../../data/repositories/profile_repository.dart';
 import '../models.dart';
 
 class HomeController extends GetxController {
   final HomeRepository homeRepository;
+  final ProfileRepository profileRepository;
 
-  HomeController({required this.homeRepository});
+  HomeController({
+    required this.homeRepository,
+    required this.profileRepository,
+  });
 
   final banners = <BannerModel>[].obs;
   final isLoading = false.obs;
@@ -14,20 +20,32 @@ class HomeController extends GetxController {
   void onInit() {
     super.onInit();
     fetchBanners();
+    fetchProfile();
+  }
+
+  Future<void> fetchProfile() async {
+    try {
+      final profile = await profileRepository.getProfile();
+      if (profile != null) {
+        final storage = Get.find<StorageService>();
+        await storage.setIsDonor(profile.isDonor);
+        await storage.setIsVolunteer(profile.isVolunteer);
+      }
+    } catch (e) {
+      Get.printError(info: 'Error fetching profile: $e');
+    }
   }
 
   Future<void> fetchBanners() async {
     isLoading.value = true;
     try {
       final bannerList = await homeRepository.getBanners();
-      // Filter active banners and sort by order ascending
       banners.value = bannerList
           .where((banner) => banner.isActive)
           .toList()
         ..sort((a, b) => a.order.compareTo(b.order));
     } catch (e) {
       Get.printError(info: "Error fetching banners from API: $e. Using local fallbacks.");
-      // Graceful fallback to default banners so the UI is not empty
       banners.value = [
         BannerModel(
           id: 1,

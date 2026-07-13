@@ -24,6 +24,7 @@ import 'package:blood_donation/modules/volunteer_registration/bindings/volunteer
 import 'package:blood_donation/modules/volunteer_registration/views/volunteer_registration_view.dart';
 import 'package:blood_donation/modules/assisted_registration/bindings/assisted_registration_binding.dart';
 import 'package:blood_donation/modules/assisted_registration/views/assisted_registration_view.dart';
+import 'package:blood_donation/modules/more/views/quick_register_view.dart';
 import 'package:get/get.dart';
 
 /// App page routes and bindings configuration
@@ -170,6 +171,14 @@ class AppPages {
       name: AppRoutes.assistedRegistration,
       page: () => const AssistedRegistrationView(),
       binding: AssistedRegistrationBinding(),
+      transition: Transition.cupertino,
+      transitionDuration: const Duration(milliseconds: 400),
+    ),
+
+    // Quick Register Screen (for users who already have data from the other role)
+    GetPage(
+      name: AppRoutes.quickRegister,
+      page: () => const QuickRegisterView(),
       transition: Transition.cupertino,
       transitionDuration: const Duration(milliseconds: 400),
     ),

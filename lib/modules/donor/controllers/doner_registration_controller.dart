@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../core/services/storage_service.dart';
  
 // ─── GetX Controller ────────────────────────────────────────────────────────
  
@@ -30,14 +31,22 @@ class RegistrationController extends GetxController {
     super.onClose();
   }
  
-  void onRegister() {
+  void onRegister() async {
     if (fullNameController.text.isEmpty) {
       Get.snackbar('Error', 'Please enter your full name',
           backgroundColor: Colors.red, colorText: Colors.white);
       return;
     }
+
+    // Save to Storage
+    final storage = Get.find<StorageService>();
+    await storage.setIsDonor(true);
+
     Get.snackbar('Success', 'Registration Complete!',
         backgroundColor: const Color(0xFFE8285A), colorText: Colors.white);
+
+    // Auto-navigate back after a brief delay
+    Future.delayed(const Duration(seconds: 2), () => Get.back());
   }
  
   Future<void> pickDate(BuildContext context) async {

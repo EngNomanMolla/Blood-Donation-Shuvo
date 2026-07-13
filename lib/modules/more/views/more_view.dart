@@ -2,7 +2,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
-import 'package:blood_donation/app/routes/app_routes.dart';
 import '../controllers/more_controller.dart';
 
 class MoreView extends GetView<MoreController> {
@@ -330,47 +329,114 @@ class MoreView extends GetView<MoreController> {
             ),
           ),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _buildAtmosphereCard(
-                  title: 'Become A\nDonor',
-                  icon: Icons.water_drop_rounded,
-                  mainColor: primaryPink,
-                  accentColor: const Color(0xFFFF5C8D),
-                  onTap: () => Get.toNamed(AppRoutes.donor),
+          Obx(() {
+            final isDonor = controller.isDonor.value;
+            final isVolunteer = controller.isVolunteer.value;
+            return Row(
+              children: [
+                Expanded(
+                  child: _buildSmartCard(
+                    title: 'Become A\nDonor',
+                    doneTitle: 'Donor ✓',
+                    quickTitle: 'Become A\nDonor',
+                    icon: Icons.water_drop_rounded,
+                    mainColor: primaryPink,
+                    accentColor: const Color(0xFFFF5C8D),
+                    isAlready: isDonor,
+                    hasExistingData: isVolunteer && !isDonor,
+                    onTap: controller.handleBecomeDonor,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildAtmosphereCard(
-                  title: 'Become A\nVolunteer',
-                  icon: Icons.volunteer_activism_rounded,
-                  mainColor: accentPurple,
-                  accentColor: const Color(0xFF9575CD),
-                  onTap: () => Get.toNamed(AppRoutes.volunteerRegistration),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildSmartCard(
+                    title: 'Become A\nVolunteer',
+                    doneTitle: 'Volunteer ✓',
+                    quickTitle: 'Become A\nVolunteer',
+                    icon: Icons.volunteer_activism_rounded,
+                    mainColor: accentPurple,
+                    accentColor: const Color(0xFF9575CD),
+                    isAlready: isVolunteer,
+                    hasExistingData: isDonor && !isVolunteer,
+                    onTap: controller.handleBecomeVolunteer,
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            );
+          }),
         ],
       ),
     );
   }
 
-  Widget _buildAtmosphereCard({
+  /// Smart card that renders one of 3 states:
+  /// [isAlready] = true  -> Disabled, green checkmark
+  /// [hasExistingData] = true -> Quick Register mode (flash icon)
+  /// else -> Normal "Become" card
+  Widget _buildSmartCard({
     required String title,
+    required String doneTitle,
+    required String quickTitle,
     required IconData icon,
     required Color mainColor,
     required Color accentColor,
+    required bool isAlready,
+    required bool hasExistingData,
     required VoidCallback onTap,
   }) {
+    const double cardHeight = 96;
+    if (isAlready) {
+      // ── Already registered — disabled card with green badge ──
+      return Container(
+        height: cardHeight,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          color: Colors.grey.shade100,
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade100,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(Icons.check_circle_rounded, color: Colors.green.shade600, size: 18),
+                ),
+                Text(
+                  doneTitle,
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    color: Colors.green.shade700,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    height: 1.1,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    // ── Normal or Quick Register card ──
+    final displayTitle = hasExistingData ? quickTitle : title;
+    final displayIcon = hasExistingData ? Icons.flash_on_rounded : icon;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 125,
+        height: cardHeight,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(20),
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -378,46 +444,60 @@ class MoreView extends GetView<MoreController> {
           ),
           boxShadow: [
             BoxShadow(
-              color: mainColor.withOpacity(0.3),
-              blurRadius: 15,
-              offset: const Offset(0, 8),
+              color: mainColor.withOpacity(0.2),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(20),
           child: Stack(
             children: [
-              // Decorative background icon
               Positioned(
-                right: -20,
-                bottom: -20,
-                child: Icon(icon, size: 100, color: white.withOpacity(0.12)),
+                right: -15,
+                bottom: -15,
+                child: Icon(icon, size: 70, color: white.withOpacity(0.12)),
               ),
-
+              if (hasExistingData)
+                Positioned(
+                  top: 6,
+                  right: 6,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.25),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
+                      'Data ready!',
+                      style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ),
               Padding(
-                padding: const EdgeInsets.all(18),
+                padding: const EdgeInsets.all(12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
                         color: white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Icon(icon, color: white, size: 24),
+                      child: Icon(displayIcon, color: white, size: 18),
                     ),
                     Text(
-                      title,
+                      displayTitle,
                       style: const TextStyle(
                         fontFamily: 'Poppins',
                         color: white,
-                        fontSize: 15,
-                        fontWeight: FontWeight.normal,
-                        height: 1.2,
-                        letterSpacing: 0.3,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        height: 1.1,
+                        letterSpacing: 0.2,
                       ),
                     ),
                   ],
@@ -429,6 +509,7 @@ class MoreView extends GetView<MoreController> {
       ),
     );
   }
+
 
   Widget _buildMenuList() {
     return Padding(

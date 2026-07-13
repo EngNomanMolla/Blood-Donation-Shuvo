@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../core/services/storage_service.dart';
 
 class VolunteerRegistrationController extends GetxController {
   final fullNameController = TextEditingController();
@@ -31,7 +32,7 @@ class VolunteerRegistrationController extends GetxController {
     super.onClose();
   }
 
-  void onRegister() {
+  void onRegister() async {
     if (fullNameController.text.isEmpty) {
       Get.snackbar('Error', 'Please enter your full name',
           backgroundColor: Colors.red, colorText: Colors.white);
@@ -41,6 +42,13 @@ class VolunteerRegistrationController extends GetxController {
     String successMsg = isAlsoDonor.value 
         ? 'Registered as Volunteer and Donor Successful!' 
         : 'Volunteer Registration Complete!';
+
+    // Save to Storage
+    final storage = Get.find<StorageService>();
+    await storage.setIsVolunteer(true);
+    if (isAlsoDonor.value) {
+      await storage.setIsDonor(true);
+    }
 
     Get.snackbar('Success', successMsg,
         backgroundColor: const Color(0xFFE53935), colorText: Colors.white);

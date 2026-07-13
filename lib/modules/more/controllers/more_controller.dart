@@ -19,6 +19,8 @@ class MoreMenuItem {
 
 class MoreController extends GetxController {
   final RxBool isAvailable = true.obs;
+  final RxBool isDonor = false.obs;
+  final RxBool isVolunteer = false.obs;
 
   final List<MoreMenuItem> menuItems = [
     const MoreMenuItem(icon: Icons.person_outline, title: 'Available For Donate', hasToggle: true),
@@ -30,8 +32,64 @@ class MoreController extends GetxController {
     const MoreMenuItem(icon: Icons.logout_outlined, title: 'Logout'),
   ];
 
+  @override
+  void onInit() {
+    super.onInit();
+    _loadRoles();
+  }
+
+  void _loadRoles() {
+    final storage = Get.find<StorageService>();
+    isDonor.value = storage.isDonor;
+    isVolunteer.value = storage.isVolunteer;
+  }
+
   void toggleAvailability(bool value) {
     isAvailable.value = value;
+  }
+
+  /// Called when user taps "Become A Donor"
+  void handleBecomeDonor() async {
+    if (isDonor.value) {
+      // Already a donor — do nothing (card is disabled)
+      return;
+    }
+    if (isVolunteer.value) {
+      // Has volunteer data — show quick confirm screen
+      await Get.toNamed(
+        AppRoutes.quickRegister,
+        arguments: {
+          'targetRole': 'donor',
+          'existingRole': 'volunteer',
+        },
+      );
+    } else {
+      // Fresh user — go to full form
+      await Get.toNamed(AppRoutes.donor);
+    }
+    _loadRoles();
+  }
+
+  /// Called when user taps "Become A Volunteer"
+  void handleBecomeVolunteer() async {
+    if (isVolunteer.value) {
+      // Already a volunteer — do nothing (card is disabled)
+      return;
+    }
+    if (isDonor.value) {
+      // Has donor data — show quick confirm screen
+      await Get.toNamed(
+        AppRoutes.quickRegister,
+        arguments: {
+          'targetRole': 'volunteer',
+          'existingRole': 'donor',
+        },
+      );
+    } else {
+      // Fresh user — go to full form
+      await Get.toNamed(AppRoutes.volunteerRegistration);
+    }
+    _loadRoles();
   }
 
   void logout() async {
@@ -63,15 +121,13 @@ class MoreController extends GetxController {
   }
 
   void deleteAccount() {
-    // Logic to delete account would go here
-    Get.back(); // Close dialog
+    Get.back();
     Get.snackbar(
       'Account Deleted',
-      'Your volunteer account has been successfully removed.',
+      'Your account has been successfully removed.',
       snackPosition: SnackPosition.BOTTOM,
       backgroundColor: Colors.redAccent,
       colorText: Colors.white,
     );
   }
 }
-

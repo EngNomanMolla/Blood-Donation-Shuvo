@@ -20,4 +20,5 @@ class AppRoutes {
   static const String volunteerWallet = '/volunteer-wallet';
   static const String volunteerRegistration = '/volunteer-registration';
   static const String assistedRegistration = '/assisted-registration';
+  static const String quickRegister = '/quick-register';
 }
