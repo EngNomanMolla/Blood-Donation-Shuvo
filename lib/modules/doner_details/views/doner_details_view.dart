@@ -1,6 +1,7 @@
 import 'package:blood_donation/modules/doner_details/controllers.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class DonerDetailsView extends StatelessWidget {
   DonerDetailsView({super.key});
@@ -313,10 +314,10 @@ class DonerDetailsView extends StatelessWidget {
             const Divider(height: 1, color: Color(0xFFF0F0F0)),
             const SizedBox(height: 14),
 
-            _buildDetailRow('${donor.age} Years  ${donor.gender}'),
-            _buildDetailRow(donor.hospital),
-            _buildDetailRow(donor.location),
-            _buildDetailRow(donor.date),
+            if (donor.age > 0) _buildDetailRow('${donor.age} Years  ${donor.gender}'),
+            if (donor.hospital.isNotEmpty) _buildDetailRow(donor.hospital),
+            if (donor.location.isNotEmpty) _buildDetailRow(donor.location),
+            if (donor.date.isNotEmpty) _buildDetailRow(donor.date),
           ],
         ),
       );
@@ -377,7 +378,15 @@ class DonerDetailsView extends StatelessWidget {
             children: [
               Expanded(
                 child: GestureDetector(
-                  onTap: () {},
+                  onTap: () async {
+                    final phone = controller.donor.value.phone;
+                    if (phone.isNotEmpty) {
+                      final url = Uri.parse('tel:$phone');
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url);
+                      }
+                    }
+                  },
                   child: Container(
                     height: 50,
                     decoration: BoxDecoration(

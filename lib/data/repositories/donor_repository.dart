@@ -59,4 +59,15 @@ class DonorRepository {
       total: total,
     );
   }
+
+  Future<Map<String, dynamic>> getDonorDetails(int id) async {
+    final response = await donorProvider.getDonorDetails(id);
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception('Failed to fetch donor details: ${response.statusCode}');
+    }
+
+    final decoded = jsonDecode(response.body);
+    return Map<String, dynamic>.from(decoded['data'] ?? {});
+  }
 }

@@ -3,6 +3,7 @@ import 'package:blood_donation/modules/doner_request/controllers/doner_request_c
 import 'package:blood_donation/modules/doner_request/models/doner_list_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shimmer/shimmer.dart';
 
 
 class DonateScreen extends GetView<DonateController> {
@@ -142,17 +143,38 @@ class DonateScreen extends GetView<DonateController> {
     return Row(
       children: [
         _buildDropdown(
-          selected: controller.selectedDistrict,
-          label: 'District',
+          selected: controller.selectedDivision,
+          label: 'Division',
           onTap: () => _showLocationPicker(
-            title: 'Select District',
-            items: controller.districts,
-            selectedValue: controller.selectedDistrict,
-            isLoading: controller.isDistrictsLoading,
+            title: 'Select Division',
+            items: controller.divisions,
+            selectedValue: controller.selectedDivision,
+            isLoading: controller.isDivisionsLoading,
             onSelect: (val) {
-              controller.selectedDistrict.value = val;
+              controller.selectedDivision.value = val;
             },
           ),
+        ),
+        const SizedBox(width: 8),
+        _buildDropdown(
+          selected: controller.selectedDistrict,
+          label: 'District',
+          onTap: () {
+            if (controller.selectedDivision.value == 'Division') {
+              Get.snackbar('Alert', 'Please select a Division first',
+                  backgroundColor: Colors.orangeAccent, colorText: Colors.white);
+              return;
+            }
+            _showLocationPicker(
+              title: 'Select District',
+              items: controller.districts,
+              selectedValue: controller.selectedDistrict,
+              isLoading: controller.isDistrictsLoading,
+              onSelect: (val) {
+                controller.selectedDistrict.value = val;
+              },
+            );
+          },
         ),
         const SizedBox(width: 8),
         _buildDropdown(
@@ -171,27 +193,6 @@ class DonateScreen extends GetView<DonateController> {
               isLoading: controller.isUpazilasLoading,
               onSelect: (val) {
                 controller.selectedUpazila.value = val;
-              },
-            );
-          },
-        ),
-        const SizedBox(width: 8),
-        _buildDropdown(
-          selected: controller.selectedThana,
-          label: 'Thana',
-          onTap: () {
-            if (controller.selectedDistrict.value == 'District') {
-              Get.snackbar('Alert', 'Please select a District first',
-                  backgroundColor: Colors.orangeAccent, colorText: Colors.white);
-              return;
-            }
-            _showLocationPicker(
-              title: 'Select Thana',
-              items: controller.upazilas,
-              selectedValue: controller.selectedThana,
-              isLoading: controller.isUpazilasLoading,
-              onSelect: (val) {
-                controller.selectedThana.value = val;
               },
             );
           },
@@ -293,12 +294,14 @@ class DonateScreen extends GetView<DonateController> {
                       color: Color(0xFF1A1A2E),
                     ),
                   ),
-                  if (selectedValue.value != 'District' && 
-                      selectedValue.value != 'Upazila' && 
-                      selectedValue.value != 'Thana')
+                  if (selectedValue.value != 'Division' && 
+                      selectedValue.value != 'District' && 
+                      selectedValue.value != 'Upazila')
                     TextButton(
                       onPressed: () {
-                        onSelect(title.contains('District') ? 'District' : (title.contains('Upazila') ? 'Upazila' : 'Thana'));
+                        onSelect(title.contains('Division') 
+                            ? 'Division' 
+                            : (title.contains('District') ? 'District' : 'Upazila'));
                         Get.back();
                       },
                       child: const Text('Reset', style: TextStyle(color: primaryRed)),
@@ -340,7 +343,6 @@ class DonateScreen extends GetView<DonateController> {
                     child: Text('No locations found', style: TextStyle(color: Colors.grey)),
                   );
                 }
-                
                 return ListView.builder(
                   itemCount: filtered.length,
                   itemBuilder: (ctx, index) {
@@ -371,23 +373,121 @@ class DonateScreen extends GetView<DonateController> {
       isScrollControlled: true,
     );
   }
- 
+
   // ── Donor List ────────────────────────────────────────────────────────────
- 
+
+  Widget _buildShimmerList() {
+    return Column(
+      children: List.generate(
+        5,
+        (index) => _buildSingleShimmerItem(),
+      ),
+    );
+  }
+
+  Widget _buildSingleShimmerItem() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Shimmer.fromColors(
+        baseColor: Colors.grey.shade300,
+        highlightColor: Colors.grey.shade100,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              // Avatar placeholder
+              Container(
+                width: 56,
+                height: 56,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Info placeholder
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 120,
+                      height: 14,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Container(
+                      width: 80,
+                      height: 11,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Container(
+                          width: 12,
+                          height: 12,
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Container(
+                          width: 100,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              // Blood drop placeholder
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildDonorList() {
     return Obx(() {
       if (controller.isLoading.value) {
-        return const Center(
-          child: Padding(
-            padding: EdgeInsets.symmetric(vertical: 40),
-            child: CircularProgressIndicator(color: primaryRed),
-          ),
-        );
+        return _buildShimmerList();
       }
       
       final donors = controller.filteredDonors;
       if (donors.isEmpty) {
-        return const Center(
+        return  Center(
           child: Padding(
             padding: EdgeInsets.symmetric(vertical: 40),
             child: Text(
@@ -409,9 +509,9 @@ class DonateScreen extends GetView<DonateController> {
               .entries
               .map((e) => _buildDonorCard(e.value, e.key)),
           if (controller.isLoadingMore.value)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
-              child: CircularProgressIndicator(color: primaryRed),
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: _buildSingleShimmerItem(),
             ),
         ],
       );
@@ -475,6 +575,8 @@ class DonateScreen extends GetView<DonateController> {
                 children: [
                   Text(
                     donor.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -484,6 +586,8 @@ class DonateScreen extends GetView<DonateController> {
                   const SizedBox(height: 3),
                   Text(
                     '${donor.age} Years | ${donor.gender}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey.shade500,
@@ -495,11 +599,15 @@ class DonateScreen extends GetView<DonateController> {
                       Icon(Icons.location_on,
                           size: 12, color: primaryRed.withValues(alpha: 0.8)),
                       const SizedBox(width: 3),
-                      Text(
-                        donor.location,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey.shade500,
+                      Expanded(
+                        child: Text(
+                          donor.location,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey.shade500,
+                          ),
                         ),
                       ),
                     ],

@@ -6,4 +6,6 @@ class ApiConstants {
   static const String getDonors = '/user/donors';
   static const String bdApisDistricts = 'https://bdapis.com/api/v1.2/districts';
   static const String bdApisDistrictDetail = 'https://bdapis.com/api/v1.2/district';
+  static const String bdApisDivisions = 'https://bdapis.com/api/v1.2/divisions';
+  static const String bdApisDivisionDetail = 'https://bdapis.com/api/v1.2/division';
 }

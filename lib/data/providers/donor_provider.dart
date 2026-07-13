@@ -44,4 +44,22 @@ class DonorProvider {
 
     return await client.get(uri, headers: headers);
   }
+
+  Future<http.Response> getDonorDetails(int id) async {
+    final storage = Get.find<StorageService>();
+    final token = storage.userToken;
+
+    final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.getDonors}/$id');
+
+    final Map<String, String> headers = {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    };
+
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    return await client.get(uri, headers: headers);
+  }
 }

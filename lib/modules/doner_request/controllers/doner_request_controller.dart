@@ -14,9 +14,9 @@ class DonateController extends GetxController {
   final ScrollController scrollController = ScrollController();
 
   final searchQuery = ''.obs;
+  final selectedDivision = 'Division'.obs;
   final selectedDistrict = 'District'.obs;
   final selectedUpazila = 'Upazila'.obs;
-  final selectedThana = 'Thana'.obs;
 
   final donors = <Donor>[].obs;
   final isLoading = false.obs;
@@ -25,8 +25,10 @@ class DonateController extends GetxController {
   final lastPage = 1.obs;
 
   // bdapis.com geographical lists
+  final divisions = <String>[].obs;
   final districts = <String>[].obs;
   final upazilas = <String>[].obs;
+  final isDivisionsLoading = false.obs;
   final isDistrictsLoading = false.obs;
   final isUpazilasLoading = false.obs;
 
@@ -38,9 +40,19 @@ class DonateController extends GetxController {
     scrollController.addListener(_scrollListener);
     
     // Listen to changes in filter values and reload
+    ever(selectedDivision, (String division) {
+      selectedDistrict.value = 'District';
+      selectedUpazila.value = 'Upazila';
+      districts.clear();
+      upazilas.clear();
+      if (division != 'Division' && division.isNotEmpty) {
+        fetchDistrictsList(division);
+      }
+      fetchDonors(reset: true);
+    });
+
     ever(selectedDistrict, (String district) {
       selectedUpazila.value = 'Upazila';
-      selectedThana.value = 'Thana';
       upazilas.clear();
       if (district != 'District' && district.isNotEmpty) {
         fetchUpazilasList(district);
@@ -49,11 +61,10 @@ class DonateController extends GetxController {
     });
 
     ever(selectedUpazila, (_) => fetchDonors(reset: true));
-    ever(selectedThana, (_) => fetchDonors(reset: true));
 
-    // Fetch initial list of donors and districts list
+    // Fetch initial list of donors and divisions list
     fetchDonors(reset: true);
-    fetchDistrictsList();
+    fetchDivisionsList();
   }
 
   void _scrollListener() {
@@ -70,10 +81,29 @@ class DonateController extends GetxController {
     super.onClose();
   }
 
-  Future<void> fetchDistrictsList() async {
+  Future<void> fetchDivisionsList() async {
+    isDivisionsLoading.value = true;
+    try {
+      final response = await http.get(Uri.parse(ApiConstants.bdApisDivisions));
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        final List<dynamic> listData = decoded['data'] ?? [];
+        divisions.value = listData
+            .map((e) => e['division'] as String)
+            .toList()
+          ..sort();
+      }
+    } catch (e) {
+      Get.printError(info: "Error fetching divisions list from bdapis: $e");
+    } finally {
+      isDivisionsLoading.value = false;
+    }
+  }
+
+  Future<void> fetchDistrictsList(String division) async {
     isDistrictsLoading.value = true;
     try {
-      final response = await http.get(Uri.parse(ApiConstants.bdApisDistricts));
+      final response = await http.get(Uri.parse('${ApiConstants.bdApisDivisionDetail}/$division'));
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
         final List<dynamic> listData = decoded['data'] ?? [];
@@ -83,7 +113,7 @@ class DonateController extends GetxController {
           ..sort();
       }
     } catch (e) {
-      Get.printError(info: "Error fetching districts list from bdapis: $e");
+      Get.printError(info: "Error fetching districts list for $division from bdapis: $e");
     } finally {
       isDistrictsLoading.value = false;
     }
@@ -122,6 +152,7 @@ class DonateController extends GetxController {
     try {
       final response = await donorRepository.getDonors(
         bloodGroup: bloodTypeArg,
+        division: selectedDivision.value == 'Division' ? null : selectedDivision.value,
         district: selectedDistrict.value == 'District' ? null : selectedDistrict.value,
         upazila: selectedUpazila.value == 'Upazila' ? null : selectedUpazila.value,
         page: currentPage.value,

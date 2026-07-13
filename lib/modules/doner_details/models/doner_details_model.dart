@@ -24,6 +24,7 @@ class DonorProfile {
   final String location;
   final String date;
   final String imageUrl;
+  final String phone;
  
   const DonorProfile({
     required this.name,
@@ -33,5 +34,6 @@ class DonorProfile {
     required this.location,
     required this.date,
     required this.imageUrl,
+    required this.phone,
   });
 }
