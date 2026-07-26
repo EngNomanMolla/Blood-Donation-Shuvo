@@ -1,4 +1,4 @@
-import 'dart:ffi';
+
 
 import 'package:blood_donation/core/utils/text_styles.dart';
 import 'package:flutter/material.dart';
@@ -143,8 +143,8 @@ class EmergencyContactCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 ...contact.numbers.map(
-                  (num) =>
-                      Text(num, style: const TextStyle(color: Colors.grey)),
+                  (phoneNum) =>
+                      Text(phoneNum, style: const TextStyle(color: Colors.grey)),
                 ),
               ],
             ),

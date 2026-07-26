@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 import 'package:blood_donation/data/providers/auth_provider.dart';
 import 'package:blood_donation/data/repositories/auth_repository.dart';
-import '../controllers/signIn_controller.dart';
+import '../controllers/sign_in_controller.dart';
 
 class SignInBinding extends Bindings {
   @override

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import '../../core/constants/api_constants.dart';
@@ -61,5 +62,23 @@ class DonorProvider {
     }
 
     return await client.get(uri, headers: headers);
+  }
+
+  Future<http.Response> registerDonor(Map<String, dynamic> body) async {
+    final storage = Get.find<StorageService>();
+    final token = storage.userToken;
+
+    final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.donorRegistration}');
+
+    final Map<String, String> headers = {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    };
+
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    return await client.post(uri, headers: headers, body: jsonEncode(body));
   }
 }

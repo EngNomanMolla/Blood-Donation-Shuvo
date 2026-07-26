@@ -10,7 +10,6 @@ class VolunteerRegistrationView extends GetView<VolunteerRegistrationController>
   static const _bgLight = Color(0xFFFFF5F5);
   static const _hintGray = Color(0xFFAAAAAA);
   static const _labelColor = Color(0xFF333333);
-  static const _borderColor = Color(0xFFEEEEEE);
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +44,7 @@ class VolunteerRegistrationView extends GetView<VolunteerRegistrationController>
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
+                      color: Colors.white.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: const Icon(
@@ -208,7 +207,7 @@ class VolunteerRegistrationView extends GetView<VolunteerRegistrationController>
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: _primaryRed.withOpacity(0.1)),
+                      border: Border.all(color: _primaryRed.withValues(alpha: 0.1)),
                     ),
                     child: Obx(() => CheckboxListTile(
                       value: controller.isAlsoDonor.value,
@@ -250,7 +249,7 @@ class VolunteerRegistrationView extends GetView<VolunteerRegistrationController>
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: _primaryRed.withOpacity(0.35),
+                            color: _primaryRed.withValues(alpha: 0.35),
                             blurRadius: 15,
                             offset: const Offset(0, 8),
                           ),
@@ -312,7 +311,7 @@ class VolunteerRegistrationView extends GetView<VolunteerRegistrationController>
     decoration: BoxDecoration(
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.02),
+          color: Colors.black.withValues(alpha: 0.02),
           blurRadius: 10,
           offset: const Offset(0, 4),
         ),
@@ -357,7 +356,7 @@ class VolunteerRegistrationView extends GetView<VolunteerRegistrationController>
       borderRadius: BorderRadius.circular(14),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.02),
+          color: Colors.black.withValues(alpha: 0.02),
           blurRadius: 10,
           offset: const Offset(0, 4),
         ),
@@ -395,7 +394,7 @@ class VolunteerRegistrationView extends GetView<VolunteerRegistrationController>
       borderRadius: BorderRadius.circular(12),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.02),
+          color: Colors.black.withValues(alpha: 0.02),
           blurRadius: 10,
           offset: const Offset(0, 4),
         ),

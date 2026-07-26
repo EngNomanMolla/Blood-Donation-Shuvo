@@ -2,7 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-import '../controllers/signIn_controller.dart';
+import '../controllers/sign_in_controller.dart';
 
 class SignInScreen extends GetView<SignInController> {
   const SignInScreen({super.key});
@@ -10,7 +10,6 @@ class SignInScreen extends GetView<SignInController> {
   // Premium Reds
   static const Color _primaryRed = Color(0xFFE53935);
   static const Color _darkRed = Color(0xFFB71C1C);
-  static const Color _accentRed = Color(0xFFFF5252);
 
   @override
   Widget build(BuildContext context) {
@@ -104,12 +103,12 @@ class SignInScreen extends GetView<SignInController> {
           Positioned(
             top: -100,
             right: -80,
-            child: _buildBlob(300, 300, _primaryRed.withOpacity(0.08)),
+            child: _buildBlob(300, 300, _primaryRed.withValues(alpha: 0.08)),
           ),
           Positioned(
             bottom: -50,
             left: -50,
-            child: _buildBlob(250, 250, _darkRed.withOpacity(0.06)),
+            child: _buildBlob(250, 250, _darkRed.withValues(alpha: 0.06)),
           ),
         ],
       ),
@@ -135,12 +134,12 @@ class SignInScreen extends GetView<SignInController> {
         child: Container(
           padding: const EdgeInsets.all(28),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.9),
+            color: Colors.white.withValues(alpha: 0.9),
             borderRadius: BorderRadius.circular(32),
             border: Border.all(color: Colors.white, width: 2),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 25,
                 offset: const Offset(0, 10),
               ),
@@ -218,7 +217,7 @@ class SignInScreen extends GetView<SignInController> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -265,7 +264,7 @@ class SignInScreen extends GetView<SignInController> {
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              color: _primaryRed.withOpacity(0.3),
+              color: _primaryRed.withValues(alpha: 0.3),
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),

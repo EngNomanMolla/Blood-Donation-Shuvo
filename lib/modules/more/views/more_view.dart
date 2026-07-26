@@ -34,8 +34,7 @@ class MoreView extends GetView<MoreController> {
   }
 
   Widget _buildHeader(BuildContext context) {
-    return Container(
-      height: 313,
+    return SizedBox(
       child: Stack(
         children: [
           // 1. Premium Gradient Background with Blobs
@@ -67,7 +66,7 @@ class MoreView extends GetView<MoreController> {
                       height: 200,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: white.withOpacity(0.1),
+                        color: white.withValues(alpha: 0.1),
                       ),
                     ),
                   ),
@@ -79,7 +78,7 @@ class MoreView extends GetView<MoreController> {
                       height: 120,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.purple.withOpacity(0.15),
+                        color: Colors.purple.withValues(alpha: 0.15),
                       ),
                     ),
                   ),
@@ -119,15 +118,15 @@ class MoreView extends GetView<MoreController> {
                       child: Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.85),
+                          color: Colors.white.withValues(alpha: 0.85),
                           borderRadius: BorderRadius.circular(28),
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.4),
+                            color: Colors.white.withValues(alpha: 0.4),
                             width: 1.5,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
+                              color: Colors.black.withValues(alpha: 0.1),
                               blurRadius: 20,
                               offset: const Offset(0, 10),
                             ),
@@ -144,7 +143,7 @@ class MoreView extends GetView<MoreController> {
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                      color: primaryPink.withOpacity(0.3),
+                                      color: primaryPink.withValues(alpha: 0.3),
                                       width: 2,
                                     ),
                                   ),
@@ -215,19 +214,6 @@ class MoreView extends GetView<MoreController> {
     );
   }
 
-  Widget _buildHeaderIcon(IconData icon, {required VoidCallback onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: white.withOpacity(0.2),
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Icon(icon, color: white, size: 22),
-      ),
-    );
-  }
 
   Widget _buildStatsCard() {
     return Padding(
@@ -277,7 +263,7 @@ class MoreView extends GetView<MoreController> {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -444,7 +430,7 @@ class MoreView extends GetView<MoreController> {
           ),
           boxShadow: [
             BoxShadow(
-              color: mainColor.withOpacity(0.2),
+              color: mainColor.withValues(alpha: 0.2),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -457,7 +443,7 @@ class MoreView extends GetView<MoreController> {
               Positioned(
                 right: -15,
                 bottom: -15,
-                child: Icon(icon, size: 70, color: white.withOpacity(0.12)),
+                child: Icon(icon, size: 70, color: white.withValues(alpha: 0.12)),
               ),
               if (hasExistingData)
                 Positioned(
@@ -466,7 +452,7 @@ class MoreView extends GetView<MoreController> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.25),
+                      color: Colors.white.withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Text(
@@ -484,7 +470,7 @@ class MoreView extends GetView<MoreController> {
                     Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: white.withOpacity(0.2),
+                        color: white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(displayIcon, color: white, size: 18),
@@ -533,7 +519,7 @@ class MoreView extends GetView<MoreController> {
               borderRadius: BorderRadius.circular(28),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
+                  color: Colors.black.withValues(alpha: 0.03),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -601,7 +587,7 @@ class MoreView extends GetView<MoreController> {
                   scale: 0.8,
                   child: CupertinoSwitch(
                     value: controller.isAvailable.value,
-                    activeColor: primaryPink,
+                    activeTrackColor: primaryPink,
                     onChanged: controller.toggleAvailability,
                   ),
                 ),

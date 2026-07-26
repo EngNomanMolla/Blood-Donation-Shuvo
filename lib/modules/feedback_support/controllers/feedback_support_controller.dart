@@ -42,7 +42,7 @@ class FeedbackSupportController extends GetxController {
       'Support',
       'Calling support team...',
       snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.green.withOpacity(0.8),
+      backgroundColor: Colors.green.withValues(alpha: 0.8),
       colorText: Colors.white,
     );
   }
@@ -52,7 +52,7 @@ class FeedbackSupportController extends GetxController {
       'Support',
       'Opening email client...',
       snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.blue.withOpacity(0.8),
+      backgroundColor: Colors.blue.withValues(alpha: 0.8),
       colorText: Colors.white,
     );
   }
@@ -62,7 +62,7 @@ class FeedbackSupportController extends GetxController {
       'Support',
       'Connecting to live chat agent...',
       snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: const Color(0xFFE70349).withOpacity(0.8),
+      backgroundColor: const Color(0xFFE70349).withValues(alpha: 0.8),
       colorText: Colors.white,
     );
   }

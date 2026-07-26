@@ -1,4 +1,4 @@
-/// MODEL
+// MODEL
 import 'package:flutter/material.dart';
 
 class EmergencyContact {

@@ -45,7 +45,7 @@ class OnboardingView extends StatelessWidget {
             
             dotsDecorator: DotsDecorator(
               size: const Size(10.0, 10.0),
-              color: _primaryRed.withOpacity(0.25),
+              color: _primaryRed.withValues(alpha: 0.25),
               activeSize: const Size(28.0, 10.0),
               activeColor: _primaryRed,
               spacing: const EdgeInsets.symmetric(horizontal: 4.0),
@@ -75,12 +75,12 @@ class OnboardingView extends StatelessWidget {
           Positioned(
             top: -100,
             left: -80,
-            child: _buildBlob(320, 320, _primaryRed.withOpacity(0.04)),
+            child: _buildBlob(320, 320, _primaryRed.withValues(alpha: 0.04)),
           ),
           Positioned(
             bottom: 200,
             right: -60,
-            child: _buildBlob(200, 200, _darkRed.withOpacity(0.03)),
+            child: _buildBlob(200, 200, _darkRed.withValues(alpha: 0.03)),
           ),
         ],
       ),
@@ -102,7 +102,7 @@ class OnboardingView extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: _primaryRed.withOpacity(0.05),
+        color: _primaryRed.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
       ),
       child: const Text(
@@ -130,7 +130,7 @@ class OnboardingView extends StatelessWidget {
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: _primaryRed.withOpacity(0.3),
+            color: _primaryRed.withValues(alpha: 0.3),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -156,7 +156,7 @@ class OnboardingView extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: _primaryRed.withOpacity(0.3),
+            color: _primaryRed.withValues(alpha: 0.3),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),

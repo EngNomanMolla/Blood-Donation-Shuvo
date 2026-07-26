@@ -21,4 +21,5 @@ class AppRoutes {
   static const String volunteerRegistration = '/volunteer-registration';
   static const String assistedRegistration = '/assisted-registration';
   static const String quickRegister = '/quick-register';
+  static const String initialRecharge = '/initial-recharge';
 }

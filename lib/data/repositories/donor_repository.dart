@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../providers/donor_provider.dart';
 import '../../modules/doner_request/models/doner_list_model.dart';
 
@@ -69,5 +70,9 @@ class DonorRepository {
 
     final decoded = jsonDecode(response.body);
     return Map<String, dynamic>.from(decoded['data'] ?? {});
+  }
+
+  Future<http.Response> registerDonor(Map<String, dynamic> body) async {
+    return await donorProvider.registerDonor(body);
   }
 }

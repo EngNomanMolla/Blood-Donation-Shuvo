@@ -1,7 +1,8 @@
 import 'package:blood_donation/app/routes/app_routes.dart';
-import 'package:blood_donation/modules/auth/bindings/signIn_binding.dart';
+import 'package:blood_donation/modules/auth/bindings/sign_in_binding.dart';
 import 'package:blood_donation/modules/auth/views/login_view.dart';
 import 'package:blood_donation/modules/donor/views/donor_registration_view.dart';
+import 'package:blood_donation/modules/donor/bindings/donor_registration_binding.dart';
 import 'package:blood_donation/modules/doner_details/views/doner_details_view.dart';
 import 'package:blood_donation/modules/doner_request/views/doner_request_list_view.dart';
 import 'package:blood_donation/modules/doner_request/bindings/doner_request_binding.dart';
@@ -25,6 +26,8 @@ import 'package:blood_donation/modules/volunteer_registration/views/volunteer_re
 import 'package:blood_donation/modules/assisted_registration/bindings/assisted_registration_binding.dart';
 import 'package:blood_donation/modules/assisted_registration/views/assisted_registration_view.dart';
 import 'package:blood_donation/modules/more/views/quick_register_view.dart';
+import 'package:blood_donation/modules/initial_recharge/bindings/initial_recharge_binding.dart';
+import 'package:blood_donation/modules/initial_recharge/views/initial_recharge_view.dart';
 import 'package:get/get.dart';
 
 /// App page routes and bindings configuration
@@ -68,6 +71,7 @@ class AppPages {
     GetPage(
       name: AppRoutes.donor,
       page: () => const DonerRegistrationView(),
+      binding: DonorRegistrationBinding(),
       transition: Transition.cupertino,
       transitionDuration: const Duration(milliseconds: 400),
     ),
@@ -179,6 +183,15 @@ class AppPages {
     GetPage(
       name: AppRoutes.quickRegister,
       page: () => const QuickRegisterView(),
+      transition: Transition.cupertino,
+      transitionDuration: const Duration(milliseconds: 400),
+    ),
+
+    // Initial Recharge Screen
+    GetPage(
+      name: AppRoutes.initialRecharge,
+      page: () => const InitialRechargeView(),
+      binding: InitialRechargeBinding(),
       transition: Transition.cupertino,
       transitionDuration: const Duration(milliseconds: 400),
     ),

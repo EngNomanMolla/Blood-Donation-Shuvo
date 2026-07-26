@@ -13,7 +13,7 @@ class DonerRegistrationView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ctrl = Get.put(RegistrationController());
+    final ctrl = Get.find<RegistrationController>();
 
     return Scaffold(
       backgroundColor: _lightPink,
@@ -36,7 +36,7 @@ class DonerRegistrationView extends StatelessWidget {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(
@@ -121,11 +121,23 @@ class DonerRegistrationView extends StatelessWidget {
                       children: [
                         Expanded(
                           child: _compactDropdown(
-                            value: ctrl.selectedDistrict.value.isEmpty
-                                ? null
-                                : ctrl.selectedDistrict.value,
+                            value: ctrl.divisions.contains(ctrl.selectedDivision.value)
+                                ? ctrl.selectedDivision.value
+                                : null,
+                            hint: 'Division',
+                            items: ctrl.divisions,
+                            onChanged: (v) =>
+                                ctrl.selectedDivision.value = v ?? '',
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _compactDropdown(
+                            value: ctrl.districts.contains(ctrl.selectedDistrict.value)
+                                ? ctrl.selectedDistrict.value
+                                : null,
                             hint: 'District',
-                            items: ctrl.districtOptions,
+                            items: ctrl.districts,
                             onChanged: (v) =>
                                 ctrl.selectedDistrict.value = v ?? '',
                           ),
@@ -133,25 +145,13 @@ class DonerRegistrationView extends StatelessWidget {
                         const SizedBox(width: 8),
                         Expanded(
                           child: _compactDropdown(
-                            value: ctrl.selectedUpazila.value.isEmpty
-                                ? null
-                                : ctrl.selectedUpazila.value,
+                            value: ctrl.upazilas.contains(ctrl.selectedUpazila.value)
+                                ? ctrl.selectedUpazila.value
+                                : null,
                             hint: 'Upazila',
-                            items: ctrl.upazilaOptions,
+                            items: ctrl.upazilas,
                             onChanged: (v) =>
                                 ctrl.selectedUpazila.value = v ?? '',
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: _compactDropdown(
-                            value: ctrl.selectedThana.value.isEmpty
-                                ? null
-                                : ctrl.selectedThana.value,
-                            hint: 'Thana',
-                            items: ctrl.thanaOptions,
-                            onChanged: (v) =>
-                                ctrl.selectedThana.value = v ?? '',
                           ),
                         ),
                       ],
@@ -224,26 +224,37 @@ class DonerRegistrationView extends StatelessWidget {
                   const SizedBox(height: 20),
 
                   // Register Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: ElevatedButton(
-                      onPressed: ctrl.onRegister,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _pink,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                  Obx(
+                    () => SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton(
+                        onPressed: ctrl.isLoading.value ? null : ctrl.onRegister,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _pink,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
                         ),
-                        elevation: 0,
-                      ),
-                      child: const Text(
-                        'Registration Complete',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.3,
-                        ),
+                        child: ctrl.isLoading.value
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text(
+                                'Registration Complete',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.3,
+                                ),
+                              ),
                       ),
                     ),
                   ),

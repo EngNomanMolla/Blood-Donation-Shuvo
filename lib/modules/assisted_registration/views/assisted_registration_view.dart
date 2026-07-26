@@ -45,7 +45,7 @@ class AssistedRegistrationView extends GetView<AssistedRegistrationController> {
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
+                      color: Colors.white.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: const Icon(
@@ -254,7 +254,7 @@ class AssistedRegistrationView extends GetView<AssistedRegistrationController> {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: _primaryRed.withOpacity(0.35),
+                            color: _primaryRed.withValues(alpha: 0.35),
                             blurRadius: 15,
                             offset: const Offset(0, 8),
                           ),
@@ -316,7 +316,7 @@ class AssistedRegistrationView extends GetView<AssistedRegistrationController> {
     decoration: BoxDecoration(
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.02),
+          color: Colors.black.withValues(alpha: 0.02),
           blurRadius: 10,
           offset: const Offset(0, 4),
         ),
@@ -361,7 +361,7 @@ class AssistedRegistrationView extends GetView<AssistedRegistrationController> {
       borderRadius: BorderRadius.circular(14),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.02),
+          color: Colors.black.withValues(alpha: 0.02),
           blurRadius: 10,
           offset: const Offset(0, 4),
         ),
@@ -399,7 +399,7 @@ class AssistedRegistrationView extends GetView<AssistedRegistrationController> {
       borderRadius: BorderRadius.circular(12),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.02),
+          color: Colors.black.withValues(alpha: 0.02),
           blurRadius: 10,
           offset: const Offset(0, 4),
         ),

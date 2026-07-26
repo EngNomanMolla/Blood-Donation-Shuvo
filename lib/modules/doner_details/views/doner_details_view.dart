@@ -12,9 +12,7 @@ class DonerDetailsView extends StatelessWidget {
   static const Color lightPink = Color(0xFFFFF0F3);
   static const Color softPink = Color(0xFFFFDDE5);
 
-  /// Get donor data from route arguments
-  dynamic get _donorData => Get.arguments?['donor'];
-  String get _bloodType => Get.arguments?['bloodType'] ?? 'All';
+
 
   @override
   Widget build(BuildContext context) {
@@ -133,7 +131,7 @@ class DonerDetailsView extends StatelessWidget {
           border: Border.all(color: Colors.white, width: 3),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15),
+            color: Colors.black.withValues(alpha: 0.15),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -164,7 +162,7 @@ class DonerDetailsView extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.pink.withOpacity(0.10),
+              color: Colors.pink.withValues(alpha: 0.10),
               blurRadius: 20,
               offset: const Offset(0, 6),
             ),
@@ -270,7 +268,7 @@ class DonerDetailsView extends StatelessWidget {
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              color: Colors.pink.withOpacity(0.08),
+              color: Colors.pink.withValues(alpha: 0.08),
               blurRadius: 16,
               offset: const Offset(0, 4),
             ),
@@ -360,7 +358,7 @@ class DonerDetailsView extends StatelessWidget {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 12,
             offset: const Offset(0, -3),
           ),
@@ -437,30 +435,4 @@ class DonerDetailsView extends StatelessWidget {
     );
   }
 }
-
-// ─── Blood Drop Painter ───────────────────────────────────────────────────────
-
-class _BloodDropPainter extends CustomPainter {
-  final Color color;
-  const _BloodDropPainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-
-    final cx = size.width / 2;
-    final path = Path()
-      ..moveTo(cx, 0)
-      ..cubicTo(cx + size.width * 0.6, size.height * 0.35,
-          cx + size.width * 0.6, size.height * 0.65, cx, size.height)
-      ..cubicTo(cx - size.width * 0.6, size.height * 0.65,
-          cx - size.width * 0.6, size.height * 0.35, cx, 0);
-
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _BloodDropPainter old) => old.color != color;
-}
+

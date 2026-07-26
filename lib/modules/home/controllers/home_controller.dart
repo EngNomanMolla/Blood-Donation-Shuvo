@@ -1,4 +1,4 @@
-﻿import 'package:get/get.dart';
+import 'package:get/get.dart';
 import '../../../core/services/storage_service.dart';
 import '../../../data/repositories/home_repository.dart';
 import '../../../data/repositories/profile_repository.dart';

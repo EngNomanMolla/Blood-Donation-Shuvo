@@ -9,4 +9,6 @@ class ApiConstants {
   static const String bdApisDivisions = 'https://bdapis.com/api/v1.2/divisions';
   static const String bdApisDivisionDetail = 'https://bdapis.com/api/v1.2/division';
   static const String profileMe = '/user/me';
+  static const String donorRegistration = '/user/donor-registration';
+  static const String recharge = '/user/recharge';
 }

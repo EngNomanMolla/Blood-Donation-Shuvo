@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:blood_donation/core/utils/app_colors.dart';
-import 'package:blood_donation/core/utils/text_styles.dart';
 import '../controllers/volunteer_wallet_controller.dart';
-import 'package:blood_donation/modules/performance/views/widgets/my_level_section.dart'; // for BulletText
 
 class VolunteerWalletView extends GetView<VolunteerWalletController> {
   const VolunteerWalletView({super.key});
@@ -30,7 +27,7 @@ class VolunteerWalletView extends GetView<VolunteerWalletController> {
             ),
             boxShadow: [
               BoxShadow(
-                color: primaryRed.withOpacity(0.4),
+                color: primaryRed.withValues(alpha: 0.4),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -94,12 +91,12 @@ class VolunteerWalletView extends GetView<VolunteerWalletController> {
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-            color: primaryRed.withOpacity(0.08),
+            color: primaryRed.withValues(alpha: 0.08),
             blurRadius: 30,
             offset: const Offset(0, 15),
           ),
         ],
-        border: Border.all(color: primaryRed.withOpacity(0.05), width: 1.5),
+        border: Border.all(color: primaryRed.withValues(alpha: 0.05), width: 1.5),
       ),
       child: Column(
         children: [
@@ -140,7 +137,7 @@ class VolunteerWalletView extends GetView<VolunteerWalletController> {
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: primaryRed.withOpacity(0.3),
+                        color: primaryRed.withValues(alpha: 0.3),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -243,7 +240,7 @@ class VolunteerWalletView extends GetView<VolunteerWalletController> {
                   color: Color(0xFF2D2D2D),
                 ),
               ),
-              Icon(Icons.history_rounded, color: primaryRed.withOpacity(0.5), size: 20),
+              Icon(Icons.history_rounded, color: primaryRed.withValues(alpha: 0.5), size: 20),
             ],
           ),
           const SizedBox(height: 16),
@@ -261,7 +258,7 @@ class VolunteerWalletView extends GetView<VolunteerWalletController> {
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.015),
+                      color: Colors.black.withValues(alpha: 0.015),
                       blurRadius: 15,
                       offset: const Offset(0, 5),
                     ),
@@ -272,12 +269,12 @@ class VolunteerWalletView extends GetView<VolunteerWalletController> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: tx.statusColor.withOpacity(0.08),
+                        color: tx.statusColor.withValues(alpha: 0.08),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         tx.type == 'Withdraw' ? Icons.account_balance_wallet_rounded : Icons.add_circle_rounded,
-                        color: tx.statusColor.withOpacity(0.9),
+                        color: tx.statusColor.withValues(alpha: 0.9),
                         size: 22,
                       ),
                     ),
@@ -348,7 +345,7 @@ class _AppBarIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white.withOpacity(0.15),
+      color: Colors.white.withValues(alpha: 0.15),
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         onTap: onTap,

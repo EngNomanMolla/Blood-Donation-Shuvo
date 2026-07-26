@@ -343,6 +343,7 @@ class DonateScreen extends GetView<DonateController> {
                     child: Text('No locations found', style: TextStyle(color: Colors.grey)),
                   );
                 }
+
                 return ListView.builder(
                   itemCount: filtered.length,
                   itemBuilder: (ctx, index) {
@@ -373,8 +374,6 @@ class DonateScreen extends GetView<DonateController> {
       isScrollControlled: true,
     );
   }
-
-  // ── Donor List ────────────────────────────────────────────────────────────
 
   Widget _buildShimmerList() {
     return Column(

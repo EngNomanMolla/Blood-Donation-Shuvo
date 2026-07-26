@@ -1,11 +1,7 @@
 import 'package:blood_donation/app/routes/app_pages.dart';
-import 'package:blood_donation/modules/performance/views/performance_view.dart';
-import 'package:blood_donation/modules/wallet/views/wallet_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
 import 'package:blood_donation/core/services/storage_service.dart';
-import 'modules/emergency_contact/views/emergency_contact_view.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

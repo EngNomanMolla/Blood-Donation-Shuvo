@@ -159,7 +159,7 @@ class _NotificationPanelState extends State<NotificationPanel>
                     BoxShadow(
                       color: _getGradientStart(
                         notification.type,
-                      ).withOpacity(0.15),
+                      ).withValues(alpha: 0.15),
                       blurRadius: 16,
                       offset: Offset(0, 4),
                       spreadRadius: 0,
@@ -187,10 +187,10 @@ class _NotificationPanelState extends State<NotificationPanel>
                           width: 52,
                           height: 52,
                           decoration: BoxDecoration(
-                            color: AppColors.white.withOpacity(0.25),
+                            color: AppColors.white.withValues(alpha: 0.25),
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: AppColors.white.withOpacity(0.3),
+                              color: AppColors.white.withValues(alpha: 0.3),
                               width: 1.5,
                             ),
                           ),
@@ -238,7 +238,7 @@ class _NotificationPanelState extends State<NotificationPanel>
                                 notification.message,
                                 style: AllStyles.notificationSubtitleStyle
                                     .copyWith(
-                                      color: AppColors.white.withOpacity(0.85),
+                                      color: AppColors.white.withValues(alpha: 0.85),
                                     ),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
@@ -247,7 +247,7 @@ class _NotificationPanelState extends State<NotificationPanel>
                               Text(
                                 notification.timeAgo,
                                 style: AllStyles.notificationTimeStyle.copyWith(
-                                  color: AppColors.white.withOpacity(0.7),
+                                  color: AppColors.white.withValues(alpha: 0.7),
                                 ),
                               ),
                             ],

@@ -7,7 +7,7 @@ import '../controllers/performance_controller.dart';
 import 'widgets/stats_grid_section.dart';
 import 'widgets/my_level_section.dart';
 import 'widgets/available_level_section.dart';
-import 'widgets/transaction_history_section.dart';
+
 
 class PerformanceView extends StatelessWidget {
   PerformanceView({super.key});

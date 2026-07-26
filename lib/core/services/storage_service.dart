@@ -14,6 +14,7 @@ class StorageService extends GetxService {
   static const String _keyUserToken = 'user_token';
   static const String _keyIsDonor = 'is_donor';
   static const String _keyIsVolunteer = 'is_volunteer';
+  static const String _keyHasRecharged = 'has_recharged';
 
   bool get hasShownOnboarding => _prefs.getBool(_keyHasShownOnboarding) ?? false;
   
@@ -45,11 +46,18 @@ class StorageService extends GetxService {
     return await _prefs.setBool(_keyIsVolunteer, value);
   }
 
+  bool get hasRecharged => _prefs.getBool(_keyHasRecharged) ?? false;
+
+  Future<bool> setHasRecharged(bool value) async {
+    return await _prefs.setBool(_keyHasRecharged, value);
+  }
+
   Future<void> clearAuth() async {
     await _prefs.remove(_keyIsLoggedIn);
     await _prefs.remove(_keyUserToken);
     await _prefs.remove(_keyIsDonor);
     await _prefs.remove(_keyIsVolunteer);
+    await _prefs.remove(_keyHasRecharged);
   }
 }
 

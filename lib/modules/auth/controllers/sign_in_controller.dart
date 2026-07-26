@@ -121,7 +121,7 @@ class SignInController extends GetxController {
         final token = responseData['token'] ?? responseData['data']?['token'] ?? 'dummy_token';
         await storage.setUserToken(token);
 
-        Get.offAllNamed(AppRoutes.home);
+        Get.offAllNamed(AppRoutes.initialRecharge);
         Get.snackbar('Success', 'Login successful!',
             backgroundColor: const Color(0xFFE53935), colorText: Colors.white);
       } else {

@@ -49,7 +49,7 @@ class PeopleReviewsView extends GetView<FeedbackSupportController> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadowColor.withOpacity(0.05),
+            color: AppColors.shadowColor.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -151,7 +151,7 @@ class PeopleReviewsView extends GetView<FeedbackSupportController> {
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderGray.withOpacity(0.5)),
+        border: Border.all(color: AppColors.borderGray.withValues(alpha: 0.5)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -186,7 +186,7 @@ class PeopleReviewsView extends GetView<FeedbackSupportController> {
           const SizedBox(height: 12),
           Text(
             review['comment'],
-            style: AllStyles.subtitleTextStyle.copyWith(color: AppColors.black.withOpacity(0.8), height: 1.4),
+            style: AllStyles.subtitleTextStyle.copyWith(color: AppColors.black.withValues(alpha: 0.8), height: 1.4),
           ),
         ],
       ),

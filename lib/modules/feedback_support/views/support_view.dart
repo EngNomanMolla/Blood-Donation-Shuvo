@@ -51,7 +51,7 @@ class SupportView extends GetView<FeedbackSupportController> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppColors.white.withOpacity(0.2),
+              color: AppColors.white.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.support_agent_rounded, color: AppColors.white, size: 60),
@@ -64,7 +64,7 @@ class SupportView extends GetView<FeedbackSupportController> {
           const SizedBox(height: 8),
           Text(
             'We are available 24/7 to assist you',
-            style: AllStyles.subtitleTextStyle.copyWith(color: AppColors.white.withOpacity(0.9)),
+            style: AllStyles.subtitleTextStyle.copyWith(color: AppColors.white.withValues(alpha: 0.9)),
           ),
         ],
       ),
@@ -112,19 +112,19 @@ class SupportView extends GetView<FeedbackSupportController> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: AppColors.shadowColor.withOpacity(0.04),
+              color: AppColors.shadowColor.withValues(alpha: 0.04),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
           ],
-          border: Border.all(color: AppColors.borderGray.withOpacity(0.4)),
+          border: Border.all(color: AppColors.borderGray.withValues(alpha: 0.4)),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(icon, color: color, size: 24),
@@ -173,15 +173,15 @@ class SupportView extends GetView<FeedbackSupportController> {
         data: ThemeData(dividerColor: Colors.transparent),
         child: ExpansionTile(
           title: Text(question, style: AllStyles.subtitleTextStyle.copyWith(fontWeight: FontWeight.w600)),
+          tilePadding: EdgeInsets.zero,
+          collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Text(answer, style: AllStyles.subtitleTextStyle.copyWith(color: AppColors.darkGray)),
             ),
           ],
-          tilePadding: EdgeInsets.zero,
-          collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
     );

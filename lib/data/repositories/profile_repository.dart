@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import '../providers/profile_provider.dart';
 
 class ProfileData {
