@@ -30,6 +30,9 @@ class HomeController extends GetxController {
         final storage = Get.find<StorageService>();
         await storage.setIsDonor(profile.isDonor);
         await storage.setIsVolunteer(profile.isVolunteer);
+        if (profile.phone != null) {
+          await storage.setUserPhone(profile.phone!);
+        }
       }
     } catch (e) {
       Get.printError(info: 'Error fetching profile: $e');

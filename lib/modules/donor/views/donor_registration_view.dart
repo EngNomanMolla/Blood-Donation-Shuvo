@@ -97,6 +97,7 @@ class DonerRegistrationView extends StatelessWidget {
                   _textField(
                     controller: ctrl.mobileController,
                     keyboardType: TextInputType.phone,
+                    readOnly: true,
                   ),
                   const SizedBox(height: 16),
 
@@ -287,16 +288,18 @@ class DonerRegistrationView extends StatelessWidget {
     String? hint,
     TextInputType keyboardType = TextInputType.text,
     Widget? suffixIcon,
+    bool readOnly = false,
   }) => TextField(
     controller: controller,
     keyboardType: keyboardType,
-    style: const TextStyle(fontSize: 14, color: _labelColor),
+    readOnly: readOnly,
+    style: TextStyle(fontSize: 14, color: readOnly ? _hintGray : _labelColor),
     decoration: InputDecoration(
       hintText: hint,
       hintStyle: const TextStyle(fontSize: 14, color: _hintGray),
       suffixIcon: suffixIcon,
       filled: true,
-      fillColor: Colors.white,
+      fillColor: readOnly ? Colors.grey.shade100 : Colors.white,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),

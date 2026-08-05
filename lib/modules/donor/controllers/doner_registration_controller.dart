@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/services/storage_service.dart';
 import '../../../data/repositories/donor_repository.dart';
+import '../../more/controllers/more_controller.dart';
  
 // ─── GetX Controller ────────────────────────────────────────────────────────
  
@@ -39,6 +40,10 @@ class RegistrationController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    final storage = Get.find<StorageService>();
+    if (storage.userPhone != null && storage.userPhone!.isNotEmpty) {
+      mobileController.text = storage.userPhone!;
+    }
     
     // Listen to changes in division
     ever(selectedDivision, (String division) {
@@ -122,7 +127,7 @@ class RegistrationController extends GetxController {
 
       final body = {
         "name": fullNameController.text.trim(),
-        "gender": selectedGender.value,
+        "gender": selectedGender.value.toLowerCase(),
         "phone": mobileController.text.trim(),
         "blood_group": selectedBloodGroup.value,
         "division": selectedDivision.value,
@@ -131,7 +136,9 @@ class RegistrationController extends GetxController {
         "address": "${selectedUpazila.value}, ${selectedDistrict.value}, ${selectedDivision.value}",
         "email": emailController.text.trim(),
         "date_of_birth": dobController.text.trim(),
-        "donations_count": 0
+        "donations_count": 0,
+        "is_donor": true,
+        "is_volunteer": storage.isVolunteer
       };
 
       debugPrint("Donor Registration API Debug - Sending Payload: $body");
@@ -142,6 +149,15 @@ class RegistrationController extends GetxController {
       if (response.statusCode >= 200 && response.statusCode < 300) {
         // Save to Storage
         await storage.setIsDonor(true);
+
+        // Refresh MoreController profile details
+        try {
+          if (Get.isRegistered<MoreController>()) {
+            Get.find<MoreController>().fetchUserProfile();
+          }
+        } catch (e) {
+          debugPrint("Error refreshing profile: $e");
+        }
 
         Get.snackbar('Success', 'Registration Complete!',
             backgroundColor: const Color(0xFFE8285A), colorText: Colors.white);

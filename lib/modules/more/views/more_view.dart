@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
+import 'package:blood_donation/app/routes/app_routes.dart';
 import '../controllers/more_controller.dart';
 
 class MoreView extends GetView<MoreController> {
@@ -110,12 +111,14 @@ class MoreView extends GetView<MoreController> {
 
                 // 3. Glassmorphism Profile Card
                 Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 24),
+                  width: double.infinity,
+                  margin: const EdgeInsets.symmetric(horizontal: 40),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(28),
                     child: BackdropFilter(
                       filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                       child: Container(
+                        width: double.infinity,
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.85),
@@ -147,12 +150,25 @@ class MoreView extends GetView<MoreController> {
                                       width: 2,
                                     ),
                                   ),
-                                  child: const CircleAvatar(
-                                    radius: 36,
-                                    backgroundImage: NetworkImage(
-                                      'https://i.pravatar.cc/300?u=nahid',
-                                    ),
-                                  ),
+                                  child: Obx(() {
+                                    final avatar = controller.avatarUrl.value;
+                                    if (avatar.isNotEmpty) {
+                                      return CircleAvatar(
+                                        radius: 36,
+                                        backgroundImage: NetworkImage(avatar),
+                                      );
+                                    } else {
+                                      return CircleAvatar(
+                                        radius: 36,
+                                        backgroundColor: Colors.grey.shade200,
+                                        child: Icon(
+                                          Icons.person_rounded,
+                                          size: 38,
+                                          color: Colors.grey.shade600,
+                                        ),
+                                      );
+                                    }
+                                  }),
                                 ),
                                 Positioned(
                                   bottom: 0,
@@ -179,33 +195,84 @@ class MoreView extends GetView<MoreController> {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 12),
-                            const Text(
-                              'Nahid Hasan',
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF1A1A1A),
-                                letterSpacing: 0.2,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'nahid.hasan@gmail.com',
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 13,
-                                color: Colors.grey[700],
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
+                             const SizedBox(height: 12),
+                             Obx(() {
+                               if (controller.isLoading.value && controller.name.value.isEmpty) {
+                                 return const Text('Loading...');
+                               }
+                               if (controller.name.value.isEmpty) {
+                                 return const SizedBox.shrink();
+                               }
+                               return Column(
+                                 children: [
+                                   Text(
+                                     controller.name.value,
+                                     style: const TextStyle(
+                                       fontFamily: 'Poppins',
+                                       fontSize: 20,
+                                       fontWeight: FontWeight.bold,
+                                       color: Color(0xFF1A1A1A),
+                                       letterSpacing: 0.2,
+                                     ),
+                                     maxLines: 1,
+                                     overflow: TextOverflow.ellipsis,
+                                     textAlign: TextAlign.center,
+                                   ),
+                                   const SizedBox(height: 4),
+                                 ],
+                               );
+                             }),
+                             Obx(() {
+                               if (controller.isLoading.value && controller.email.value.isEmpty) {
+                                 return const Text('...');
+                               }
+                               if (controller.email.value.isEmpty) {
+                                 return const SizedBox.shrink();
+                               }
+                               return Column(
+                                 children: [
+                                   Text(
+                                     controller.email.value,
+                                     style: TextStyle(
+                                       fontFamily: 'Poppins',
+                                       fontSize: 13,
+                                       color: Colors.grey[700],
+                                       fontWeight: FontWeight.w400,
+                                     ),
+                                     maxLines: 1,
+                                     overflow: TextOverflow.ellipsis,
+                                     textAlign: TextAlign.center,
+                                   ),
+                                   const SizedBox(height: 4),
+                                 ],
+                               );
+                             }),
+                             Obx(() {
+                               if (controller.isLoading.value && controller.phone.value.isEmpty) {
+                                 return const Text('...');
+                               }
+                               return Text(
+                                 controller.phone.value.isNotEmpty
+                                     ? controller.phone.value
+                                     : 'N/A',
+                                 style: TextStyle(
+                                   fontFamily: 'Poppins',
+                                   fontSize: 13,
+                                   color: Colors.grey[600],
+                                   fontWeight: FontWeight.w500,
+                                 ),
+                                 maxLines: 1,
+                                 overflow: TextOverflow.ellipsis,
+                                 textAlign: TextAlign.center,
+                               );
+                             }),
                           ],
                         ),
                       ),
                     ),
                   ),
                 ),
+                const SizedBox(height: 20),
               ],
             ),
           ),
@@ -216,36 +283,44 @@ class MoreView extends GetView<MoreController> {
 
 
   Widget _buildStatsCard() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Row(
-        children: [
-          _buildStatTile(
-            'O+',
-            'Type',
-            Icons.bloodtype_outlined,
-            const Color(0xFFFDECF4), // Soft Pink
-            primaryPink,
-          ),
-          const SizedBox(width: 12),
-          _buildStatTile(
-            '03',
-            'Donor',
-            Icons.favorite_outline_rounded,
-            const Color(0xFFE8EAF6), // Soft Indigo
-            const Color(0xFF3F51B5),
-          ),
-          const SizedBox(width: 12),
-          _buildStatTile(
-            '08',
-            'Lives',
-            Icons.auto_awesome_rounded,
-            const Color(0xFFE8F5E9), // Soft Green
-            const Color(0xFF4CAF50),
-          ),
-        ],
-      ),
-    );
+    return Obx(() {
+      final bloodGroup = controller.bloodGroup.value.isNotEmpty
+          ? controller.bloodGroup.value
+          : 'N/A';
+      final donations = controller.donationsCount.value.toString().padLeft(2, '0');
+      final livesSaved = controller.livesSavedCount.value.toString().padLeft(2, '0');
+
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Row(
+          children: [
+            _buildStatTile(
+              bloodGroup,
+              'Type',
+              Icons.bloodtype_outlined,
+              const Color(0xFFFDECF4), // Soft Pink
+              primaryPink,
+            ),
+            const SizedBox(width: 12),
+            _buildStatTile(
+              donations,
+              'Donations',
+              Icons.favorite_outline_rounded,
+              const Color(0xFFE8EAF6), // Soft Indigo
+              const Color(0xFF3F51B5),
+            ),
+            const SizedBox(width: 12),
+            _buildStatTile(
+              livesSaved,
+              'Lives Saved',
+              Icons.auto_awesome_rounded,
+              const Color(0xFFE8F5E9), // Soft Green
+              const Color(0xFF4CAF50),
+            ),
+          ],
+        ),
+      );
+    });
   }
 
   Widget _buildStatTile(
@@ -323,7 +398,7 @@ class MoreView extends GetView<MoreController> {
                 Expanded(
                   child: _buildSmartCard(
                     title: 'Become A\nDonor',
-                    doneTitle: 'Donor ✓',
+                    doneTitle: 'Donor\nDashboard',
                     quickTitle: 'Become A\nDonor',
                     icon: Icons.water_drop_rounded,
                     mainColor: primaryPink,
@@ -331,13 +406,14 @@ class MoreView extends GetView<MoreController> {
                     isAlready: isDonor,
                     hasExistingData: isVolunteer && !isDonor,
                     onTap: controller.handleBecomeDonor,
+                    onAlreadyTap: () => Get.toNamed(AppRoutes.donorDashboard),
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: _buildSmartCard(
                     title: 'Become A\nVolunteer',
-                    doneTitle: 'Volunteer ✓',
+                    doneTitle: 'Volunteer\nDashboard',
                     quickTitle: 'Become A\nVolunteer',
                     icon: Icons.volunteer_activism_rounded,
                     mainColor: accentPurple,
@@ -345,6 +421,7 @@ class MoreView extends GetView<MoreController> {
                     isAlready: isVolunteer,
                     hasExistingData: isDonor && !isVolunteer,
                     onTap: controller.handleBecomeVolunteer,
+                    onAlreadyTap: () => Get.toNamed(AppRoutes.volunteerDashboard),
                   ),
                 ),
               ],
@@ -356,7 +433,7 @@ class MoreView extends GetView<MoreController> {
   }
 
   /// Smart card that renders one of 3 states:
-  /// [isAlready] = true  -> Disabled, green checkmark
+  /// [isAlready] = true  -> Opens Dashboard
   /// [hasExistingData] = true -> Quick Register mode (flash icon)
   /// else -> Normal "Become" card
   Widget _buildSmartCard({
@@ -369,44 +446,63 @@ class MoreView extends GetView<MoreController> {
     required bool isAlready,
     required bool hasExistingData,
     required VoidCallback onTap,
+    VoidCallback? onAlreadyTap,
   }) {
     const double cardHeight = 96;
     if (isAlready) {
-      // ── Already registered — disabled card with green badge ──
-      return Container(
-        height: cardHeight,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          color: Colors.grey.shade100,
-          border: Border.all(color: Colors.grey.shade300),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: Colors.green.shade100,
-                    borderRadius: BorderRadius.circular(10),
+      // ── Already registered — clickable card going to dashboard ──
+      return GestureDetector(
+        onTap: onAlreadyTap,
+        child: Container(
+          height: cardHeight,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            color: Colors.white,
+            border: Border.all(color: mainColor.withValues(alpha: 0.3), width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: mainColor.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: mainColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(icon, color: mainColor, size: 18),
                   ),
-                  child: Icon(Icons.check_circle_rounded, color: Colors.green.shade600, size: 18),
-                ),
-                Text(
-                  doneTitle,
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    color: Colors.green.shade700,
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    height: 1.1,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          doneTitle,
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            color: mainColor,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            height: 1.1,
+                          ),
+                        ),
+                      ),
+                      Icon(Icons.chevron_right_rounded, color: mainColor, size: 16),
+                    ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -525,11 +621,11 @@ class MoreView extends GetView<MoreController> {
                 ),
               ],
             ),
-            child: ListView.separated(
+            child: Obx(() => ListView.separated(
               shrinkWrap: true,
               padding: const EdgeInsets.symmetric(vertical: 8),
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: controller.menuItems.length,
+              itemCount: controller.filteredMenuItems.length,
               separatorBuilder: (context, index) => Divider(
                 height: 1,
                 thickness: 0.5,
@@ -538,9 +634,9 @@ class MoreView extends GetView<MoreController> {
                 color: Colors.grey[100],
               ),
               itemBuilder: (context, index) {
-                return _buildMenuItem(controller.menuItems[index]);
+                return _buildMenuItem(controller.filteredMenuItems[index]);
               },
-            ),
+            )),
           ),
         ],
       ),

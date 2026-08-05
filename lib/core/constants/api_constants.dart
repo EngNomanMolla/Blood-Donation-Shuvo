@@ -11,4 +11,5 @@ class ApiConstants {
   static const String profileMe = '/user/me';
   static const String donorRegistration = '/user/donor-registration';
   static const String recharge = '/user/recharge';
+  static const String availability = '/user/availability';
 }

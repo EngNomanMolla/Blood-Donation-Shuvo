@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:blood_donation/core/services/storage_service.dart';
+import '../../../data/providers/donor_provider.dart';
+import '../../../data/repositories/donor_repository.dart';
+import '../../../data/repositories/profile_repository.dart';
 
 /// Shown when a user already has data from one role (donor/volunteer)
 /// and wants to register for the other role without re-filling the form.
@@ -198,12 +201,16 @@ class QuickRegisterView extends StatelessWidget {
                         children: [
                           Icon(targetIcon, size: 20),
                           const SizedBox(width: 10),
-                          Text(
-                            'Confirm — Become a $targetLabel',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.2,
+                          Flexible(
+                            child: Text(
+                              'Confirm — Become a $targetLabel',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.2,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
                             ),
                           ),
                         ],
@@ -257,26 +264,98 @@ class QuickRegisterView extends StatelessWidget {
   }
 
   void _onConfirm(StorageService storage, String targetRole, Color color) async {
-    // Optimistically update local storage
-    if (targetRole == 'donor') {
-      await storage.setIsDonor(true);
-    } else {
-      await storage.setIsVolunteer(true);
-    }
-
-    Get.back();
-
-    // Show success snackbar
-    final label = targetRole == 'donor' ? 'Donor' : 'Volunteer';
-    Get.snackbar(
-      '🎉 Congratulations!',
-      'You are now registered as a $label.',
-      backgroundColor: color,
-      colorText: Colors.white,
-      snackPosition: SnackPosition.BOTTOM,
-      margin: const EdgeInsets.all(16),
-      borderRadius: 12,
-      duration: const Duration(seconds: 3),
+    // Show a loading indicator dialog
+    Get.dialog(
+      const Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+        ),
+      ),
+      barrierDismissible: false,
     );
+
+    try {
+      final profileRepository = Get.find<ProfileRepository>();
+      final donorProvider = Get.put(DonorProvider());
+      final donorRepository = Get.put(DonorRepository(donorProvider));
+
+      final profile = await profileRepository.getProfile();
+      if (profile == null) {
+        Get.back(); // Dismiss loading dialog
+        Get.snackbar(
+          'Error',
+          'Failed to retrieve profile data from server. Please try again.',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        return;
+      }
+
+      // Build registration payload using existing profile details and enable both roles
+      final body = {
+        "name": profile.name,
+        "gender": profile.gender ?? '',
+        "phone": profile.phone ?? '',
+        "blood_group": profile.bloodGroup ?? '',
+        "division": profile.division ?? '',
+        "district": profile.district ?? '',
+        "upazila": profile.upazila ?? '',
+        "address": profile.upazila != null && profile.district != null
+            ? "${profile.upazila}, ${profile.district}"
+            : (profile.division ?? ''),
+        "email": profile.email ?? '',
+        "date_of_birth": profile.dateOfBirth ?? '',
+        "donations_count": 0,
+        "is_donor": true,
+        "is_volunteer": true,
+      };
+
+      debugPrint("Quick Register API Debug - Payload: $body");
+      final response = await donorRepository.registerDonor(body);
+      debugPrint("Quick Register API Debug - Response Code: ${response.statusCode}");
+      debugPrint("Quick Register API Debug - Response Body: ${response.body}");
+
+      Get.back(); // Dismiss loading dialog
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        // Save to local storage
+        if (targetRole == 'donor') {
+          await storage.setIsDonor(true);
+        } else {
+          await storage.setIsVolunteer(true);
+        }
+
+        // Close QuickRegisterView
+        Get.back();
+
+        // Show success snackbar
+        final label = targetRole == 'donor' ? 'Donor' : 'Volunteer';
+        Get.snackbar(
+          '🎉 Congratulations!',
+          'You are now registered as a $label.',
+          backgroundColor: color,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 12,
+          duration: const Duration(seconds: 3),
+        );
+      } else {
+        Get.snackbar(
+          'Error',
+          'Failed to register: ${response.body}',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      Get.back(); // Dismiss loading dialog
+      Get.snackbar(
+        'Error',
+        'An error occurred: $e',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
   }
 }

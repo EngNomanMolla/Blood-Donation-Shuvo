@@ -120,6 +120,15 @@ class SignInController extends GetxController {
         await storage.setIsLoggedIn(true);
         final token = responseData['token'] ?? responseData['data']?['token'] ?? 'dummy_token';
         await storage.setUserToken(token);
+        await storage.setUserPhone(formattedPhone);
+
+        final user = responseData['user'] as Map<String, dynamic>?;
+        if (user != null) {
+          final isDonor = user['is_donor'] == true || user['is_donor'] == 1 || user['is_donor'] == '1' || user['is_donor'] == 'true';
+          final isVolunteer = user['is_volunteer'] == true || user['is_volunteer'] == 1 || user['is_volunteer'] == '1' || user['is_volunteer'] == 'true';
+          await storage.setIsDonor(isDonor);
+          await storage.setIsVolunteer(isVolunteer);
+        }
 
         Get.offAllNamed(AppRoutes.initialRecharge);
         Get.snackbar('Success', 'Login successful!',

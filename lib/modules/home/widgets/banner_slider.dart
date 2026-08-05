@@ -79,11 +79,50 @@ class _BannerSliderState extends State<BannerSlider> {
         itemBuilder: (context, index) {
           return Container(
             margin: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
+            child: ClipRRect(
               borderRadius: BorderRadius.circular(widget.borderRadius),
-              image: DecorationImage(
-                image: NetworkImage(widget.images[index]),
+              child: Image.network(
+                widget.images[index],
                 fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: Colors.grey.shade100,
+                    alignment: Alignment.center,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.broken_image_outlined,
+                          color: Colors.grey.shade400,
+                          size: 40,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Failed to load image',
+                          style: TextStyle(
+                            color: Colors.grey.shade500,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Container(
+                    color: Colors.grey.shade50,
+                    alignment: Alignment.center,
+                    child: const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.red),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           );

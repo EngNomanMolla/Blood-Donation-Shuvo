@@ -108,6 +108,7 @@ class VolunteerRegistrationView extends GetView<VolunteerRegistrationController>
                   _textField(
                     controller: controller.mobileController,
                     keyboardType: TextInputType.phone,
+                    readOnly: true,
                   ),
                   const SizedBox(height: 20),
 
@@ -255,8 +256,8 @@ class VolunteerRegistrationView extends GetView<VolunteerRegistrationController>
                           ),
                         ],
                       ),
-                      child: ElevatedButton(
-                        onPressed: controller.onRegister,
+                      child: Obx(() => ElevatedButton(
+                        onPressed: controller.isLoading.value ? null : controller.onRegister,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.transparent,
                           shadowColor: Colors.transparent,
@@ -264,17 +265,26 @@ class VolunteerRegistrationView extends GetView<VolunteerRegistrationController>
                             borderRadius: BorderRadius.circular(16),
                           ),
                         ),
-                        child: const Text(
-                          'Complete Registration',
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ),
+                        child: controller.isLoading.value
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text(
+                                'Complete Registration',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                      )),
                     ),
                   ),
                   const SizedBox(height: 40),
@@ -307,6 +317,7 @@ class VolunteerRegistrationView extends GetView<VolunteerRegistrationController>
     String? hint,
     TextInputType keyboardType = TextInputType.text,
     Widget? suffixIcon,
+    bool readOnly = false,
   }) => Container(
     decoration: BoxDecoration(
       boxShadow: [
@@ -320,13 +331,14 @@ class VolunteerRegistrationView extends GetView<VolunteerRegistrationController>
     child: TextField(
       controller: controller,
       keyboardType: keyboardType,
-      style: const TextStyle(fontFamily: 'Poppins', fontSize: 14, color: _labelColor),
+      readOnly: readOnly,
+      style: TextStyle(fontFamily: 'Poppins', fontSize: 14, color: readOnly ? _hintGray : _labelColor),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: const TextStyle(fontFamily: 'Poppins', fontSize: 14, color: _hintGray),
         suffixIcon: suffixIcon,
         filled: true,
-        fillColor: Colors.white,
+        fillColor: readOnly ? Colors.grey.shade100 : Colors.white,
         contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),

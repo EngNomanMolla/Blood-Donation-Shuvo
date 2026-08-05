@@ -81,4 +81,26 @@ class DonorProvider {
 
     return await client.post(uri, headers: headers, body: jsonEncode(body));
   }
+
+  Future<http.Response> updateAvailability(bool isAvailable) async {
+    final storage = Get.find<StorageService>();
+    final token = storage.userToken;
+
+    final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.availability}');
+
+    final Map<String, String> headers = {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    };
+
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    final body = {
+      'is_available': isAvailable,
+    };
+
+    return await client.post(uri, headers: headers, body: jsonEncode(body));
+  }
 }

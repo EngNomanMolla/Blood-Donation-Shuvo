@@ -1,5 +1,7 @@
 import 'package:blood_donation/app/routes/app_routes.dart';
 import 'package:blood_donation/core/services/storage_service.dart';
+import 'package:blood_donation/data/providers/profile_provider.dart';
+import 'package:blood_donation/data/repositories/profile_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
@@ -22,16 +24,42 @@ class _SplashViewState extends State<SplashView> {
   }
 
   void _navigateToNextScreen() {
-    Future.delayed(const Duration(seconds: 1), () {
+    Future.delayed(const Duration(seconds: 1), () async {
       if (mounted) {
         final storage = Get.find<StorageService>();
         if (!storage.hasShownOnboarding) {
           Get.offAllNamed(AppRoutes.onboarding);
-        } else if (!storage.isLoggedIn) {
+          return;
+        } 
+        
+        if (!storage.isLoggedIn) {
           Get.offAllNamed(AppRoutes.login);
-        } else {
-          Get.offAllNamed(AppRoutes.home);
+          return;
         }
+
+        try {
+          final profileProvider = Get.put(ProfileProvider());
+          final profileRepository = Get.put(ProfileRepository(provider: profileProvider));
+          final profile = await profileRepository.getProfile();
+          if (profile != null) {
+            await storage.setIsDonor(profile.isDonor);
+            await storage.setIsVolunteer(profile.isVolunteer);
+            await storage.setHasRecharged(profile.hasCompletedInitialRecharge);
+            if (profile.phone != null) {
+              await storage.setUserPhone(profile.phone!);
+            }
+
+            if (profile.initialRechargeStatus == 'approved' || profile.hasCompletedInitialRecharge) {
+              Get.offAllNamed(AppRoutes.home);
+            } else {
+              Get.offAllNamed(AppRoutes.initialRecharge);
+            }
+            return;
+          }
+        } catch (_) {}
+
+        // Fallback to initial recharge if fetch fails but they are logged in
+        Get.offAllNamed(AppRoutes.initialRecharge);
       }
     });
   }

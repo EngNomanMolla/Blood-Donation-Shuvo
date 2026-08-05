@@ -17,6 +17,7 @@ class AppRoutes {
   static const String peopleReviews = '/people-reviews';
   static const String support = '/support';
   static const String volunteerDashboard = '/volunteer-dashboard';
+  static const String donorDashboard = '/donor-dashboard';
   static const String volunteerWallet = '/volunteer-wallet';
   static const String volunteerRegistration = '/volunteer-registration';
   static const String assistedRegistration = '/assisted-registration';

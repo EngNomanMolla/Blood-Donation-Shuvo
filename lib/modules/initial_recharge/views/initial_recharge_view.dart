@@ -23,108 +23,361 @@ class InitialRechargeView extends GetView<InitialRechargeController> {
           // Background blobs
           _buildBackground(),
 
-          Column(
-            children: [
-              // ── App Bar ──
-              Container(
-                color: _primaryRed,
-                padding: EdgeInsets.only(
-                  top: MediaQuery.of(context).padding.top + 12,
-                  bottom: 16,
-                  left: 16,
-                  right: 16,
+          Obx(() {
+            if (controller.isLoading.value && controller.rechargeStatus.value == 'initial') {
+              return const Center(
+                child: CircularProgressIndicator(color: _primaryRed),
+              );
+            }
+
+            return Column(
+              children: [
+                _buildAppBar(context),
+                Expanded(
+                  child: _buildBody(context),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              ],
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAppBar(BuildContext context) {
+    return Container(
+      color: _primaryRed,
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 12,
+        bottom: 16,
+        left: 16,
+        right: 16,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text(
+            'Activate Wallet',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.5,
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout_rounded, color: Colors.white),
+            tooltip: 'Log Out',
+            onPressed: () async {
+              final storage = Get.find<StorageService>();
+              await storage.clearAuth();
+              Get.offAllNamed(AppRoutes.login);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBody(BuildContext context) {
+    switch (controller.rechargeStatus.value) {
+      case 'pending':
+        return _buildPendingScreen(context);
+      case 'rejected':
+        return _buildRejectedScreen(context);
+      case 'initial':
+      default:
+        return SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          physics: const BouncingScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Welcome & instructions card
+              _buildWelcomeCard(),
+              const SizedBox(height: 24),
+
+              // Select Payment Method
+              _label('Select Payment Method'),
+              _buildMethodSelector(),
+              const SizedBox(height: 20),
+
+              // Selected Method Details
+              Obx(() => _buildPaymentInstruction()),
+              const SizedBox(height: 20),
+
+              // Form Fields
+              _label('Recharge Amount (Min ৳ 1)'),
+              _buildTextField(
+                controller: controller.amountController,
+                hint: '50',
+                keyboardType: TextInputType.number,
+                prefixText: '৳ ',
+              ),
+              const SizedBox(height: 16),
+
+              _label('Sender Mobile Number'),
+              _buildTextField(
+                controller: controller.senderNumberController,
+                hint: '01XXXXXXXXX',
+                keyboardType: TextInputType.phone,
+                prefixIcon: const Icon(Icons.phone_iphone_rounded, color: _primaryRed, size: 20),
+              ),
+              const SizedBox(height: 16),
+
+              _label('Transaction ID'),
+              _buildTextField(
+                controller: controller.transactionIdController,
+                hint: 'TRX12345678',
+                prefixIcon: const Icon(Icons.receipt_long_rounded, color: _primaryRed, size: 20),
+              ),
+              const SizedBox(height: 16),
+
+              _label('Note (Optional)'),
+              _buildTextField(
+                controller: controller.noteController,
+                hint: 'Initial recharge payment',
+                prefixIcon: const Icon(Icons.note_alt_rounded, color: _primaryRed, size: 20),
+              ),
+              const SizedBox(height: 32),
+
+              // Action Button
+              Obx(() => _buildSubmitButton()),
+              const SizedBox(height: 24),
+            ],
+          ),
+        );
+    }
+  }
+
+  Widget _buildPendingScreen(BuildContext context) {
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        physics: const BouncingScrollPhysics(),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.amber.shade50,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.amber.shade200, width: 2),
+              ),
+              child: const Icon(
+                Icons.hourglass_empty_rounded,
+                color: Colors.amber,
+                size: 64,
+              ),
+            ),
+            const SizedBox(height: 32),
+            const Text(
+              'Verification Pending',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF2D2D2D),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Your initial wallet activation recharge request of ৳${controller.rechargeAmount.value.toStringAsFixed(0)} is currently under review by our admin team.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 14,
+                color: Colors.grey[600],
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Verification usually takes a few minutes. Please check status below or try again later.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 12,
+                color: Colors.grey[500],
+              ),
+            ),
+            const SizedBox(height: 48),
+            
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton.icon(
+                onPressed: controller.isLoading.value
+                    ? null
+                    : () => controller.fetchInitialRechargeStatus(showFeedback: true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _primaryRed,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  elevation: 0,
+                ),
+                icon: controller.isLoading.value
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                      )
+                    : const Icon(Icons.refresh_rounded, size: 20),
+                label: const Text(
+                  'Check Verification Status',
+                  style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 15),
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // Logout option
+            TextButton.icon(
+              onPressed: () async {
+                final storage = Get.find<StorageService>();
+                await storage.clearAuth();
+                Get.offAllNamed(AppRoutes.login);
+              },
+              icon: const Icon(Icons.logout_rounded, color: Colors.grey, size: 18),
+              label: const Text(
+                'Log Out from Account',
+                style: TextStyle(fontFamily: 'Poppins', color: Colors.grey, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRejectedScreen(BuildContext context) {
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        physics: const BouncingScrollPhysics(),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.red.shade200, width: 2),
+              ),
+              child: const Icon(
+                Icons.cancel_rounded,
+                color: Colors.red,
+                size: 64,
+              ),
+            ),
+            const SizedBox(height: 32),
+            const Text(
+              'Activation Rejected',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF2D2D2D),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Your initial wallet recharge verification has been rejected by the administrator.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 14,
+                color: Colors.grey[600],
+                height: 1.5,
+              ),
+            ),
+            
+            if (controller.rejectReason.value.isNotEmpty) ...[
+              const SizedBox(height: 20),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.red.shade100),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Activate Wallet',
+                      'Rejection Reason:',
                       style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.5,
+                        fontFamily: 'Poppins',
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red,
                       ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.logout_rounded, color: Colors.white),
-                      tooltip: 'Log Out',
-                      onPressed: () async {
-                        final storage = Get.find<StorageService>();
-                        await storage.clearAuth();
-                        Get.offAllNamed(AppRoutes.login);
-                      },
+                    const SizedBox(height: 4),
+                    Text(
+                      controller.rejectReason.value,
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 13,
+                        color: Colors.grey[800],
+                        fontWeight: FontWeight.w500,
+                        height: 1.4,
+                      ),
                     ),
                   ],
                 ),
               ),
-
-              // ── Body ──
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-                  physics: const BouncingScrollPhysics(),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Welcome & instructions card
-                      _buildWelcomeCard(),
-                      const SizedBox(height: 24),
-
-                      // Select Payment Method
-                      _label('Select Payment Method'),
-                      _buildMethodSelector(),
-                      const SizedBox(height: 20),
-
-                      // Selected Method Details
-                      Obx(() => _buildPaymentInstruction()),
-                      const SizedBox(height: 20),
-
-                      // Form Fields
-                      _label('Recharge Amount (Min ৳ 1)'),
-                      _buildTextField(
-                        controller: controller.amountController,
-                        hint: '50',
-                        keyboardType: TextInputType.number,
-                        prefixText: '৳ ',
-                      ),
-                      const SizedBox(height: 16),
-
-                      _label('Sender Mobile Number'),
-                      _buildTextField(
-                        controller: controller.senderNumberController,
-                        hint: '01XXXXXXXXX',
-                        keyboardType: TextInputType.phone,
-                        prefixIcon: const Icon(Icons.phone_iphone_rounded, color: _primaryRed, size: 20),
-                      ),
-                      const SizedBox(height: 16),
-
-                      _label('Transaction ID'),
-                      _buildTextField(
-                        controller: controller.transactionIdController,
-                        hint: 'TRX12345678',
-                        prefixIcon: const Icon(Icons.receipt_long_rounded, color: _primaryRed, size: 20),
-                      ),
-                      const SizedBox(height: 16),
-
-                      _label('Note (Optional)'),
-                      _buildTextField(
-                        controller: controller.noteController,
-                        hint: 'Initial recharge payment',
-                        prefixIcon: const Icon(Icons.note_alt_rounded, color: _primaryRed, size: 20),
-                      ),
-                      const SizedBox(height: 32),
-
-                      // Action Button
-                      Obx(() => _buildSubmitButton()),
-                      const SizedBox(height: 24),
-                    ],
+            ],
+            
+            const SizedBox(height: 48),
+            
+            // Try again button
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  controller.rechargeStatus.value = 'initial';
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _primaryRed,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
                   ),
+                  elevation: 0,
+                ),
+                icon: const Icon(Icons.edit_note_rounded, size: 22),
+                label: const Text(
+                  'Submit New Recharge Request',
+                  style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 15),
                 ),
               ),
-            ],
-          ),
-        ],
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // Logout option
+            TextButton.icon(
+              onPressed: () async {
+                final storage = Get.find<StorageService>();
+                await storage.clearAuth();
+                Get.offAllNamed(AppRoutes.login);
+              },
+              icon: const Icon(Icons.logout_rounded, color: Colors.grey, size: 18),
+              label: const Text(
+                'Log Out from Account',
+                style: TextStyle(fontFamily: 'Poppins', color: Colors.grey, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
