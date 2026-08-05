@@ -101,6 +101,6 @@ class DonorProvider {
       'is_available': isAvailable,
     };
 
-    return await client.post(uri, headers: headers, body: jsonEncode(body));
+    return await client.patch(uri, headers: headers, body: jsonEncode(body));
   }
 }
