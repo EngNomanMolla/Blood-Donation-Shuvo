@@ -3,11 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:blood_donation/core/utils/app_colors.dart';
 import 'package:blood_donation/core/utils/text_styles.dart';
+import '../../../data/providers/wallet_provider.dart';
+import '../../../data/repositories/wallet_repository.dart';
 import '../controllers/wallet_controller.dart';
 import 'widgets/balance_card.dart';
 import 'widgets/wallet_transaction_section.dart';
 
-class WalletView extends GetView<WalletController> {
+class WalletView extends StatelessWidget {
   const WalletView({super.key});
 
   @override
@@ -18,6 +20,20 @@ class WalletView extends GetView<WalletController> {
         statusBarIconBrightness: Brightness.light,
       ),
     );
+
+    // Resilient initialization fallback for hot-reload or direct navigation
+    final WalletController controller;
+    if (Get.isRegistered<WalletController>()) {
+      controller = Get.find<WalletController>();
+    } else {
+      if (!Get.isRegistered<WalletProvider>()) {
+        Get.put(WalletProvider());
+      }
+      if (!Get.isRegistered<WalletRepository>()) {
+        Get.put(WalletRepository(Get.find<WalletProvider>()));
+      }
+      controller = Get.put(WalletController(walletRepository: Get.find<WalletRepository>()));
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFFCE8EE),
