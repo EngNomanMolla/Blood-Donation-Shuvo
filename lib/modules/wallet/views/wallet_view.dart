@@ -67,7 +67,6 @@ class WalletView extends StatelessWidget {
                     BalanceCard(
                       balance: balance,
                       onAddMoney: controller.onAddMoney,
-                      onWithdraw: controller.onWithdraw,
                     ),
                     const SizedBox(height: 25),
                     WalletTransactionSection(

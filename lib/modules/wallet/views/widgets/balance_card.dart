@@ -7,13 +7,11 @@ import '../../models/wallet_model.dart';
 class BalanceCard extends StatelessWidget {
   final WalletBalanceModel balance;
   final VoidCallback onAddMoney;
-  final VoidCallback onWithdraw;
 
   const BalanceCard({
     super.key,
     required this.balance,
     required this.onAddMoney,
-    required this.onWithdraw,
   });
 
   @override
@@ -113,11 +111,6 @@ class BalanceCard extends StatelessWidget {
                       icon: Icons.add_rounded,
                       label: 'Add',
                       onTap: onAddMoney,
-                    ),
-                    _QuickActionBtn(
-                      icon: Icons.arrow_upward_rounded,
-                      label: 'Withdraw',
-                      onTap: onWithdraw,
                     ),
                   ],
                 ),
