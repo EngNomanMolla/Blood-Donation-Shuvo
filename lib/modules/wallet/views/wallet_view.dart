@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:blood_donation/core/utils/app_colors.dart';
 import 'package:blood_donation/core/utils/text_styles.dart';
+import '../../../app/routes/app_routes.dart';
 import '../../../data/providers/wallet_provider.dart';
 import '../../../data/repositories/wallet_repository.dart';
 import '../controllers/wallet_controller.dart';
@@ -68,7 +69,71 @@ class WalletView extends StatelessWidget {
                       balance: balance,
                       onAddMoney: controller.onAddMoney,
                     ),
+                    const SizedBox(height: 16),
+                    
+                    // Subscription Plans card
+                    Material(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      shadowColor: AppColors.primary.withValues(alpha: 0.06),
+                      elevation: 2,
+                      child: InkWell(
+                        onTap: () => Get.toNamed(AppRoutes.subscriptionPlans),
+                        borderRadius: BorderRadius.circular(16),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFFCE8EE),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.card_membership_rounded,
+                                  color: AppColors.primary,
+                                  size: 24,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              const Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Subscription Plans',
+                                      style: TextStyle(
+                                        fontFamily: 'Poppins',
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.black,
+                                      ),
+                                    ),
+                                    SizedBox(height: 3),
+                                    Text(
+                                      'Unlock access to donor phone numbers and calls',
+                                      style: TextStyle(
+                                        fontFamily: 'Poppins',
+                                        fontSize: 12,
+                                        color: AppColors.darkGray,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                color: AppColors.primary.withValues(alpha: 0.7),
+                                size: 14,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 25),
+                    
                     WalletTransactionSection(
                       transactions: controller.transactions,
                     ),

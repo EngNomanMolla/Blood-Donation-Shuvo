@@ -78,6 +78,30 @@ class WalletController extends GetxController {
     }
   }
 
+  final isLoadingPlans = false.obs;
+  final subscriptionPlans = <SubscriptionPlanModel>[].obs;
+
+  Future<void> fetchSubscriptionPlans() async {
+    isLoadingPlans.value = true;
+    try {
+      final response = await walletRepository.getSubscriptionPlans();
+      if (response.statusCode == 200) {
+        final List<dynamic> decoded = jsonDecode(response.body);
+        final mappedPlans = decoded.map((plan) => SubscriptionPlanModel.fromJson(plan)).toList();
+        subscriptionPlans.assignAll(mappedPlans);
+      } else {
+        Get.snackbar('Error', 'Failed to fetch subscription plans',
+            backgroundColor: Colors.redAccent, colorText: Colors.white);
+      }
+    } catch (e) {
+      debugPrint("Error fetching subscription plans: $e");
+      Get.snackbar('Error', 'An error occurred while fetching plans: $e',
+          backgroundColor: Colors.redAccent, colorText: Colors.white);
+    } finally {
+      isLoadingPlans.value = false;
+    }
+  }
+
   void onAddMoney() {
     Get.toNamed(AppRoutes.initialRecharge, arguments: {'is_general_recharge': true});
   }

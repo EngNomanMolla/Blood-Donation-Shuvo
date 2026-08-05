@@ -25,4 +25,8 @@ class WalletRepository {
   Future<http.Response> getWallet() async {
     return await walletProvider.getWallet();
   }
+
+  Future<http.Response> getSubscriptionPlans() async {
+    return await walletProvider.getSubscriptionPlans();
+  }
 }

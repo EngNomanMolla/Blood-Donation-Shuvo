@@ -14,6 +14,7 @@ class AppRoutes {
   static const String performance = '/performance';
   static const String wallet = '/wallet';
   static const String profile = '/profile';
+  static const String subscriptionPlans = '/subscription-plans';
   static const String peopleReviews = '/people-reviews';
   static const String support = '/support';
   static const String volunteerDashboard = '/volunteer-dashboard';
