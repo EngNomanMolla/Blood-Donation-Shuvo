@@ -24,14 +24,6 @@ class WalletTransactionSection extends StatelessWidget {
                 fontSize: 17,
               ),
             ),
-            Text(
-              'See all',
-              style: AllStyles.subtitleTextStyle.copyWith(
-                fontSize: 13,
-                color: AppColors.primary,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
           ],
         ),
         const SizedBox(height: 10),
