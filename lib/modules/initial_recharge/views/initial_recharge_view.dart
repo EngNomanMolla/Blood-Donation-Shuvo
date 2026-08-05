@@ -54,26 +54,32 @@ class InitialRechargeView extends GetView<InitialRechargeController> {
         right: 16,
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
-            'Activate Wallet',
-            style: TextStyle(
+          if (controller.isGeneralRecharge)
+            IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+              onPressed: () => Get.back(),
+            ),
+          Text(
+            controller.isGeneralRecharge ? 'Recharge Wallet' : 'Activate Wallet',
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 20,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.5,
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.logout_rounded, color: Colors.white),
-            tooltip: 'Log Out',
-            onPressed: () async {
-              final storage = Get.find<StorageService>();
-              await storage.clearAuth();
-              Get.offAllNamed(AppRoutes.login);
-            },
-          ),
+          const Spacer(),
+          if (!controller.isGeneralRecharge)
+            IconButton(
+              icon: const Icon(Icons.logout_rounded, color: Colors.white),
+              tooltip: 'Log Out',
+              onPressed: () async {
+                final storage = Get.find<StorageService>();
+                await storage.clearAuth();
+                Get.offAllNamed(AppRoutes.login);
+              },
+            ),
         ],
       ),
     );
@@ -107,7 +113,7 @@ class InitialRechargeView extends GetView<InitialRechargeController> {
               const SizedBox(height: 20),
 
               // Form Fields
-              _label('Recharge Amount (Min ৳ 1)'),
+              _label('Recharge Amount'),
               _buildTextField(
                 controller: controller.amountController,
                 hint: '50',
@@ -435,16 +441,16 @@ class InitialRechargeView extends GetView<InitialRechargeController> {
           ),
         ],
       ),
-      child: const Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.account_balance_wallet_rounded, color: Colors.white, size: 28),
-              SizedBox(width: 12),
+              const Icon(Icons.account_balance_wallet_rounded, color: Colors.white, size: 28),
+              const SizedBox(width: 12),
               Text(
-                'Wallet Activation',
-                style: TextStyle(
+                controller.isGeneralRecharge ? 'Recharge Wallet' : 'Wallet Activation',
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -452,10 +458,12 @@ class InitialRechargeView extends GetView<InitialRechargeController> {
               ),
             ],
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           Text(
-            'To access the dashboard and request or donate blood, please complete a one-time activation recharge in your wallet. Send money to any of the numbers below and enter the payment details.',
-            style: TextStyle(
+            controller.isGeneralRecharge
+                ? 'To add money to your wallet balance, please send money to any of the numbers below and enter the payment details.'
+                : 'To access the dashboard and request or donate blood, please complete a one-time activation recharge in your wallet. Send money to any of the numbers below and enter the payment details.',
+            style: const TextStyle(
               color: Colors.white70,
               fontSize: 13,
               height: 1.5,
@@ -684,9 +692,9 @@ class InitialRechargeView extends GetView<InitialRechargeController> {
                   strokeWidth: 2.5,
                 ),
               )
-            : const Text(
-                'Complete Activation',
-                style: TextStyle(
+            : Text(
+                controller.isGeneralRecharge ? 'Submit Recharge' : 'Complete Activation',
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,

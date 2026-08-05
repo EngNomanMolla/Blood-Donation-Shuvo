@@ -4,6 +4,7 @@ import '../../../app/routes/app_routes.dart';
 import '../../../core/services/storage_service.dart';
 import '../../../data/repositories/wallet_repository.dart';
 import '../../../data/repositories/profile_repository.dart';
+import '../../wallet/controllers/wallet_controller.dart';
 
 class InitialRechargeController extends GetxController {
   final WalletRepository walletRepository;
@@ -23,6 +24,8 @@ class InitialRechargeController extends GetxController {
   final rejectReason = ''.obs;
   final rechargeAmount = 50.0.obs;
 
+  bool get isGeneralRecharge => Get.arguments?['is_general_recharge'] == true;
+
   @override
   void onInit() {
     super.onInit();
@@ -31,6 +34,10 @@ class InitialRechargeController extends GetxController {
     final storage = Get.find<StorageService>();
     if (storage.userPhone != null && storage.userPhone!.isNotEmpty) {
       senderNumberController.text = storage.userPhone!;
+    }
+
+    if (isGeneralRecharge) {
+      noteController.text = 'Wallet recharge';
     }
     
     fetchInitialRechargeStatus(showFeedback: false);
@@ -45,32 +52,38 @@ class InitialRechargeController extends GetxController {
         final storage = Get.find<StorageService>();
         await storage.setHasRecharged(profile.hasCompletedInitialRecharge);
 
-        if (profile.initialRechargeStatus == 'approved' || profile.hasCompletedInitialRecharge) {
-          if (showFeedback) {
-            Get.snackbar('Success', 'Verification approved! Welcome to Blood Donation.',
-                backgroundColor: const Color(0xFF4CAF50), colorText: Colors.white);
+        if (!isGeneralRecharge) {
+          if (profile.initialRechargeStatus == 'approved' || profile.hasCompletedInitialRecharge) {
+            if (showFeedback) {
+              Get.snackbar('Success', 'Verification approved! Welcome to Blood Donation.',
+                  backgroundColor: const Color(0xFF4CAF50), colorText: Colors.white);
+            }
+            Get.offAllNamed(AppRoutes.home);
+            return;
           }
-          Get.offAllNamed(AppRoutes.home);
-          return;
         }
 
         rechargeAmount.value = profile.initialRechargeAmount > 0 ? profile.initialRechargeAmount : 50.0;
         rejectReason.value = profile.initialRechargeRejectReason ?? '';
         
-        if (profile.initialRechargeStatus == 'pending') {
-          rechargeStatus.value = 'pending';
-          if (showFeedback) {
-            Get.snackbar('Status Check', 'Your recharge verification is still pending review.',
-                backgroundColor: Colors.amber, colorText: Colors.black);
-          }
-        } else if (profile.initialRechargeStatus == 'rejected') {
-          rechargeStatus.value = 'rejected';
-          if (showFeedback) {
-            Get.snackbar('Status Check', 'Your recharge verification was rejected.',
-                backgroundColor: Colors.redAccent, colorText: Colors.white);
-          }
-        } else {
+        if (isGeneralRecharge) {
           rechargeStatus.value = 'initial';
+        } else {
+          if (profile.initialRechargeStatus == 'pending') {
+            rechargeStatus.value = 'pending';
+            if (showFeedback) {
+              Get.snackbar('Status Check', 'Your recharge verification is still pending review.',
+                  backgroundColor: Colors.amber, colorText: Colors.black);
+            }
+          } else if (profile.initialRechargeStatus == 'rejected') {
+            rechargeStatus.value = 'rejected';
+            if (showFeedback) {
+              Get.snackbar('Status Check', 'Your recharge verification was rejected.',
+                  backgroundColor: Colors.redAccent, colorText: Colors.white);
+            }
+          } else {
+            rechargeStatus.value = 'initial';
+          }
         }
       } else {
         if (showFeedback) {
@@ -145,9 +158,20 @@ class InitialRechargeController extends GetxController {
 
       final isSuccess = response.statusCode >= 200 && response.statusCode < 300;
       if (isSuccess) {
-        rechargeStatus.value = 'pending';
-        Get.snackbar('Success', 'Initial recharge submitted successfully!',
-            backgroundColor: const Color(0xFFE53935), colorText: Colors.white);
+        if (isGeneralRecharge) {
+          try {
+            if (Get.isRegistered<WalletController>()) {
+              Get.find<WalletController>().fetchWalletDetails();
+            }
+          } catch (_) {}
+          Get.back();
+          Get.snackbar('Success', 'Recharge request submitted successfully!',
+              backgroundColor: const Color(0xFF4CAF50), colorText: Colors.white);
+        } else {
+          rechargeStatus.value = 'pending';
+          Get.snackbar('Success', 'Initial recharge submitted successfully!',
+              backgroundColor: const Color(0xFFE53935), colorText: Colors.white);
+        }
       } else {
         Get.snackbar('Error', 'Recharge failed: ${response.body}',
             backgroundColor: Colors.redAccent, colorText: Colors.white);

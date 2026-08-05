@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../data/repositories/wallet_repository.dart';
+import '../../../app/routes/app_routes.dart';
 import '../models/wallet_model.dart';
 
 class WalletController extends GetxController {
@@ -78,7 +79,7 @@ class WalletController extends GetxController {
   }
 
   void onAddMoney() {
-    // TODO: navigate to Add Money screen
+    Get.toNamed(AppRoutes.initialRecharge, arguments: {'is_general_recharge': true});
   }
 
   void onWithdraw() {
