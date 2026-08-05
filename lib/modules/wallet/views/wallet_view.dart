@@ -7,10 +7,8 @@ import '../controllers/wallet_controller.dart';
 import 'widgets/balance_card.dart';
 import 'widgets/wallet_transaction_section.dart';
 
-class WalletView extends StatelessWidget {
-  WalletView({super.key});
-
-  final WalletController controller = Get.put(WalletController());
+class WalletView extends GetView<WalletController> {
+  const WalletView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -27,24 +25,42 @@ class WalletView extends StatelessWidget {
         children: [
           _WalletAppBar(),
           Expanded(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(16, 20, 16, 110),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  BalanceCard(
-                    balance: controller.walletBalance,
-                    onAddMoney: controller.onAddMoney,
-                    onWithdraw: controller.onWithdraw,
+            child: Obx(() {
+              if (controller.isLoading.value) {
+                return const Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                );
+              }
+
+              final balance = controller.walletBalance.value;
+              if (balance == null) {
+                return const Center(
+                  child: Text(
+                    'No wallet information found.',
+                    style: TextStyle(fontFamily: 'Poppins', color: AppColors.darkGray),
                   ),
-                  const SizedBox(height: 25),
-                  WalletTransactionSection(
-                    transactions: controller.transactions,
-                  ),
-                ],
-              ),
-            ),
+                );
+              }
+
+              return SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 110),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    BalanceCard(
+                      balance: balance,
+                      onAddMoney: controller.onAddMoney,
+                      onWithdraw: controller.onWithdraw,
+                    ),
+                    const SizedBox(height: 25),
+                    WalletTransactionSection(
+                      transactions: controller.transactions,
+                    ),
+                  ],
+                ),
+              );
+            }),
           ),
         ],
       ),

@@ -18,6 +18,7 @@ class WalletTransactionModel {
   final String date;
   final String amount;
   final bool isCredit;
+  final String status;
 
   const WalletTransactionModel({
     required this.title,
@@ -25,5 +26,6 @@ class WalletTransactionModel {
     required this.date,
     required this.amount,
     required this.isCredit,
+    this.status = 'completed',
   });
 }

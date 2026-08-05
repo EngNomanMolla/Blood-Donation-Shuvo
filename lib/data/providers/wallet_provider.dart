@@ -44,4 +44,22 @@ class WalletProvider {
       body: jsonEncode(body),
     );
   }
+
+  Future<http.Response> getWallet() async {
+    final storage = Get.find<StorageService>();
+    final token = storage.userToken;
+
+    final url = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.wallet}');
+
+    final Map<String, String> headers = {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    };
+
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    return await client.get(url, headers: headers);
+  }
 }

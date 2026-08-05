@@ -15,6 +15,7 @@ import 'package:blood_donation/modules/splash/views/splash_view.dart';
 import 'package:blood_donation/modules/emergency_contact/views/emergency_contact_view.dart';
 import 'package:blood_donation/modules/performance/views/performance_view.dart';
 import 'package:blood_donation/modules/wallet/views/wallet_view.dart';
+import 'package:blood_donation/modules/wallet/bindings/wallet_binding.dart';
 import 'package:blood_donation/modules/feedback_support/bindings/feedback_support_binding.dart';
 import 'package:blood_donation/modules/feedback_support/views/people_reviews_view.dart';
 import 'package:blood_donation/modules/feedback_support/views/support_view.dart';
@@ -121,7 +122,8 @@ class AppPages {
     // Wallet Screen
     GetPage(
       name: AppRoutes.wallet,
-      page: () => WalletView(),
+      page: () => const WalletView(),
+      binding: WalletBinding(),
       transition: Transition.cupertino,
       transitionDuration: const Duration(milliseconds: 400),
     ),

@@ -21,4 +21,8 @@ class WalletRepository {
       note: note,
     );
   }
+
+  Future<http.Response> getWallet() async {
+    return await walletProvider.getWallet();
+  }
 }

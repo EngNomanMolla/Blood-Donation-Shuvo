@@ -1,62 +1,81 @@
+import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../data/repositories/wallet_repository.dart';
 import '../models/wallet_model.dart';
 
 class WalletController extends GetxController {
-  // ── Balance ───────────────────────────────────────────────────────────────
+  final WalletRepository walletRepository;
 
-  final WalletBalanceModel walletBalance = const WalletBalanceModel(
-    balance: '৳ 1,300.00',
-    totalPoints: 300,
-  );
+  WalletController({required this.walletRepository});
 
-  // ── Transactions ──────────────────────────────────────────────────────────
+  final isLoading = false.obs;
+  final walletBalance = Rxn<WalletBalanceModel>();
+  final transactions = <WalletTransactionModel>[].obs;
 
-  final List<WalletTransactionModel> transactions = const [
-    WalletTransactionModel(
-      title: 'Donation Reward',
-      subtitle: 'Received For Blood Donation',
-      date: '24 Apr 2024',
-      amount: '৳ 300',
-      isCredit: true,
-    ),
-    WalletTransactionModel(
-      title: 'Money Withdraw',
-      subtitle: 'Transferred To Bank Account',
-      date: '24 Apr 2024',
-      amount: '৳ 300',
-      isCredit: false,
-    ),
-    WalletTransactionModel(
-      title: 'Referral Bonus',
-      subtitle: 'Received For Blood Donation',
-      date: '24 Apr 2024',
-      amount: '৳ 300',
-      isCredit: true,
-    ),
-    WalletTransactionModel(
-      title: 'Add Money',
-      subtitle: 'Received For Blood Donation',
-      date: '24 Apr 2024',
-      amount: '৳ 300',
-      isCredit: true,
-    ),
-    WalletTransactionModel(
-      title: 'Donation Reward',
-      subtitle: 'Received For Blood Donation',
-      date: '24 Apr 2024',
-      amount: '৳ 300',
-      isCredit: true,
-    ),
-    WalletTransactionModel(
-      title: 'Referral Bonus',
-      subtitle: 'Received For Blood Donation',
-      date: '24 Apr 2024',
-      amount: '৳ 300',
-      isCredit: true,
-    ),
-  ];
+  @override
+  void onInit() {
+    super.onInit();
+    fetchWalletDetails();
+  }
 
-  // ── Actions ───────────────────────────────────────────────────────────────
+  Future<void> fetchWalletDetails() async {
+    isLoading.value = true;
+    try {
+      final response = await walletRepository.getWallet();
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        
+        final double balanceVal = (decoded['balance'] ?? 0).toDouble();
+        walletBalance.value = WalletBalanceModel(
+          balance: '৳ ${balanceVal.toStringAsFixed(0)}',
+          totalPoints: 0,
+        );
+
+        final List<dynamic> txList = decoded['transactions'] ?? [];
+        final mappedTx = txList.map((tx) {
+          final double amountVal = (tx['amount'] ?? 0).toDouble();
+          final String typeVal = tx['type'] ?? 'recharge';
+          final String descVal = tx['description'] ?? '';
+          final String dateVal = formatDate(tx['created_at']);
+          final String statusVal = tx['status'] ?? 'completed';
+          
+          final isCredit = typeVal == 'recharge' || typeVal == 'deposit';
+
+          return WalletTransactionModel(
+            title: typeVal.capitalizeFirst ?? 'Transaction',
+            subtitle: descVal.isNotEmpty ? descVal : (typeVal.capitalizeFirst ?? 'Transaction'),
+            date: dateVal,
+            amount: '৳ ${amountVal.toStringAsFixed(0)}',
+            isCredit: isCredit,
+            status: statusVal,
+          );
+        }).toList();
+
+        transactions.assignAll(mappedTx);
+      } else {
+        Get.snackbar('Error', 'Failed to fetch wallet details',
+            backgroundColor: Colors.redAccent, colorText: Colors.white);
+      }
+    } catch (e) {
+      debugPrint("Error fetching wallet details: $e");
+      Get.snackbar('Error', 'An error occurred: $e',
+          backgroundColor: Colors.redAccent, colorText: Colors.white);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  String formatDate(String? dateStr) {
+    if (dateStr == null || dateStr.isEmpty) return '';
+    try {
+      final dt = DateTime.parse(dateStr).toLocal();
+      final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
+    } catch (_) {
+      return dateStr;
+    }
+  }
 
   void onAddMoney() {
     // TODO: navigate to Add Money screen
