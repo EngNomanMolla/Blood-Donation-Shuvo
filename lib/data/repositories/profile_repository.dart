@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../providers/profile_provider.dart';
 
 class ProfileData {
@@ -22,6 +23,7 @@ class ProfileData {
   final double initialRechargeAmount;
   final String? initialRechargeStatus;
   final String? initialRechargeRejectReason;
+  final String? volunteerPaymentStatus;
 
   ProfileData({
     required this.isDonor,
@@ -44,6 +46,7 @@ class ProfileData {
     required this.initialRechargeAmount,
     this.initialRechargeStatus,
     this.initialRechargeRejectReason,
+    this.volunteerPaymentStatus,
   });
 }
 
@@ -79,9 +82,14 @@ class ProfileRepository {
           initialRechargeAmount: (data['initial_recharge_amount'] ?? 0).toDouble(),
           initialRechargeStatus: data['initial_recharge_status'],
           initialRechargeRejectReason: data['initial_recharge_reject_reason'],
+          volunteerPaymentStatus: data['volunteer_payment_status'],
         );
       }
     } catch (_) {}
     return null;
+  }
+
+  Future<http.Response> updateProfileImage(String imagePath) async {
+    return await provider.updateProfileImage(imagePath);
   }
 }

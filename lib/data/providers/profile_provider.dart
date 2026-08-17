@@ -24,4 +24,22 @@ class ProfileProvider {
 
     return await client.get(url, headers: headers);
   }
+
+  Future<http.Response> updateProfileImage(String imagePath) async {
+    final url = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.profile}');
+    final storage = Get.find<StorageService>();
+    final token = storage.userToken;
+
+    final request = http.MultipartRequest('POST', url);
+
+    request.headers['Accept'] = 'application/json';
+    if (token != null && token.isNotEmpty) {
+      request.headers['Authorization'] = 'Bearer $token';
+    }
+
+    request.files.add(await http.MultipartFile.fromPath('avatar', imagePath));
+
+    final streamedResponse = await request.send();
+    return await http.Response.fromStream(streamedResponse);
+  }
 }

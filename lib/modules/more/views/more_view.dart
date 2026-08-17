@@ -139,61 +139,64 @@ class MoreView extends GetView<MoreController> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             // Profile Image with Glow
-                            Stack(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(3),
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: primaryPink.withValues(alpha: 0.3),
-                                      width: 2,
-                                    ),
-                                  ),
-                                  child: Obx(() {
-                                    final avatar = controller.avatarUrl.value;
-                                    if (avatar.isNotEmpty) {
-                                      return CircleAvatar(
-                                        radius: 36,
-                                        backgroundImage: NetworkImage(avatar),
-                                      );
-                                    } else {
-                                      return CircleAvatar(
-                                        radius: 36,
-                                        backgroundColor: Colors.grey.shade200,
-                                        child: Icon(
-                                          Icons.person_rounded,
-                                          size: 38,
-                                          color: Colors.grey.shade600,
-                                        ),
-                                      );
-                                    }
-                                  }),
-                                ),
-                                Positioned(
-                                  bottom: 0,
-                                  right: 0,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(6),
-                                    decoration: const BoxDecoration(
-                                      color: primaryPink,
+                            GestureDetector(
+                              onTap: controller.changeProfileImage,
+                              child: Stack(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(3),
+                                    decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black26,
-                                          blurRadius: 4,
-                                          offset: Offset(0, 2),
-                                        ),
-                                      ],
+                                      border: Border.all(
+                                        color: primaryPink.withValues(alpha: 0.3),
+                                        width: 2,
+                                      ),
                                     ),
-                                    child: const Icon(
-                                      Icons.camera_alt_rounded,
-                                      size: 14,
-                                      color: white,
+                                    child: Obx(() {
+                                      final avatar = controller.avatarUrl.value;
+                                      if (avatar.isNotEmpty) {
+                                        return CircleAvatar(
+                                          radius: 36,
+                                          backgroundImage: NetworkImage(avatar),
+                                        );
+                                      } else {
+                                        return CircleAvatar(
+                                          radius: 36,
+                                          backgroundColor: Colors.grey.shade200,
+                                          child: Icon(
+                                            Icons.person_rounded,
+                                            size: 38,
+                                            color: Colors.grey.shade600,
+                                          ),
+                                        );
+                                      }
+                                    }),
+                                  ),
+                                  Positioned(
+                                    bottom: 0,
+                                    right: 0,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(6),
+                                      decoration: const BoxDecoration(
+                                        color: primaryPink,
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black26,
+                                            blurRadius: 4,
+                                            offset: Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: const Icon(
+                                        Icons.camera_alt_rounded,
+                                        size: 14,
+                                        color: white,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                              const SizedBox(height: 12),
                              Obx(() {

@@ -14,4 +14,6 @@ class ApiConstants {
   static const String availability = '/user/availability';
   static const String wallet = '/user/wallet';
   static const String subscriptionPlans = '/user/subscription-plans';
+  static const String profile = '/user/profile';
+  static const String volunteerRequest = '/user/volunteer-request';
 }

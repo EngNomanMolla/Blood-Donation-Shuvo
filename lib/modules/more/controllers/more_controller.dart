@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:blood_donation/app/routes/app_routes.dart';
 import 'package:blood_donation/core/services/storage_service.dart';
 import '../../../data/repositories/profile_repository.dart';
+import '../../volunteer_registration/views/volunteer_status_view.dart';
 import '../../../data/providers/donor_provider.dart';
 import '../../../data/repositories/donor_repository.dart';
 
@@ -31,6 +33,7 @@ class MoreController extends GetxController {
   final RxBool isAvailable = true.obs;
   final RxBool isDonor = false.obs;
   final RxBool isVolunteer = false.obs;
+  final RxString volunteerPaymentStatus = ''.obs;
   final RxBool isLoading = false.obs;
 
   List<MoreMenuItem> get filteredMenuItems {
@@ -89,6 +92,7 @@ class MoreController extends GetxController {
         isAvailable.value = profile.isAvailable;
         isDonor.value = profile.isDonor;
         isVolunteer.value = profile.isVolunteer;
+        volunteerPaymentStatus.value = profile.volunteerPaymentStatus ?? '';
 
         // Sync with StorageService
         final storage = Get.find<StorageService>();
@@ -157,6 +161,17 @@ class MoreController extends GetxController {
       // Already a volunteer — do nothing (card is disabled)
       return;
     }
+
+    if (volunteerPaymentStatus.value == 'pending') {
+      await Get.to(() => const VolunteerStatusView(status: 'pending'));
+      fetchUserProfile();
+      return;
+    } else if (volunteerPaymentStatus.value == 'rejected') {
+      await Get.to(() => const VolunteerStatusView(status: 'rejected'));
+      fetchUserProfile();
+      return;
+    }
+
     if (isDonor.value) {
       // Has donor data — show quick confirm screen
       await Get.toNamed(
@@ -210,5 +225,47 @@ class MoreController extends GetxController {
       backgroundColor: Colors.redAccent,
       colorText: Colors.white,
     );
+  }
+
+  Future<void> changeProfileImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
+
+    if (image == null) return;
+
+    isLoading.value = true;
+    try {
+      final profileRepository = Get.find<ProfileRepository>();
+      final response = await profileRepository.updateProfileImage(image.path);
+
+      if (response.statusCode == 200) {
+        await fetchUserProfile();
+        Get.snackbar(
+          'Success',
+          'Profile picture updated successfully!',
+          backgroundColor: const Color(0xFF4CAF50),
+          colorText: Colors.white,
+        );
+      } else {
+        Get.snackbar(
+          'Error',
+          'Failed to update profile picture. Server responded with status: ${response.statusCode}',
+          backgroundColor: Colors.redAccent,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'An error occurred: $e',
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
+    }
   }
 }
