@@ -128,8 +128,12 @@ class CallController extends GetxController {
       );
 
       // 5. Setup Audio & Join Channel
-      await _engine.enableAudio();
-      await _engine.setEnableSpeakerphone(isSpeakerOn.value);
+      try {
+        await _engine.enableAudio();
+        await _engine.setDefaultAudioRouteToSpeakerphone(isSpeakerOn.value);
+      } catch (audioErr) {
+        debugPrint("Agora audio setup warning (non-fatal): $audioErr");
+      }
 
       debugPrint("Joining Agora Channel: ${tokenData.channelName} | UID: ${tokenData.uid} | Token: ${tokenData.rtcToken}");
 
@@ -138,6 +142,7 @@ class CallController extends GetxController {
         channelId: tokenData.channelName.trim(),
         uid: tokenData.uid,
         options: const ChannelMediaOptions(
+          channelProfile: ChannelProfileType.channelProfileCommunication,
           clientRoleType: ClientRoleType.clientRoleBroadcaster,
           publishMicrophoneTrack: true,
           autoSubscribeAudio: true,
