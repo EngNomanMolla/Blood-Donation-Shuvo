@@ -5,6 +5,7 @@ import 'package:blood_donation/modules/call/models/call_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
+import '../../../app/routes/app_routes.dart';
 
 enum CallState { connecting, ringing, connected, ended, error }
 
@@ -249,6 +250,8 @@ class CallController extends GetxController {
         ),
       );
 
+      if (_isEndingCall) return;
+
       // 5. Setup Audio & Join Channel
       try {
         await _engine.enableAudio();
@@ -256,6 +259,8 @@ class CallController extends GetxController {
       } catch (audioErr) {
         debugPrint("Agora audio setup warning (non-fatal): $audioErr");
       }
+
+      if (_isEndingCall) return;
 
       debugPrint("\n-------------------------------------------------------");
       debugPrint("🚀 [AGORA JOIN CHANNEL INITIATED]");
@@ -280,6 +285,7 @@ class CallController extends GetxController {
       );
       debugPrint("✅ Agora joinChannel() executed without exception");
     } catch (e, stack) {
+      if (_isEndingCall) return;
       debugPrint("Error initiating call session: $e\n$stack");
       callState.value = CallState.error;
       callStatusText.value = 'Connection failed';
@@ -309,7 +315,7 @@ class CallController extends GetxController {
   }
 
   Future<void> toggleMute() async {
-    if (!_isEngineInitialized) return;
+    if (!_isEngineInitialized || _isEndingCall) return;
     try {
       isMuted.value = !isMuted.value;
       await _engine.muteLocalAudioStream(isMuted.value);
@@ -319,7 +325,7 @@ class CallController extends GetxController {
   }
 
   Future<void> toggleSpeaker() async {
-    if (!_isEngineInitialized) return;
+    if (!_isEngineInitialized || _isEndingCall) return;
     try {
       isSpeakerOn.value = !isSpeakerOn.value;
       await _engine.setEnableSpeakerphone(isSpeakerOn.value);
@@ -338,36 +344,41 @@ class CallController extends GetxController {
     callState.value = CallState.ended;
     callStatusText.value = 'Call Ended';
 
-    if (_isEngineInitialized) {
-      try {
-        await _engine.leaveChannel();
-        await _engine.release();
-      } catch (e) {
-        debugPrint("Error releasing Agora engine: $e");
-      }
-      _isEngineInitialized = false;
-    }
-
-    // Safely pop screen
+    // 1. Instant Navigation - Pop screen immediately so user experiences zero lag
     try {
       if (Get.isDialogOpen ?? false) {
         Get.back();
       }
-      if (Get.currentRoute == '/call' || (Get.key.currentState?.canPop() ?? false)) {
+      if (Get.key.currentState?.canPop() ?? false) {
         Get.back();
+      } else {
+        Get.offAllNamed(AppRoutes.home);
       }
     } catch (e) {
       debugPrint("Error popping call view: $e");
+    }
+
+    // 2. Non-blocking Agora Engine cleanup in background
+    if (_isEngineInitialized) {
+      _isEngineInitialized = false;
+      try {
+        _engine.leaveChannel().catchError((e) => debugPrint("leaveChannel err: $e"));
+        _engine.release().catchError((e) => debugPrint("release err: $e"));
+      } catch (e) {
+        debugPrint("Background Agora release error: $e");
+      }
     }
   }
 
   @override
   void onClose() {
     _callTimer?.cancel();
+    _isEndingCall = true;
     if (_isEngineInitialized) {
+      _isEngineInitialized = false;
       try {
-        _engine.leaveChannel();
-        _engine.release();
+        _engine.leaveChannel().catchError((e) => null);
+        _engine.release().catchError((e) => null);
       } catch (_) {}
     }
     super.onClose();
