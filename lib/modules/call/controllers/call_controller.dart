@@ -169,10 +169,13 @@ class CallController extends GetxController {
             debugStep.value = 'Connection State: $state';
             if (state == ConnectionStateType.connectionStateConnected) {
               isJoined.value = true;
-              if (isIncoming.value) {
+              if (remoteUserJoined.value) {
                 callState.value = CallState.connected;
                 callStatusText.value = 'Connected';
                 _startCallTimer();
+              } else if (isIncoming.value) {
+                callState.value = CallState.connecting;
+                callStatusText.value = 'Connecting...';
               } else {
                 callState.value = CallState.ringing;
                 callStatusText.value = 'Ringing...';
@@ -194,10 +197,13 @@ class CallController extends GetxController {
             debugPrint("Agora onJoinChannelSuccess -> Channel: ${connection.channelId}, LocalUid: ${connection.localUid}");
             isJoined.value = true;
             debugStep.value = 'Joined: ${connection.channelId} (UID: ${connection.localUid})';
-            if (isIncoming.value) {
+            if (remoteUserJoined.value) {
               callState.value = CallState.connected;
               callStatusText.value = 'Connected';
               _startCallTimer();
+            } else if (isIncoming.value) {
+              callState.value = CallState.connecting;
+              callStatusText.value = 'Connecting...';
             } else {
               callState.value = CallState.ringing;
               callStatusText.value = 'Ringing...';
