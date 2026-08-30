@@ -33,6 +33,7 @@ import 'package:blood_donation/modules/more/views/privacy_policy_view.dart';
 import 'package:blood_donation/modules/more/views/about_us_view.dart';
 import 'package:blood_donation/modules/call/bindings/call_binding.dart';
 import 'package:blood_donation/modules/call/views/call_view.dart';
+import 'package:blood_donation/modules/call/views/incoming_call_view.dart';
 import 'package:blood_donation/modules/initial_recharge/bindings/initial_recharge_binding.dart';
 import 'package:blood_donation/modules/initial_recharge/views/initial_recharge_view.dart';
 import 'package:get/get.dart';
@@ -149,6 +150,14 @@ class AppPages {
       binding: CallBinding(),
       transition: Transition.downToUp,
       transitionDuration: const Duration(milliseconds: 350),
+    ),
+
+    // Incoming Voice Call Screen
+    GetPage(
+      name: AppRoutes.incomingCall,
+      page: () => const IncomingCallView(),
+      transition: Transition.fadeIn,
+      transitionDuration: const Duration(milliseconds: 300),
     ),
 
     // People Reviews Screen

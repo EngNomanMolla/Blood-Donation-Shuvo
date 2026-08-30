@@ -19,6 +19,7 @@ class CallController extends GetxController {
   final donorAvatar = ''.obs;
   final bloodGroup = ''.obs;
   final availableMinutes = 0.obs;
+  final isIncoming = false.obs;
 
   // Call State
   final callState = CallState.connecting.obs;
@@ -39,20 +40,34 @@ class CallController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    final args = Get.arguments ?? {};
-    recipientId.value = args['recipient_id'] ?? 0;
-    donorName.value = args['donor_name'] ?? 'Donor';
-    donorAvatar.value = args['donor_avatar'] ?? '';
-    bloodGroup.value = args['blood_group'] ?? '';
-    availableMinutes.value = args['available_minutes'] ?? 0;
+    final Map<String, dynamic> args = Get.arguments is Map
+        ? Map<String, dynamic>.from(Get.arguments as Map)
+        : <String, dynamic>{};
+    isIncoming.value = args['is_incoming'] == true;
+    
+    if (isIncoming.value) {
+      donorName.value = args['caller_name'] ?? 'Caller';
+      donorAvatar.value = args['caller_avatar'] ?? '';
+      bloodGroup.value = args['blood_group'] ?? '';
+    } else {
+      recipientId.value = args['recipient_id'] ?? 0;
+      donorName.value = args['donor_name'] ?? 'Donor';
+      donorAvatar.value = args['donor_avatar'] ?? '';
+      bloodGroup.value = args['blood_group'] ?? '';
+      availableMinutes.value = args['available_minutes'] ?? 0;
+    }
 
-    initiateCallSession();
+    initiateCallSession(args);
   }
 
-  Future<void> initiateCallSession() async {
+  Future<void> initiateCallSession([Map<String, dynamic>? rawArgs]) async {
+    final Map<String, dynamic> args = rawArgs ??
+        (Get.arguments is Map
+            ? Map<String, dynamic>.from(Get.arguments as Map)
+            : <String, dynamic>{});
     try {
       callState.value = CallState.connecting;
-      callStatusText.value = 'Connecting...';
+      callStatusText.value = isIncoming.value ? 'Connecting...' : 'Calling...';
 
       // 1. Request Microphone Permission
       final status = await Permission.microphone.request();
@@ -69,11 +84,32 @@ class CallController extends GetxController {
         return;
       }
 
-      // 2. Fetch Agora Token from Backend
-      final AgoraTokenData tokenData = await callRepository.getAgoraToken(recipientId.value);
-      debugPrint("Fetched Agora Token Data -> AppID: ${tokenData.appId}, Channel: ${tokenData.channelName}, UID: ${tokenData.uid}, TokenLength: ${tokenData.rtcToken.length}");
-      if (tokenData.remainingCallMinutes > 0) {
-        availableMinutes.value = tokenData.remainingCallMinutes;
+      // 2. Resolve Agora Token Data
+      late final AgoraTokenData tokenData;
+      if (isIncoming.value) {
+        // Pre-provided token data from push notification payload
+        final String appId = args['agora_app_id'] ?? '';
+        final String channelName = args['channel_name'] ?? '';
+        final String rtcToken = args['rtc_token'] ?? '';
+        final int uid = int.tryParse(args['uid']?.toString() ?? '0') ?? 0;
+
+        tokenData = AgoraTokenData(
+          appId: appId,
+          channelName: channelName,
+          rtcToken: rtcToken,
+          uid: uid,
+          remainingCallMinutes: 0,
+          tokenTtlSeconds: 0,
+          expiresAt: '',
+        );
+        debugPrint("Incoming Call Token Data -> AppID: ${tokenData.appId}, Channel: ${tokenData.channelName}");
+      } else {
+        // Fetch Agora Token from Backend API for outgoing call
+        tokenData = await callRepository.getAgoraToken(recipientId.value);
+        debugPrint("Fetched Agora Token Data -> AppID: ${tokenData.appId}, Channel: ${tokenData.channelName}, UID: ${tokenData.uid}, TokenLength: ${tokenData.rtcToken.length}");
+        if (tokenData.remainingCallMinutes > 0) {
+          availableMinutes.value = tokenData.remainingCallMinutes;
+        }
       }
 
       // 3. Initialize Agora Engine safely
@@ -99,8 +135,14 @@ class CallController extends GetxController {
           onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
             debugPrint("Agora onJoinChannelSuccess -> Channel: ${connection.channelId}, LocalUid: ${connection.localUid}");
             isJoined.value = true;
-            callState.value = CallState.ringing;
-            callStatusText.value = 'Ringing...';
+            if (isIncoming.value) {
+              callState.value = CallState.connected;
+              callStatusText.value = 'Connected';
+              _startCallTimer();
+            } else {
+              callState.value = CallState.ringing;
+              callStatusText.value = 'Ringing...';
+            }
           },
           onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
             debugPrint("Agora Remote User Joined -> RemoteUid: $remoteUid");

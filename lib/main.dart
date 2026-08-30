@@ -6,6 +6,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:blood_donation/core/services/storage_service.dart';
+import 'package:blood_donation/core/services/fcm_service.dart';
 
 class MyHttpOverrides extends HttpOverrides {
   @override
@@ -23,6 +24,7 @@ void main() async {
  
   HttpOverrides.global = MyHttpOverrides();
   await Get.putAsync(() => StorageService().init());
+  await Get.putAsync(() => FCMService().init());
   runApp(const MyApp());
 }
 

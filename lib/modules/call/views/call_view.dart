@@ -68,6 +68,10 @@ class CallView extends GetView<CallController> {
           ),
           Obx(() {
             final minutes = controller.availableMinutes.value;
+            final isIncoming = controller.isIncoming.value;
+            final badgeText = isIncoming
+                ? 'Voice Call'
+                : (minutes > 0 ? '$minutes Min Left' : 'Voice Call');
             return Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
               decoration: BoxDecoration(
@@ -87,7 +91,7 @@ class CallView extends GetView<CallController> {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    minutes > 0 ? '$minutes Min Left' : 'Calling',
+                    badgeText,
                     style: const TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 12,

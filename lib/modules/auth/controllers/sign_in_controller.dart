@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:blood_donation/app/routes/app_routes.dart';
@@ -104,7 +105,19 @@ class SignInController extends GetxController {
 
     isLoading.value = true;
     try {
-      final response = await authRepository.verifyCode(formattedPhone, verificationCode);
+      String? fcmToken;
+      try {
+        fcmToken = await FirebaseMessaging.instance.getToken();
+        debugPrint("Obtained FCM Token for Login: $fcmToken");
+      } catch (fcmErr) {
+        debugPrint("Failed to get FCM token: $fcmErr");
+      }
+
+      final response = await authRepository.verifyCode(
+        formattedPhone,
+        verificationCode,
+        fcmToken: fcmToken,
+      );
       isLoading.value = false;
 
       final isSuccess = response.statusCode >= 200 && response.statusCode < 300;
@@ -121,6 +134,9 @@ class SignInController extends GetxController {
         final token = responseData['token'] ?? responseData['data']?['token'] ?? 'dummy_token';
         await storage.setUserToken(token);
         await storage.setUserPhone(formattedPhone);
+        if (fcmToken != null && fcmToken.isNotEmpty) {
+          await storage.setFcmToken(fcmToken);
+        }
 
         final user = responseData['user'] as Map<String, dynamic>?;
         if (user != null) {

@@ -16,6 +16,7 @@ class AppRoutes {
   static const String profile = '/profile';
   static const String subscriptionPlans = '/subscription-plans';
   static const String call = '/call';
+  static const String incomingCall = '/incoming-call';
   static const String peopleReviews = '/people-reviews';
   static const String support = '/support';
   static const String volunteerDashboard = '/volunteer-dashboard';

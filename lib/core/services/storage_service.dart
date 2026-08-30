@@ -16,6 +16,7 @@ class StorageService extends GetxService {
   static const String _keyIsVolunteer = 'is_volunteer';
   static const String _keyHasRecharged = 'has_recharged';
   static const String _keyUserPhone = 'user_phone';
+  static const String _keyFcmToken = 'fcm_token';
 
   bool get hasShownOnboarding => _prefs.getBool(_keyHasShownOnboarding) ?? false;
   
@@ -33,6 +34,12 @@ class StorageService extends GetxService {
 
   Future<bool> setUserToken(String token) async {
     return await _prefs.setString(_keyUserToken, token);
+  }
+
+  String? get fcmToken => _prefs.getString(_keyFcmToken);
+
+  Future<bool> setFcmToken(String token) async {
+    return await _prefs.setString(_keyFcmToken, token);
   }
 
   String? get userPhone => _prefs.getString(_keyUserPhone);
@@ -66,6 +73,7 @@ class StorageService extends GetxService {
     await _prefs.remove(_keyIsVolunteer);
     await _prefs.remove(_keyHasRecharged);
     await _prefs.remove(_keyUserPhone);
+    await _prefs.remove(_keyFcmToken);
   }
 }
 
