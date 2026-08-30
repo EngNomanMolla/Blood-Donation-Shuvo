@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -8,7 +9,18 @@ import 'storage_service.dart';
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
-  debugPrint("Handling background FCM message: ${message.messageId} | Data: ${message.data}");
+  debugPrint("\n=======================================================");
+  debugPrint("📩 [BACKGROUND FCM MESSAGE RECEIVED]");
+  debugPrint("Message ID: ${message.messageId}");
+  debugPrint("Notification Title: ${message.notification?.title}");
+  debugPrint("Notification Body: ${message.notification?.body}");
+  try {
+    const encoder = JsonEncoder.withIndent('  ');
+    debugPrint("Raw Data Payload JSON:\n${encoder.convert(message.data)}");
+  } catch (_) {
+    debugPrint("Raw Data Payload: ${message.data}");
+  }
+  debugPrint("=======================================================\n");
 }
 
 class FCMService extends GetxService {
@@ -47,20 +59,23 @@ class FCMService extends GetxService {
 
     // 4. Foreground Message Listener
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      debugPrint('Foreground FCM Message received: ${message.data}');
+      debugPrint("\n=======================================================");
+      debugPrint("🔔 [FOREGROUND FCM MESSAGE RECEIVED]");
       _handleIncomingMessage(message, isForeground: true);
     });
 
     // 5. Background Notification Tap Listener
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      debugPrint('FCM Message opened from background: ${message.data}');
+      debugPrint("\n=======================================================");
+      debugPrint("📱 [BACKGROUND FCM NOTIFICATION TAPPED]");
       _handleIncomingMessage(message, isForeground: false);
     });
 
     // 6. Terminated State Initial Message Check
     final initialMessage = await _messaging.getInitialMessage();
     if (initialMessage != null) {
-      debugPrint('FCM Initial Message (Terminated): ${initialMessage.data}');
+      debugPrint("\n=======================================================");
+      debugPrint("🚀 [TERMINATED APP OPENED VIA FCM NOTIFICATION]");
       _handleIncomingMessage(initialMessage, isForeground: false);
     }
 
@@ -72,18 +87,44 @@ class FCMService extends GetxService {
 
   void _handleIncomingMessage(RemoteMessage message, {required bool isForeground}) {
     final data = message.data;
+    debugPrint("Message ID: ${message.messageId}");
+    debugPrint("Notification Title: ${message.notification?.title}");
+    debugPrint("Notification Body: ${message.notification?.body}");
+    try {
+      const encoder = JsonEncoder.withIndent('  ');
+      debugPrint("Full Data Payload (JSON):\n${encoder.convert(data)}");
+    } catch (_) {
+      debugPrint("Full Data Payload: $data");
+    }
+    debugPrint("=======================================================\n");
+
     final String? type = data['type'] ?? data['notification_type'];
 
     if (type == 'incoming_call') {
-      final String channelName = data['channel_name'] ?? '';
-      final String callerId = data['caller_id']?.toString() ?? '0';
+      final String channelName = data['channel_name'] ?? data['channel'] ?? '';
+      final String callerId = data['caller_id']?.toString() ?? data['sender_id']?.toString() ?? '0';
       final String callerName = data['caller_name'] ?? data['title'] ?? 'Incoming Call';
-      final String callerAvatar = data['caller_avatar'] ?? data['user_avatar'] ?? '';
-      final String agoraAppId = data['agora_app_id'] ?? data['app_id'] ?? '';
-      final String rtcToken = data['rtc_token'] ?? '';
+      final String callerAvatar = data['caller_avatar'] ?? data['user_avatar'] ?? data['avatar'] ?? '';
+      final String agoraAppId = data['agora_app_id'] ?? data['app_id'] ?? data['agora_appid'] ?? '';
+      final String rtcToken = data['rtc_token'] ?? data['token'] ?? '';
       final String bloodGroup = data['blood_group'] ?? '';
+      
+      String uid = data['uid']?.toString() ?? data['recipient_id']?.toString() ?? data['user_id']?.toString() ?? '';
+      if (uid.isEmpty || uid == '0') {
+        final parts = channelName.split('_');
+        if (parts.length >= 3 && parts[0] == 'call') {
+          uid = parts[2]; // Extract receiver UID from call_<callerId>_<receiverId>_...
+        }
+      }
+      if (uid.isEmpty) uid = '0';
 
-      debugPrint("Incoming Call Received from: $callerName | Channel: $channelName | AppID: $agoraAppId");
+      debugPrint("👉 Parsed Incoming Call Details:");
+      debugPrint("   • Caller Name : $callerName");
+      debugPrint("   • Channel Name: $channelName");
+      debugPrint("   • Agora App ID: $agoraAppId");
+      debugPrint("   • Target UID  : $uid");
+      debugPrint("   • RTC Token   : ${rtcToken.isNotEmpty ? (rtcToken.length > 30 ? '${rtcToken.substring(0, 30)}...' : rtcToken) : 'EMPTY'} (Length: ${rtcToken.length})");
+      debugPrint("-------------------------------------------------------\n");
 
       final callArgs = {
         'is_incoming': true,
@@ -94,6 +135,7 @@ class FCMService extends GetxService {
         'agora_app_id': agoraAppId,
         'rtc_token': rtcToken,
         'blood_group': bloodGroup,
+        'uid': uid,
       };
 
       // Navigate to Incoming Call Screen

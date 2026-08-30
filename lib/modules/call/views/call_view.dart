@@ -192,7 +192,136 @@ class CallView extends GetView<CallController> {
             ),
           );
         }),
+        const SizedBox(height: 16),
+
+        // Live On-Screen Debug Card
+        _buildDebugCard(),
       ],
+    );
+  }
+
+  Widget _buildDebugCard() {
+    return Obx(() {
+      final step = controller.debugStep.value;
+      final channel = controller.debugChannel.value;
+      final uid = controller.debugUid.value;
+      final appId = controller.debugAppId.value;
+      final token = controller.debugToken.value;
+      final error = controller.debugError.value;
+      final isInc = controller.isIncoming.value;
+
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 20),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: error.isNotEmpty
+                ? Colors.redAccent.withValues(alpha: 0.6)
+                : const Color(0xFF38BDF8).withValues(alpha: 0.35),
+            width: 1.2,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: error.isNotEmpty
+                            ? Colors.redAccent
+                            : const Color(0xFF38BDF8),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      isInc ? 'RECEIVER DEBUG INFO' : 'CALLER DEBUG INFO',
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF38BDF8),
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                  ],
+                ),
+                Text(
+                  step,
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.amberAccent,
+                  ),
+                ),
+              ],
+            ),
+            const Divider(color: Colors.white12, height: 12),
+            _debugRow('Channel', channel.isNotEmpty ? channel : 'Waiting...'),
+            _debugRow('Your UID', uid.isNotEmpty ? uid : '0'),
+            _debugRow('App ID', appId.isNotEmpty ? appId : 'EMPTY'),
+            _debugRow('Token', token.isNotEmpty ? token : 'EMPTY'),
+            if (error.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(
+                '❌ $error',
+                style: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.redAccent,
+                ),
+              ),
+            ],
+          ],
+        ),
+      );
+    });
+  }
+
+  Widget _debugRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 1.5),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 65,
+            child: Text(
+              '$label:',
+              style: const TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 10,
+                color: Colors.white54,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 10,
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

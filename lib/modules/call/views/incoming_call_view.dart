@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../app/routes/app_routes.dart';
+import '../controllers/call_controller.dart';
 
 class IncomingCallView extends StatefulWidget {
   const IncomingCallView({super.key});
@@ -21,9 +22,9 @@ class _IncomingCallViewState extends State<IncomingCallView> with SingleTickerPr
   @override
   void initState() {
     super.initState();
-    args = Get.arguments is Map<String, dynamic>
-        ? Map<String, dynamic>.from(Get.arguments)
-        : {};
+    args = Get.arguments is Map
+        ? Map<String, dynamic>.from(Get.arguments as Map)
+        : <String, dynamic>{};
 
     callerName = args['caller_name'] ?? 'Donor / Requester';
     callerAvatar = args['caller_avatar'] ?? '';
@@ -50,6 +51,9 @@ class _IncomingCallViewState extends State<IncomingCallView> with SingleTickerPr
   }
 
   void _acceptCall() {
+    if (Get.isRegistered<CallController>()) {
+      Get.delete<CallController>(force: true);
+    }
     // Navigate to CallView with arguments directly
     Get.offNamed(AppRoutes.call, arguments: args);
   }

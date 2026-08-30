@@ -21,6 +21,14 @@ class CallController extends GetxController {
   final availableMinutes = 0.obs;
   final isIncoming = false.obs;
 
+  // On-screen Debug Info
+  final debugChannel = ''.obs;
+  final debugAppId = ''.obs;
+  final debugUid = ''.obs;
+  final debugToken = ''.obs;
+  final debugStep = 'Starting...'.obs;
+  final debugError = ''.obs;
+
   // Call State
   final callState = CallState.connecting.obs;
   final callStatusText = 'Calling...'.obs;
@@ -84,6 +92,8 @@ class CallController extends GetxController {
         return;
       }
 
+      isIncoming.value = args['is_incoming'] == true;
+
       // 2. Resolve Agora Token Data
       late final AgoraTokenData tokenData;
       if (isIncoming.value) {
@@ -91,7 +101,18 @@ class CallController extends GetxController {
         final String appId = args['agora_app_id'] ?? '';
         final String channelName = args['channel_name'] ?? '';
         final String rtcToken = args['rtc_token'] ?? '';
-        final int uid = int.tryParse(args['uid']?.toString() ?? '0') ?? 0;
+        
+        int uid = int.tryParse(args['uid']?.toString() ?? '0') ?? 0;
+        if (uid == 0 && channelName.isNotEmpty) {
+          final parts = channelName.split('_');
+          if (parts.length >= 3 && parts[0] == 'call') {
+            uid = int.tryParse(parts[2]) ?? 0;
+          }
+        }
+
+        if (appId.isEmpty || channelName.isEmpty || rtcToken.isEmpty) {
+          throw Exception("Invalid call parameters: AppId '${appId.isNotEmpty ? 'OK' : 'EMPTY'}', Channel '${channelName.isNotEmpty ? 'OK' : 'EMPTY'}', Token '${rtcToken.isNotEmpty ? 'OK' : 'EMPTY'}'");
+        }
 
         tokenData = AgoraTokenData(
           appId: appId,
@@ -102,8 +123,9 @@ class CallController extends GetxController {
           tokenTtlSeconds: 0,
           expiresAt: '',
         );
-        debugPrint("Incoming Call Token Data -> AppID: ${tokenData.appId}, Channel: ${tokenData.channelName}");
+        debugPrint("Incoming Call Token Data -> AppID: ${tokenData.appId}, Channel: ${tokenData.channelName}, UID: ${tokenData.uid}");
       } else {
+        debugStep.value = 'Fetching Token from Backend...';
         // Fetch Agora Token from Backend API for outgoing call
         tokenData = await callRepository.getAgoraToken(recipientId.value);
         debugPrint("Fetched Agora Token Data -> AppID: ${tokenData.appId}, Channel: ${tokenData.channelName}, UID: ${tokenData.uid}, TokenLength: ${tokenData.rtcToken.length}");
@@ -112,7 +134,16 @@ class CallController extends GetxController {
         }
       }
 
+      // Assign to debug observables
+      debugChannel.value = tokenData.channelName.trim();
+      debugAppId.value = tokenData.appId.trim();
+      debugUid.value = tokenData.uid.toString();
+      debugToken.value = tokenData.rtcToken.trim().isNotEmpty
+          ? '${tokenData.rtcToken.trim().substring(0, tokenData.rtcToken.trim().length > 25 ? 25 : tokenData.rtcToken.trim().length)}... (${tokenData.rtcToken.trim().length} chars)'
+          : 'EMPTY';
+
       // 3. Initialize Agora Engine safely
+      debugStep.value = 'Initializing Agora Engine...';
       if (_isEngineInitialized) {
         try {
           await _engine.leaveChannel();
@@ -127,14 +158,42 @@ class CallController extends GetxController {
         channelProfile: ChannelProfileType.channelProfileCommunication,
       ));
       _isEngineInitialized = true;
+      debugStep.value = 'Agora Engine Initialized';
       debugPrint("Agora Engine Initialized Successfully with AppID: ${tokenData.appId.trim()}");
 
       // 4. Register Event Handlers
       _engine.registerEventHandler(
         RtcEngineEventHandler(
+          onConnectionStateChanged: (RtcConnection connection, ConnectionStateType state, ConnectionChangedReasonType reason) {
+            debugPrint("Agora onConnectionStateChanged -> State: $state, Reason: $reason");
+            debugStep.value = 'Connection State: $state';
+            if (state == ConnectionStateType.connectionStateConnected) {
+              isJoined.value = true;
+              if (isIncoming.value) {
+                callState.value = CallState.connected;
+                callStatusText.value = 'Connected';
+                _startCallTimer();
+              } else {
+                callState.value = CallState.ringing;
+                callStatusText.value = 'Ringing...';
+              }
+            } else if (state == ConnectionStateType.connectionStateFailed) {
+              callState.value = CallState.error;
+              callStatusText.value = 'Connection failed';
+              debugError.value = 'Connection failed: $reason';
+              Get.snackbar(
+                'Connection Failed',
+                'Agora connection failed: $reason',
+                backgroundColor: Colors.redAccent,
+                colorText: Colors.white,
+                snackPosition: SnackPosition.BOTTOM,
+              );
+            }
+          },
           onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
             debugPrint("Agora onJoinChannelSuccess -> Channel: ${connection.channelId}, LocalUid: ${connection.localUid}");
             isJoined.value = true;
+            debugStep.value = 'Joined: ${connection.channelId} (UID: ${connection.localUid})';
             if (isIncoming.value) {
               callState.value = CallState.connected;
               callStatusText.value = 'Connected';
@@ -147,6 +206,7 @@ class CallController extends GetxController {
           onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
             debugPrint("Agora Remote User Joined -> RemoteUid: $remoteUid");
             remoteUserJoined.value = true;
+            debugStep.value = 'Remote User Joined (UID: $remoteUid)';
             callState.value = CallState.connected;
             callStatusText.value = 'Connected';
             _startCallTimer();
@@ -154,17 +214,31 @@ class CallController extends GetxController {
           onUserOffline: (RtcConnection connection, int remoteUid, UserOfflineReasonType reason) {
             debugPrint("Agora Remote User Offline -> RemoteUid: $remoteUid, Reason: $reason");
             remoteUserJoined.value = false;
+            debugStep.value = 'Remote User Left ($reason)';
             callState.value = CallState.ended;
             callStatusText.value = 'Call Ended';
             Future.delayed(const Duration(seconds: 1), () => endCall());
           },
           onLeaveChannel: (RtcConnection connection, RtcStats stats) {
             debugPrint("Agora onLeaveChannel");
+            debugStep.value = 'Left Channel';
             isJoined.value = false;
           },
           onError: (ErrorCodeType err, String msg) {
             debugPrint("Agora Error Callback -> Code: $err, Message: $msg");
             errorMessage.value = msg;
+            debugError.value = 'Error: $err ($msg)';
+            if (callState.value == CallState.connecting) {
+              callState.value = CallState.error;
+              callStatusText.value = 'Connection error ($err)';
+              Get.snackbar(
+                'Call Error',
+                'Agora error: $err ($msg)',
+                backgroundColor: Colors.redAccent,
+                colorText: Colors.white,
+                snackPosition: SnackPosition.BOTTOM,
+              );
+            }
           },
         ),
       );
@@ -177,8 +251,16 @@ class CallController extends GetxController {
         debugPrint("Agora audio setup warning (non-fatal): $audioErr");
       }
 
-      debugPrint("Joining Agora Channel: ${tokenData.channelName} | UID: ${tokenData.uid} | Token: ${tokenData.rtcToken}");
+      debugPrint("\n-------------------------------------------------------");
+      debugPrint("🚀 [AGORA JOIN CHANNEL INITIATED]");
+      debugPrint("   • Channel ID : ${tokenData.channelName.trim()}");
+      debugPrint("   • Joining UID: ${tokenData.uid}");
+      debugPrint("   • App ID     : ${tokenData.appId.trim()}");
+      debugPrint("   • Token Len  : ${tokenData.rtcToken.trim().length}");
+      debugPrint("   • Full Token : ${tokenData.rtcToken.trim()}");
+      debugPrint("-------------------------------------------------------\n");
 
+      debugStep.value = 'Joining Channel (UID: ${tokenData.uid})...';
       await _engine.joinChannel(
         token: tokenData.rtcToken.trim(),
         channelId: tokenData.channelName.trim(),
@@ -190,11 +272,12 @@ class CallController extends GetxController {
           autoSubscribeAudio: true,
         ),
       );
-      debugPrint("Agora joinChannel call executed successfully");
+      debugPrint("✅ Agora joinChannel() executed without exception");
     } catch (e, stack) {
       debugPrint("Error initiating call session: $e\n$stack");
       callState.value = CallState.error;
       callStatusText.value = 'Connection failed';
+      debugError.value = 'Exception: $e';
       Get.snackbar(
         'Call Failed',
         e.toString().replaceAll('Exception:', '').trim(),
