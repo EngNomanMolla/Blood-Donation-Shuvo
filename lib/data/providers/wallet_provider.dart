@@ -63,6 +63,60 @@ class WalletProvider {
     return await client.get(url, headers: headers);
   }
 
+  Future<http.Response> getActiveSubscription() async {
+    final storage = Get.find<StorageService>();
+    final token = storage.userToken;
+
+    final url = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.activeSubscription}');
+
+    final Map<String, String> headers = {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    };
+
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    return await client.get(url, headers: headers);
+  }
+
+  Future<http.Response> getVolunteerWallet() async {
+    final storage = Get.find<StorageService>();
+    final token = storage.userToken;
+
+    final url = Uri.parse('${ApiConstants.baseUrl}/user/volunteer/wallet');
+
+    final Map<String, String> headers = {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    };
+
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    return await client.get(url, headers: headers);
+  }
+
+  Future<http.Response> getVolunteerPerformance() async {
+    final storage = Get.find<StorageService>();
+    final token = storage.userToken;
+
+    final url = Uri.parse('${ApiConstants.baseUrl}/user/volunteer/performance');
+
+    final Map<String, String> headers = {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    };
+
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    return await client.get(url, headers: headers);
+  }
+
   Future<http.Response> getSubscriptionPlans() async {
     final storage = Get.find<StorageService>();
     final token = storage.userToken;
@@ -79,5 +133,56 @@ class WalletProvider {
     }
 
     return await client.get(url, headers: headers);
+  }
+
+  Future<http.Response> volunteerWithdraw(Map<String, dynamic> body) async {
+    final url = Uri.parse('${ApiConstants.baseUrl}/user/volunteer/withdraw');
+    final storage = Get.find<StorageService>();
+    final token = storage.userToken;
+
+    final Map<String, String> headers = {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    };
+
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    return await client.post(url, headers: headers, body: jsonEncode(body));
+  }
+
+  Future<http.Response> getWithdrawals() async {
+    final url = Uri.parse('${ApiConstants.baseUrl}/user/volunteer/withdrawals?per_page=15');
+    final storage = Get.find<StorageService>();
+    final token = storage.userToken;
+
+    final Map<String, String> headers = {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    };
+
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    return await client.get(url, headers: headers);
+  }
+
+  Future<http.Response> purchaseSubscription(int planId) async {
+    final url = Uri.parse('${ApiConstants.baseUrl}/user/subscriptions/$planId/purchase');
+    final storage = Get.find<StorageService>();
+    final token = storage.userToken;
+
+    final Map<String, String> headers = {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    };
+
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    return await client.post(url, headers: headers);
   }
 }

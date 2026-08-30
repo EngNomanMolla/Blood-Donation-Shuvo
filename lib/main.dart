@@ -1,5 +1,8 @@
 import 'dart:io';
 import 'package:blood_donation/app/routes/app_pages.dart';
+// Import the generated file
+import 'firebase_options.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:blood_donation/core/services/storage_service.dart';
@@ -13,7 +16,11 @@ class MyHttpOverrides extends HttpOverrides {
 }
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+  options: DefaultFirebaseOptions.currentPlatform,
+);
+ 
   HttpOverrides.global = MyHttpOverrides();
   await Get.putAsync(() => StorageService().init());
   runApp(const MyApp());

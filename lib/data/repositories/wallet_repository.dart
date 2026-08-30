@@ -26,7 +26,31 @@ class WalletRepository {
     return await walletProvider.getWallet();
   }
 
+  Future<http.Response> getActiveSubscription() async {
+    return await walletProvider.getActiveSubscription();
+  }
+
+  Future<http.Response> getVolunteerWallet() async {
+    return await walletProvider.getVolunteerWallet();
+  }
+
+  Future<http.Response> getVolunteerPerformance() async {
+    return await walletProvider.getVolunteerPerformance();
+  }
+
   Future<http.Response> getSubscriptionPlans() async {
     return await walletProvider.getSubscriptionPlans();
+  }
+
+  Future<http.Response> volunteerWithdraw(Map<String, dynamic> body) async {
+    return await walletProvider.volunteerWithdraw(body);
+  }
+
+  Future<http.Response> getWithdrawals() async {
+    return await walletProvider.getWithdrawals();
+  }
+
+  Future<http.Response> purchaseSubscription(int planId) async {
+    return await walletProvider.purchaseSubscription(planId);
   }
 }

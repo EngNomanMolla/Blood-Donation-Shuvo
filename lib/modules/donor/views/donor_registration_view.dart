@@ -125,10 +125,11 @@ class DonerRegistrationView extends StatelessWidget {
                             value: ctrl.divisions.contains(ctrl.selectedDivision.value)
                                 ? ctrl.selectedDivision.value
                                 : null,
-                            hint: 'Division',
+                            hint: ctrl.isDivisionsLoading.value ? 'Loading...' : 'Division',
                             items: ctrl.divisions,
                             onChanged: (v) =>
                                 ctrl.selectedDivision.value = v ?? '',
+                            isDisabled: ctrl.isDivisionsLoading.value,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -137,10 +138,11 @@ class DonerRegistrationView extends StatelessWidget {
                             value: ctrl.districts.contains(ctrl.selectedDistrict.value)
                                 ? ctrl.selectedDistrict.value
                                 : null,
-                            hint: 'District',
+                            hint: ctrl.isDistrictsLoading.value ? 'Loading...' : 'District',
                             items: ctrl.districts,
                             onChanged: (v) =>
                                 ctrl.selectedDistrict.value = v ?? '',
+                            isDisabled: ctrl.selectedDivision.value.isEmpty || ctrl.isDistrictsLoading.value,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -149,10 +151,11 @@ class DonerRegistrationView extends StatelessWidget {
                             value: ctrl.upazilas.contains(ctrl.selectedUpazila.value)
                                 ? ctrl.selectedUpazila.value
                                 : null,
-                            hint: 'Upazila',
+                            hint: ctrl.isUpazilasLoading.value ? 'Loading...' : 'Upazila',
                             items: ctrl.upazilas,
                             onChanged: (v) =>
                                 ctrl.selectedUpazila.value = v ?? '',
+                            isDisabled: ctrl.selectedDistrict.value.isEmpty || ctrl.isUpazilasLoading.value,
                           ),
                         ),
                       ],
@@ -351,28 +354,31 @@ class DonerRegistrationView extends StatelessWidget {
     required String hint,
     required List<String> items,
     required ValueChanged<String?> onChanged,
+    bool isDisabled = false,
   }) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 8),
     decoration: BoxDecoration(
-      color: Colors.white,
+      color: isDisabled ? Colors.grey.shade100 : Colors.white,
       borderRadius: BorderRadius.circular(10),
-      border: Border.all(color: _borderColor),
+      border: Border.all(color: isDisabled ? Colors.grey.shade200 : _borderColor),
     ),
     child: DropdownButtonHideUnderline(
       child: DropdownButton<String>(
-        value: value,
+        value: isDisabled ? null : value,
         hint: Text(
           hint,
-          style: const TextStyle(fontSize: 12, color: _hintGray),
+          style: TextStyle(fontSize: 12, color: isDisabled ? Colors.grey.shade400 : _hintGray),
           overflow: TextOverflow.ellipsis,
         ),
         isExpanded: true,
-        icon: const Icon(Icons.keyboard_arrow_down, color: _hintGray, size: 18),
-        style: const TextStyle(fontSize: 12, color: _labelColor),
-        items: items
-            .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-            .toList(),
-        onChanged: onChanged,
+        icon: Icon(Icons.keyboard_arrow_down, color: isDisabled ? Colors.grey.shade400 : _hintGray, size: 18),
+        style: TextStyle(fontSize: 12, color: isDisabled ? Colors.grey.shade400 : _labelColor),
+        items: isDisabled
+            ? null
+            : items
+                .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                .toList(),
+        onChanged: isDisabled ? null : onChanged,
       ),
     ),
   );

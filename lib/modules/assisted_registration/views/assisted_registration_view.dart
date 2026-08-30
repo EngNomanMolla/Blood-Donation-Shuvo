@@ -84,26 +84,18 @@ class AssistedRegistrationView extends GetView<AssistedRegistrationController> {
                 children: [
                   // Verification Section (First as requested)
                   _label('Donor Mobile Number'),
-                  _textField(
-                    controller: controller.mobileController,
-                    hint: 'Type Number',
-                    keyboardType: TextInputType.phone,
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  _label('Verification Code'),
                   Row(
                     children: [
                       Expanded(
                         child: _textField(
-                          controller: controller.verificationCodeController,
-                          hint: 'Code',
-                          keyboardType: TextInputType.number,
+                          controller: controller.mobileController,
+                          hint: 'Type Number',
+                          keyboardType: TextInputType.phone,
                         ),
                       ),
                       const SizedBox(width: 12),
-                      ElevatedButton(
-                        onPressed: controller.onSendCode,
+                      Obx(() => ElevatedButton(
+                        onPressed: controller.isSendingCode.value ? null : controller.onSendCode,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: _primaryRed,
                           foregroundColor: Colors.white,
@@ -113,16 +105,33 @@ class AssistedRegistrationView extends GetView<AssistedRegistrationController> {
                           ),
                           elevation: 0,
                         ),
-                        child: const Text(
-                          'Send Code',
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+                        child: controller.isSendingCode.value
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text(
+                                'Send OTP',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                      )),
                     ],
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  _label('Verification Code'),
+                  _textField(
+                    controller: controller.verificationCodeController,
+                    hint: 'Code',
+                    keyboardType: TextInputType.number,
                   ),
 
                   const Padding(
@@ -173,37 +182,40 @@ class AssistedRegistrationView extends GetView<AssistedRegistrationController> {
                       children: [
                         Expanded(
                           child: _compactDropdown(
-                            value: controller.selectedDistrict.value.isEmpty
-                                ? null
-                                : controller.selectedDistrict.value,
-                            hint: 'District',
-                            items: controller.districtOptions,
+                            value: controller.divisions.contains(controller.selectedDivision.value)
+                                ? controller.selectedDivision.value
+                                : null,
+                            hint: controller.isDivisionsLoading.value ? 'Loading...' : 'Division',
+                            items: controller.divisions,
+                            onChanged: (v) =>
+                                controller.selectedDivision.value = v ?? '',
+                            isDisabled: controller.isDivisionsLoading.value,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _compactDropdown(
+                            value: controller.districts.contains(controller.selectedDistrict.value)
+                                ? controller.selectedDistrict.value
+                                : null,
+                            hint: controller.isDistrictsLoading.value ? 'Loading...' : 'District',
+                            items: controller.districts,
                             onChanged: (v) =>
                                 controller.selectedDistrict.value = v ?? '',
+                            isDisabled: controller.selectedDivision.value.isEmpty || controller.isDistrictsLoading.value,
                           ),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: _compactDropdown(
-                            value: controller.selectedUpazila.value.isEmpty
-                                ? null
-                                : controller.selectedUpazila.value,
-                            hint: 'Upazila',
-                            items: controller.upazilaOptions,
+                            value: controller.upazilas.contains(controller.selectedUpazila.value)
+                                ? controller.selectedUpazila.value
+                                : null,
+                            hint: controller.isUpazilasLoading.value ? 'Loading...' : 'Upazila',
+                            items: controller.upazilas,
                             onChanged: (v) =>
                                 controller.selectedUpazila.value = v ?? '',
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: _compactDropdown(
-                            value: controller.selectedThana.value.isEmpty
-                                ? null
-                                : controller.selectedThana.value,
-                            hint: 'Thana',
-                            items: controller.thanaOptions,
-                            onChanged: (v) =>
-                                controller.selectedThana.value = v ?? '',
+                            isDisabled: controller.selectedDistrict.value.isEmpty || controller.isUpazilasLoading.value,
                           ),
                         ),
                       ],
@@ -260,8 +272,8 @@ class AssistedRegistrationView extends GetView<AssistedRegistrationController> {
                           ),
                         ],
                       ),
-                      child: ElevatedButton(
-                        onPressed: controller.onRegister,
+                      child: Obx(() => ElevatedButton(
+                        onPressed: controller.isRegistering.value ? null : controller.onRegister,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.transparent,
                           shadowColor: Colors.transparent,
@@ -269,17 +281,19 @@ class AssistedRegistrationView extends GetView<AssistedRegistrationController> {
                             borderRadius: BorderRadius.circular(16),
                           ),
                         ),
-                        child: const Text(
-                          'Registration Complete',
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ),
+                        child: controller.isRegistering.value
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : const Text(
+                                'Registration Complete',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                      )),
                     ),
                   ),
                   const SizedBox(height: 40),
@@ -392,10 +406,11 @@ class AssistedRegistrationView extends GetView<AssistedRegistrationController> {
     required String hint,
     required List<String> items,
     required ValueChanged<String?> onChanged,
+    bool isDisabled = false,
   }) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 10),
     decoration: BoxDecoration(
-      color: Colors.white,
+      color: isDisabled ? Colors.grey.shade100 : Colors.white,
       borderRadius: BorderRadius.circular(12),
       boxShadow: [
         BoxShadow(
@@ -404,24 +419,27 @@ class AssistedRegistrationView extends GetView<AssistedRegistrationController> {
           offset: const Offset(0, 4),
         ),
       ],
+      border: isDisabled ? Border.all(color: Colors.grey.shade200) : null,
     ),
     child: DropdownButtonHideUnderline(
       child: DropdownButton<String>(
-        value: value,
+        value: isDisabled ? null : value,
         hint: Text(
           hint,
-          style: const TextStyle(fontFamily: 'Poppins', fontSize: 11, color: _hintGray),
+          style: TextStyle(fontFamily: 'Poppins', fontSize: 11, color: isDisabled ? Colors.grey.shade400 : _hintGray),
           overflow: TextOverflow.ellipsis,
         ),
         isExpanded: true,
-        icon: const Icon(Icons.keyboard_arrow_down_rounded, color: _hintGray, size: 18),
+        icon: Icon(Icons.keyboard_arrow_down_rounded, color: isDisabled ? Colors.grey.shade400 : _hintGray, size: 18),
         dropdownColor: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        style: const TextStyle(fontFamily: 'Poppins', fontSize: 11, color: _labelColor),
-        items: items
-            .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-            .toList(),
-        onChanged: onChanged,
+        style: TextStyle(fontFamily: 'Poppins', fontSize: 11, color: isDisabled ? Colors.grey.shade400 : _labelColor),
+        items: isDisabled
+            ? null
+            : items
+                .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                .toList(),
+        onChanged: isDisabled ? null : onChanged,
       ),
     ),
   );

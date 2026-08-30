@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../providers/home_provider.dart';
 import '../../modules/home/models.dart';
 
@@ -35,5 +36,13 @@ class HomeRepository {
     return listData.map((json) {
       return BannerModel.fromJson(Map<String, dynamic>.from(json as Map));
     }).toList();
+  }
+
+  Future<http.Response> getNotifications() async {
+    return await homeProvider.getNotifications();
+  }
+
+  Future<http.Response> markNotificationAsRead(String id) async {
+    return await homeProvider.markNotificationAsRead(id);
   }
 }

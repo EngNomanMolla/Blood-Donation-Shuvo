@@ -69,6 +69,7 @@ class WalletView extends StatelessWidget {
                       balance: balance,
                       onAddMoney: controller.onAddMoney,
                     ),
+                    _buildActiveSubscriptionCard(controller),
                     const SizedBox(height: 16),
                     
                     // Subscription Plans card
@@ -141,6 +142,238 @@ class WalletView extends StatelessWidget {
                 ),
               );
             }),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActiveSubscriptionCard(WalletController controller) {
+    return Obx(() {
+      final hasSub = controller.hasActiveSubscription.value;
+      final sub = controller.activeSubscription.value;
+      final remainingMin = sub?.remainingMinutes ?? controller.remainingMinutes.value ?? 0;
+      final usedMin = sub?.usedMinutes ?? 0;
+      final totalMin = sub?.totalMinutes ?? remainingMin;
+      final expiry = controller.subscriptionExpiryDate.value ?? (sub?.expireDate != null ? controller.formatDate(sub!.expireDate) : '');
+      final planName = sub?.planName ?? 'Active Subscription';
+      final daysLeft = sub?.daysLeft ?? 0;
+
+      return Container(
+        margin: const EdgeInsets.only(top: 14),
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.05),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
+            ),
+          ],
+          border: Border.all(
+            color: hasSub 
+                ? AppColors.primary.withValues(alpha: 0.15) 
+                : Colors.grey[200]!,
+            width: 1,
+          ),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Stack(
+            children: [
+              Positioned(
+                top: 0,
+                bottom: 0,
+                left: 0,
+                width: 6,
+                child: Container(
+                  color: hasSub ? AppColors.primary : Colors.grey[400],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 16, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              hasSub ? Icons.verified_user_rounded : Icons.info_outline_rounded,
+                              color: hasSub ? AppColors.primary : Colors.grey[500],
+                              size: 18,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              hasSub ? planName : 'No Active Subscription',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey[800],
+                                letterSpacing: -0.2,
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (hasSub && daysLeft > 0)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: Colors.green.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.green.shade200, width: 1),
+                            ),
+                            child: Text(
+                              '$daysLeft days left',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.green.shade700,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    if (hasSub) ...[
+                      const SizedBox(height: 14),
+                      // Stats Row: Remaining, Used, Total
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildMinuteStatItem(
+                              icon: Icons.phone_in_talk_rounded,
+                              iconColor: Colors.green,
+                              bgColor: Colors.green.shade50,
+                              label: 'Remaining',
+                              value: '$remainingMin Min',
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _buildMinuteStatItem(
+                              icon: Icons.phone_callback_rounded,
+                              iconColor: Colors.blueGrey,
+                              bgColor: Colors.blueGrey.shade50,
+                              label: 'Used',
+                              value: '$usedMin Min',
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _buildMinuteStatItem(
+                              icon: Icons.timelapse_rounded,
+                              iconColor: Colors.purple,
+                              bgColor: Colors.purple.shade50,
+                              label: 'Total',
+                              value: '$totalMin Min',
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      // Expiry Date Row
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.shade50.withValues(alpha: 0.6),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.calendar_today_rounded, size: 14, color: Colors.orange.shade800),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Expiry Date: ',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 11,
+                                color: Colors.grey.shade600,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            Text(
+                              expiry.isNotEmpty ? expiry : 'N/A',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey.shade800,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ] else ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        'Buy a subscription plan below to get call minutes and see donor contact numbers.',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 12,
+                          color: Colors.grey[500],
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
+  Widget _buildMinuteStatItem({
+    required IconData icon,
+    required Color iconColor,
+    required Color bgColor,
+    required String label,
+    required String value,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 13, color: iconColor),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 10,
+                    color: Colors.grey.shade600,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey.shade800,
+            ),
           ),
         ],
       ),

@@ -82,6 +82,24 @@ class DonorProvider {
     return await client.post(uri, headers: headers, body: jsonEncode(body));
   }
 
+  Future<http.Response> volunteerRegisterDonor(Map<String, dynamic> body) async {
+    final storage = Get.find<StorageService>();
+    final token = storage.userToken;
+
+    final uri = Uri.parse('${ApiConstants.baseUrl}/user/volunteer/register-donor');
+
+    final Map<String, String> headers = {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    };
+
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    return await client.post(uri, headers: headers, body: jsonEncode(body));
+  }
+
   Future<http.Response> updateAvailability(bool isAvailable) async {
     final storage = Get.find<StorageService>();
     final token = storage.userToken;

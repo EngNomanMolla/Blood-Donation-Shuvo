@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:blood_donation/core/utils/app_colors.dart';
 import 'package:blood_donation/core/utils/text_styles.dart';
 import 'package:blood_donation/modules/home/models.dart';
+import '../controllers/home_controller.dart';
+import '../views/notification_detail_view.dart';
 
 /// Modern, beautiful notification panel that slides from the right
 class NotificationPanel extends StatefulWidget {
@@ -23,13 +26,8 @@ class _NotificationPanelState extends State<NotificationPanel>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
-
-  final List<NotificationItem> _mockNotifications = [
-    NotificationItem.payment(),
-    NotificationItem.cashback(),
-    NotificationItem.offer(),
-    NotificationItem.urgent(),
-  ];
+  
+  final HomeController _homeController = Get.find<HomeController>();
 
   @override
   void initState() {
@@ -49,6 +47,9 @@ class _NotificationPanelState extends State<NotificationPanel>
         );
 
     _animationController.forward();
+    
+    // Refresh notifications when panel opens
+    _homeController.fetchNotifications();
   }
 
   @override
@@ -103,12 +104,12 @@ class _NotificationPanelState extends State<NotificationPanel>
                 ),
               ),
               SizedBox(height: 4),
-              Text(
-                "4 new updates",
+              Obx(() => Text(
+                "${_homeController.unreadCount.value} new updates",
                 style: AllStyles.notificationTimeStyle.copyWith(
                   color: AppColors.darkGray,
                 ),
-              ),
+              )),
             ],
           ),
           Container(
@@ -128,16 +129,48 @@ class _NotificationPanelState extends State<NotificationPanel>
   }
 
   Widget _buildNotificationsList() {
-    final notifications = widget.notifications ?? _mockNotifications;
+    return Obx(() {
+      if (_homeController.isNotificationsLoading.value) {
+        return ListView.builder(
+          padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+          itemCount: 4,
+          itemBuilder: (context, index) => const ShimmerLoadingCard(),
+        );
+      }
 
-    return ListView.builder(
-      padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-      itemCount: notifications.length,
-      itemBuilder: (context, index) {
-        final notif = notifications[index];
-        return _buildNotificationCard(notif, index);
-      },
-    );
+      final notificationsList = widget.notifications ?? _homeController.notifications;
+
+      if (notificationsList.isEmpty) {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                "🔔",
+                style: TextStyle(fontSize: 48),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                "No notifications yet",
+                style: AllStyles.headingTextStyle.copyWith(
+                  fontSize: 16,
+                  color: AppColors.black.withValues(alpha: 0.6),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+
+      return ListView.builder(
+        padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        itemCount: notificationsList.length,
+        itemBuilder: (context, index) {
+          final notif = notificationsList[index];
+          return _buildNotificationCard(notif, index);
+        },
+      );
+    });
   }
 
   Widget _buildNotificationCard(NotificationItem notification, int index) {
@@ -150,7 +183,22 @@ class _NotificationPanelState extends State<NotificationPanel>
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: notification.onTap,
+              onTap: () {
+                _homeController.markAsRead(notification.id);
+                Get.to(() => NotificationDetailView(
+                  notification: NotificationItem(
+                    id: notification.id,
+                    title: notification.title,
+                    message: notification.message,
+                    details: notification.details,
+                    type: notification.type,
+                    timestamp: notification.timestamp,
+                    icon: notification.icon,
+                    isRead: true,
+                    onTap: notification.onTap,
+                  ),
+                ));
+              },
               borderRadius: BorderRadius.circular(16),
               child: Container(
                 decoration: BoxDecoration(
@@ -195,9 +243,10 @@ class _NotificationPanelState extends State<NotificationPanel>
                             ),
                           ),
                           child: Center(
-                            child: Text(
-                              notification.icon,
-                              style: TextStyle(fontSize: 28),
+                            child: Icon(
+                              _getCategoryIcon(notification.type),
+                              color: Colors.white,
+                              size: 24,
                             ),
                           ),
                         ),
@@ -265,6 +314,19 @@ class _NotificationPanelState extends State<NotificationPanel>
     );
   }
 
+  IconData _getCategoryIcon(NotificationType type) {
+    switch (type) {
+      case NotificationType.payment:
+        return Icons.payments_rounded;
+      case NotificationType.cashback:
+        return Icons.monetization_on_rounded;
+      case NotificationType.offer:
+        return Icons.local_offer_rounded;
+      case NotificationType.urgent:
+        return Icons.notifications_active_rounded;
+    }
+  }
+
   Color _getGradientStart(NotificationType type) {
     switch (type) {
       case NotificationType.payment:
@@ -292,4 +354,106 @@ class _NotificationPanelState extends State<NotificationPanel>
   }
 
   void Function() get onClose => widget.onClose;
+}
+
+/// A custom animatable shimmer card to load notifications.
+class ShimmerLoadingCard extends StatefulWidget {
+  const ShimmerLoadingCard({super.key});
+
+  @override
+  State<ShimmerLoadingCard> createState() => _ShimmerLoadingCardState();
+}
+
+class _ShimmerLoadingCardState extends State<ShimmerLoadingCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _shimmerController;
+
+  @override
+  void initState() {
+    super.initState();
+    _shimmerController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _shimmerController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _shimmerController,
+      builder: (context, child) {
+        final opacityVal = Tween<double>(begin: 0.35, end: 0.75).evaluate(_shimmerController);
+        return Opacity(
+          opacity: opacityVal,
+          child: Container(
+            margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                )
+              ]
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFE5E7EB),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 120,
+                        height: 14,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE5E7EB),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        width: double.infinity,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE5E7EB),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Container(
+                        width: 180,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE5E7EB),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 }

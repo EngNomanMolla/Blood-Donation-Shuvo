@@ -23,6 +23,7 @@ class NotificationItem {
   final String id;
   final String title;
   final String message;
+  final String? details;
   final NotificationType type;
   final DateTime timestamp;
   final String icon;
@@ -33,6 +34,7 @@ class NotificationItem {
     required this.id,
     required this.title,
     required this.message,
+    this.details,
     required this.type,
     required this.timestamp,
     required this.icon,

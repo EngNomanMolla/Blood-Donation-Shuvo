@@ -76,6 +76,10 @@ class DonorRepository {
     return await donorProvider.registerDonor(body);
   }
 
+  Future<http.Response> volunteerRegisterDonor(Map<String, dynamic> body) async {
+    return await donorProvider.volunteerRegisterDonor(body);
+  }
+
   Future<http.Response> updateAvailability(bool isAvailable) async {
     return await donorProvider.updateAvailability(isAvailable);
   }

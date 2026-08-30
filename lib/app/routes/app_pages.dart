@@ -29,6 +29,10 @@ import 'package:blood_donation/modules/volunteer_registration/views/volunteer_re
 import 'package:blood_donation/modules/assisted_registration/bindings/assisted_registration_binding.dart';
 import 'package:blood_donation/modules/assisted_registration/views/assisted_registration_view.dart';
 import 'package:blood_donation/modules/more/views/quick_register_view.dart';
+import 'package:blood_donation/modules/more/views/privacy_policy_view.dart';
+import 'package:blood_donation/modules/more/views/about_us_view.dart';
+import 'package:blood_donation/modules/call/bindings/call_binding.dart';
+import 'package:blood_donation/modules/call/views/call_view.dart';
 import 'package:blood_donation/modules/initial_recharge/bindings/initial_recharge_binding.dart';
 import 'package:blood_donation/modules/initial_recharge/views/initial_recharge_view.dart';
 import 'package:get/get.dart';
@@ -138,6 +142,15 @@ class AppPages {
       transitionDuration: const Duration(milliseconds: 400),
     ),
 
+    // Voice Call Screen
+    GetPage(
+      name: AppRoutes.call,
+      page: () => const CallView(),
+      binding: CallBinding(),
+      transition: Transition.downToUp,
+      transitionDuration: const Duration(milliseconds: 350),
+    ),
+
     // People Reviews Screen
     GetPage(
       name: AppRoutes.peopleReviews,
@@ -214,6 +227,22 @@ class AppPages {
       name: AppRoutes.initialRecharge,
       page: () => const InitialRechargeView(),
       binding: InitialRechargeBinding(),
+      transition: Transition.cupertino,
+      transitionDuration: const Duration(milliseconds: 400),
+    ),
+
+    // Privacy Policy Screen
+    GetPage(
+      name: AppRoutes.privacyPolicy,
+      page: () => const PrivacyPolicyView(),
+      transition: Transition.cupertino,
+      transitionDuration: const Duration(milliseconds: 400),
+    ),
+
+    // About Us Screen
+    GetPage(
+      name: AppRoutes.aboutUs,
+      page: () => const AboutUsView(),
       transition: Transition.cupertino,
       transitionDuration: const Duration(milliseconds: 400),
     ),

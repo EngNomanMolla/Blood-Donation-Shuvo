@@ -1,4 +1,9 @@
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:blood_donation/app/routes/app_routes.dart';
+import 'package:blood_donation/data/providers/wallet_provider.dart';
 import 'package:blood_donation/data/repositories/donor_repository.dart';
+import 'package:blood_donation/data/repositories/wallet_repository.dart';
 import 'package:blood_donation/modules/doner_request/models/doner_list_model.dart';
 import 'package:blood_donation/modules/doner_details/models/doner_details_model.dart';
 import 'package:get/get.dart';
@@ -24,13 +29,22 @@ class ProfileController extends GetxController {
     phone: '',
   ).obs;
 
+  final donorId = 0.obs;
   final isLoading = false.obs;
+  final remainingMinutes = Rxn<int>();
+  final isCheckingMinutes = false.obs;
+  final hasActiveSubscription = false.obs;
 
   @override
   void onInit() {
     super.onInit();
     final Donor? argDonor = Get.arguments?['donor'];
+    final int? passedId = Get.arguments?['id'] ?? Get.arguments?['donor_id'];
+    if (passedId != null) {
+      donorId.value = passedId;
+    }
     if (argDonor != null) {
+      donorId.value = argDonor.id;
       user.value = UserProfile(
         name: argDonor.name,
         email: '',
@@ -50,7 +64,190 @@ class ProfileController extends GetxController {
         phone: argDonor.phone,
       );
       fetchDonorDetails(argDonor.id);
+    } else if (passedId != null) {
+      fetchDonorDetails(passedId);
     }
+    fetchCallerMinutes();
+  }
+
+  Future<void> fetchCallerMinutes() async {
+    try {
+      final WalletProvider walletProvider = Get.isRegistered<WalletProvider>()
+          ? Get.find<WalletProvider>()
+          : Get.put(WalletProvider());
+
+      final WalletRepository walletRepository = Get.isRegistered<WalletRepository>()
+          ? Get.find<WalletRepository>()
+          : Get.put(WalletRepository(walletProvider));
+
+      // 1. Try dedicated active subscription endpoint
+      final subResponse = await walletRepository.getActiveSubscription();
+      if (subResponse.statusCode == 200) {
+        final subDecoded = jsonDecode(subResponse.body);
+        if (subDecoded['has_active_subscription'] == true && subDecoded['active_subscription'] != null) {
+          hasActiveSubscription.value = true;
+          final activeSub = subDecoded['active_subscription'];
+          remainingMinutes.value = activeSub['remaining_call_minutes'] ?? activeSub['current_minutes'] ?? activeSub['total_call_minutes'] ?? 0;
+          return;
+        }
+      }
+
+      // 2. Fallback to general wallet endpoint
+      final response = await walletRepository.getWallet();
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        final dynamic subData = decoded['subscription'];
+        if (subData != null && subData is Map) {
+          hasActiveSubscription.value = true;
+          remainingMinutes.value = subData['call_minutes'] ?? subData['minutes'] ?? 0;
+        } else if (decoded['call_minutes'] != null || decoded['subscription_ends_at'] != null) {
+          hasActiveSubscription.value = true;
+          remainingMinutes.value = decoded['call_minutes'] ?? 0;
+        } else {
+          hasActiveSubscription.value = false;
+          remainingMinutes.value = 0;
+        }
+      }
+    } catch (e) {
+      debugPrint("Error fetching caller minutes: $e");
+    }
+  }
+
+  Future<void> initiateDonorCall() async {
+    isCheckingMinutes.value = true;
+    try {
+      // Re-fetch latest minutes from wallet
+      await fetchCallerMinutes();
+
+      final int minutes = remainingMinutes.value ?? 0;
+      if (minutes <= 0) {
+        _showInsufficientMinutesDialog();
+      } else {
+        _proceedWithAppCall(minutes);
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Unable to initiate call. Please try again.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+      );
+    } finally {
+      isCheckingMinutes.value = false;
+    }
+  }
+
+  void _showInsufficientMinutesDialog() {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: Colors.white,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 68,
+                height: 68,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFFEEF1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.phone_disabled_rounded,
+                  color: Color(0xFFE8194B),
+                  size: 34,
+                ),
+              ),
+              const SizedBox(height: 18),
+              const Text(
+                'Insufficient Call Minutes',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1A1A2E),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'You do not have enough call minutes to make this call. Please recharge your minutes or purchase a subscription plan to connect.',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey.shade600,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        side: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      onPressed: () => Get.back(),
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(
+                          color: Colors.grey.shade700,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFE8194B),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      onPressed: () {
+                        Get.back();
+                        Get.toNamed(AppRoutes.subscriptionPlans);
+                      },
+                      child: const Text(
+                        'Recharge Now',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _proceedWithAppCall(int availableMinutes) {
+    Get.toNamed(
+      AppRoutes.call,
+      arguments: {
+        'recipient_id': donorId.value,
+        'donor_name': donor.value.name,
+        'donor_avatar': donor.value.imageUrl,
+        'blood_group': user.value.bloodType,
+        'available_minutes': availableMinutes,
+      },
+    );
   }
 
   Future<void> fetchDonorDetails(int id) async {

@@ -262,26 +262,35 @@ class SubscriptionPlansView extends GetView<WalletController> {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Get.back();
-                        Get.snackbar(
-                          'Success',
-                          'Subscription to ${plan.name} request sent! Processing payment.',
-                          backgroundColor: const Color(0xFF4CAF50),
-                          colorText: Colors.white,
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        elevation: 0,
-                      ),
-                      child: const Text(
-                        'Confirm',
-                        style: TextStyle(fontFamily: 'Poppins', color: Colors.white, fontWeight: FontWeight.bold),
-                      ),
-                    ),
+                    child: Obx(() {
+                      final isPurchasing = controller.isPurchasing.value;
+                      return ElevatedButton(
+                        onPressed: isPurchasing
+                            ? null
+                            : () async {
+                                await controller.purchaseSubscriptionPlan(plan.id, plan.name);
+                                Get.back();
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          elevation: 0,
+                        ),
+                        child: isPurchasing
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text(
+                                'Confirm',
+                                style: TextStyle(fontFamily: 'Poppins', color: Colors.white, fontWeight: FontWeight.bold),
+                              ),
+                      );
+                    }),
                   ),
                 ],
               ),

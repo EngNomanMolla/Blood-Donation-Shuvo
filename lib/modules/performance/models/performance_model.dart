@@ -108,3 +108,53 @@ class DonationInfoModel {
     required this.nextDonationDate,
   });
 }
+
+class WithdrawalModel {
+  final int id;
+  final double amount;
+  final String method;
+  final String accountNumber;
+  final String? note;
+  final String status;
+  final String? adminNote;
+  final DateTime createdAt;
+
+  const WithdrawalModel({
+    required this.id,
+    required this.amount,
+    required this.method,
+    required this.accountNumber,
+    this.note,
+    required this.status,
+    this.adminNote,
+    required this.createdAt,
+  });
+
+  String get formattedDate {
+    return '${_monthName(createdAt.month)} ${createdAt.day} , ${createdAt.hour.toString().padLeft(2, '0')}:${createdAt.minute.toString().padLeft(2, '0')}';
+  }
+
+  String _monthName(int month) {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return months[month - 1];
+  }
+
+  Color get statusColor {
+    switch (status.toLowerCase()) {
+      case 'approved':
+      case 'completed':
+      case 'successful':
+      case 'success':
+        return const Color(0xFF16A34A);
+      case 'rejected':
+      case 'failed':
+        return const Color(0xFFEF4444);
+      case 'pending':
+      default:
+        return const Color(0xFFF59E0B);
+    }
+  }
+}

@@ -42,4 +42,21 @@ class ProfileProvider {
     final streamedResponse = await request.send();
     return await http.Response.fromStream(streamedResponse);
   }
+
+  Future<http.Response> deleteVolunteerAccount() async {
+    final url = Uri.parse('${ApiConstants.baseUrl}/user/volunteer/account');
+    final storage = Get.find<StorageService>();
+    final token = storage.userToken;
+
+    final Map<String, String> headers = {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    };
+
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    return await client.delete(url, headers: headers);
+  }
 }

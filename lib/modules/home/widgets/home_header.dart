@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:blood_donation/core/utils/app_colors.dart';
 import 'package:blood_donation/core/utils/text_styles.dart';
 import '../constants.dart';
+import '../controllers/home_controller.dart';
 
 /// Header section with avatar, balance, and notification button
 class HomeHeader extends StatefulWidget {
@@ -61,6 +63,7 @@ class _HomeHeaderState extends State<HomeHeader> {
   }
 
   Widget _buildAvatar() {
+    final HomeController homeController = Get.find<HomeController>();
     return SizedBox(
       width: 60,
       child: Container(
@@ -79,18 +82,37 @@ class _HomeHeaderState extends State<HomeHeader> {
             )
           ],
         ),
-        child: const CircleAvatar(
-          radius: HomeConstants.avatarRadius,
-          backgroundImage: NetworkImage(HomeConstants.avatarUrl),
-        ),
+        child: Obx(() {
+          final avatar = homeController.avatarUrl.value;
+          if (avatar.isNotEmpty) {
+            return CircleAvatar(
+              radius: HomeConstants.avatarRadius,
+              backgroundImage: NetworkImage(avatar),
+            );
+          } else {
+            return const CircleAvatar(
+              radius: HomeConstants.avatarRadius,
+              backgroundColor: Color(0xFFFDECF4),
+              child: Icon(
+                Icons.person_rounded,
+                color: AppColors.primary,
+                size: 24,
+              ),
+            );
+          }
+        }),
       ),
     );
   }
 
   Widget _buildBalanceButton() {
+    final HomeController homeController = Get.find<HomeController>();
     return Expanded(
       child: GestureDetector(
-        onTap: _handleBalanceTap,
+        onTap: () {
+          _handleBalanceTap();
+          homeController.fetchWalletBalance();
+        },
         child: AnimatedContainer(
           duration: HomeConstants.containerAnimationDuration,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -109,19 +131,23 @@ class _HomeHeaderState extends State<HomeHeader> {
                 ),
               ),
               const SizedBox(width: 6),
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 250),
-                child: Text(
-                  _showBalance
-                      ? HomeConstants.balanceValue
-                      : HomeConstants.balancePlaceholder,
-                  key: ValueKey(_showBalance),
-                  style: AllStyles.subtitleTextStyle.copyWith(
-                    color: AppColors.white,
-                    fontWeight: FontWeight.w600,
+              Obx(() {
+                final balance = homeController.walletBalance.value;
+                final displayBalance = balance.replaceAll('৳', '').trim();
+                return AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 250),
+                  child: Text(
+                    _showBalance
+                        ? displayBalance
+                        : HomeConstants.balancePlaceholder,
+                    key: ValueKey(_showBalance),
+                    style: AllStyles.subtitleTextStyle.copyWith(
+                      color: AppColors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-              ),
+                );
+              }),
             ],
           ),
         ),
@@ -130,6 +156,7 @@ class _HomeHeaderState extends State<HomeHeader> {
   }
 
   Widget _buildNotificationButton() {
+    final HomeController homeController = Get.find<HomeController>();
     return SizedBox(
       width: 50,
       child: GestureDetector(
@@ -142,18 +169,23 @@ class _HomeHeaderState extends State<HomeHeader> {
               backgroundColor: Color(0xFFF7D7E1),
               child: Icon(Icons.notifications_none),
             ),
-            Positioned(
-              right: 8,
-              top: 8,
-              child: Container(
-                width: 8,
-                height: 8,
-                decoration: const BoxDecoration(
-                  color: AppColors.primary,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
+            Obx(() {
+              if (homeController.unreadCount.value > 0) {
+                return Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            }),
           ],
         ),
       ),

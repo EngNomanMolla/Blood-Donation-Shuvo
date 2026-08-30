@@ -92,4 +92,8 @@ class ProfileRepository {
   Future<http.Response> updateProfileImage(String imagePath) async {
     return await provider.updateProfileImage(imagePath);
   }
+
+  Future<http.Response> deleteVolunteerAccount() async {
+    return await provider.deleteVolunteerAccount();
+  }
 }

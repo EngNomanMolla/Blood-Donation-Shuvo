@@ -15,6 +15,7 @@ class AppRoutes {
   static const String wallet = '/wallet';
   static const String profile = '/profile';
   static const String subscriptionPlans = '/subscription-plans';
+  static const String call = '/call';
   static const String peopleReviews = '/people-reviews';
   static const String support = '/support';
   static const String volunteerDashboard = '/volunteer-dashboard';
@@ -24,4 +25,6 @@ class AppRoutes {
   static const String assistedRegistration = '/assisted-registration';
   static const String quickRegister = '/quick-register';
   static const String initialRecharge = '/initial-recharge';
+  static const String privacyPolicy = '/privacy-policy';
+  static const String aboutUs = '/about-us';
 }

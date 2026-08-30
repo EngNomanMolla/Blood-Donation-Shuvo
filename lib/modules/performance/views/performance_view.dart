@@ -29,21 +29,30 @@ class PerformanceView extends StatelessWidget {
         children: [
           _PerformanceAppBar(),
           Expanded(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  StatsGridSection(stats: controller.stats),
-                  const SizedBox(height: 16),
-                  MyLevelSection(level: controller.currentLevel),
-                  const SizedBox(height: 16),
-                  AvailableLevelSection(levels: controller.availableLevels),
-                  const SizedBox(height: 16),
-                ],
-              ),
-            ),
+            child: Obx(() {
+              if (controller.isLoading.value && controller.currentLevel.value == null) {
+                return const Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                );
+              }
+              return SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    StatsGridSection(stats: controller.stats),
+                    const SizedBox(height: 16),
+                    if (controller.currentLevel.value != null) ...[
+                      MyLevelSection(level: controller.currentLevel.value!),
+                      const SizedBox(height: 16),
+                    ],
+                    AvailableLevelSection(levels: controller.availableLevels),
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              );
+            }),
           ),
         ],
       ),

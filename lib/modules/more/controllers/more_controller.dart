@@ -58,10 +58,9 @@ class MoreController extends GetxController {
     }
 
     list.addAll([
-      const MoreMenuItem(icon: Icons.help_outline, title: 'FAQ'),
       const MoreMenuItem(icon: Icons.headset_mic_outlined, title: 'Help & Support', route: AppRoutes.support),
-      const MoreMenuItem(icon: Icons.lock_outline, title: 'Privacy policy\'s'),
-      const MoreMenuItem(icon: Icons.info_outline, title: 'About Us'),
+      const MoreMenuItem(icon: Icons.lock_outline, title: 'Privacy Policy', route: AppRoutes.privacyPolicy),
+      const MoreMenuItem(icon: Icons.info_outline, title: 'About Us', route: AppRoutes.aboutUs),
       const MoreMenuItem(icon: Icons.logout_outlined, title: 'Logout'),
     ]);
 
@@ -155,10 +154,8 @@ class MoreController extends GetxController {
     fetchUserProfile();
   }
 
-  /// Called when user taps "Become A Volunteer"
   void handleBecomeVolunteer() async {
     if (isVolunteer.value) {
-      // Already a volunteer — do nothing (card is disabled)
       return;
     }
 
@@ -173,7 +170,6 @@ class MoreController extends GetxController {
     }
 
     if (isDonor.value) {
-      // Has donor data — show quick confirm screen
       await Get.toNamed(
         AppRoutes.quickRegister,
         arguments: {
@@ -182,7 +178,6 @@ class MoreController extends GetxController {
         },
       );
     } else {
-      // Fresh user — go to full form
       await Get.toNamed(AppRoutes.volunteerRegistration);
     }
     fetchUserProfile();
@@ -216,15 +211,48 @@ class MoreController extends GetxController {
     );
   }
 
-  void deleteAccount() {
+  void deleteAccount() async {
     Get.back();
-    Get.snackbar(
-      'Account Deleted',
-      'Your account has been successfully removed.',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.redAccent,
-      colorText: Colors.white,
-    );
+    isLoading.value = true;
+    try {
+      final profileRepo = Get.find<ProfileRepository>();
+      final response = await profileRepo.deleteVolunteerAccount();
+      debugPrint("Delete Volunteer Account API debug - Code: ${response.statusCode}");
+      debugPrint("Delete Volunteer Account API debug - Body: ${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        final storage = Get.find<StorageService>();
+        await storage.clearAuth();
+        Get.offAllNamed(AppRoutes.login);
+
+        Get.snackbar(
+          'Account Deleted',
+          'Your volunteer account has been successfully removed.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFFE53935),
+          colorText: Colors.white,
+        );
+      } else {
+        Get.snackbar(
+          'Error',
+          'Failed to delete volunteer account: ${response.statusCode}',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.redAccent,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      debugPrint("Error during delete volunteer account: $e");
+      Get.snackbar(
+        'Error',
+        'An error occurred while deleting your account: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   Future<void> changeProfileImage() async {

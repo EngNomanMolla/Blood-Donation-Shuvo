@@ -10,6 +10,10 @@ class AuthRepository {
     return await authProvider.sendCode(phone);
   }
 
+  Future<http.Response> volunteerSendCode(String phone) async {
+    return await authProvider.volunteerSendCode(phone);
+  }
+
   Future<http.Response> verifyCode(String phone, String code, {String? fcmToken}) async {
     return await authProvider.verifyCode(phone, code, fcmToken: fcmToken);
   }

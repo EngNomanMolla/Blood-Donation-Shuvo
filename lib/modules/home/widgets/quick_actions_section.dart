@@ -25,19 +25,6 @@ class QuickActionsSection extends StatelessWidget {
         onTap: () => Get.toNamed(AppRoutes.emergencyContacts),
       ),
       QuickActionModel(
-        label: "Referral Bonus",
-        icon: Icons.favorite_rounded,
-        iconColor: AppColors.primary,
-        iconBg: const Color(0xFFFCECEE),
-      ),
-      QuickActionModel(
-        label: "People Review's",
-        icon: Icons.chat_bubble_rounded,
-        iconColor: Colors.orange,
-        iconBg: const Color(0xFFFFF3E0),
-        onTap: () => Get.toNamed(AppRoutes.peopleReviews),
-      ),
-      QuickActionModel(
         label: "Support",
         icon: Icons.support_agent_rounded,
         iconColor: Colors.blueGrey,
@@ -53,8 +40,8 @@ class QuickActionsSection extends StatelessWidget {
     final isMobile = screenWidth < 600;
     
     // Responsive grid columns
-    final crossAxisCount = isMobile ? 2 : 3;
-    final aspectRatio = isMobile ? 2.6 : 2.8;
+    final crossAxisCount = 2;
+    final aspectRatio = isMobile ? 2.0 : 2.2;
     final spacing = isMobile ? 14.0 : 16.0;
     final horizontalPadding = isMobile ? 14.0 : HomeConstants.headerPadding.toDouble();
 

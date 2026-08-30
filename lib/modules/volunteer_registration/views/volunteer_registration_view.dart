@@ -133,37 +133,40 @@ class VolunteerRegistrationView extends GetView<VolunteerRegistrationController>
                       children: [
                         Expanded(
                           child: _compactDropdown(
-                            value: controller.selectedDistrict.value.isEmpty
-                                ? null
-                                : controller.selectedDistrict.value,
-                            hint: 'District',
-                            items: controller.districtOptions,
+                            value: controller.divisions.contains(controller.selectedDivision.value)
+                                ? controller.selectedDivision.value
+                                : null,
+                            hint: controller.isDivisionsLoading.value ? 'Loading...' : 'Division',
+                            items: controller.divisions,
+                            onChanged: (v) =>
+                                controller.selectedDivision.value = v ?? '',
+                            isDisabled: controller.isDivisionsLoading.value,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _compactDropdown(
+                            value: controller.districts.contains(controller.selectedDistrict.value)
+                                ? controller.selectedDistrict.value
+                                : null,
+                            hint: controller.isDistrictsLoading.value ? 'Loading...' : 'District',
+                            items: controller.districts,
                             onChanged: (v) =>
                                 controller.selectedDistrict.value = v ?? '',
+                            isDisabled: controller.selectedDivision.value.isEmpty || controller.isDistrictsLoading.value,
                           ),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: _compactDropdown(
-                            value: controller.selectedUpazila.value.isEmpty
-                                ? null
-                                : controller.selectedUpazila.value,
-                            hint: 'Upazila',
-                            items: controller.upazilaOptions,
+                            value: controller.upazilas.contains(controller.selectedUpazila.value)
+                                ? controller.selectedUpazila.value
+                                : null,
+                            hint: controller.isUpazilasLoading.value ? 'Loading...' : 'Upazila',
+                            items: controller.upazilas,
                             onChanged: (v) =>
                                 controller.selectedUpazila.value = v ?? '',
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: _compactDropdown(
-                            value: controller.selectedThana.value.isEmpty
-                                ? null
-                                : controller.selectedThana.value,
-                            hint: 'Thana',
-                            items: controller.thanaOptions,
-                            onChanged: (v) =>
-                                controller.selectedThana.value = v ?? '',
+                            isDisabled: controller.selectedDistrict.value.isEmpty || controller.isUpazilasLoading.value,
                           ),
                         ),
                       ],
@@ -399,10 +402,11 @@ class VolunteerRegistrationView extends GetView<VolunteerRegistrationController>
     required String hint,
     required List<String> items,
     required ValueChanged<String?> onChanged,
+    bool isDisabled = false,
   }) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 10),
     decoration: BoxDecoration(
-      color: Colors.white,
+      color: isDisabled ? Colors.grey.shade100 : Colors.white,
       borderRadius: BorderRadius.circular(12),
       boxShadow: [
         BoxShadow(
@@ -411,24 +415,27 @@ class VolunteerRegistrationView extends GetView<VolunteerRegistrationController>
           offset: const Offset(0, 4),
         ),
       ],
+      border: isDisabled ? Border.all(color: Colors.grey.shade200) : null,
     ),
     child: DropdownButtonHideUnderline(
       child: DropdownButton<String>(
-        value: value,
+        value: isDisabled ? null : value,
         hint: Text(
           hint,
-          style: const TextStyle(fontFamily: 'Poppins', fontSize: 11, color: _hintGray),
+          style: TextStyle(fontFamily: 'Poppins', fontSize: 11, color: isDisabled ? Colors.grey.shade400 : _hintGray),
           overflow: TextOverflow.ellipsis,
         ),
         isExpanded: true,
-        icon: const Icon(Icons.keyboard_arrow_down_rounded, color: _hintGray, size: 18),
+        icon: Icon(Icons.keyboard_arrow_down_rounded, color: isDisabled ? Colors.grey.shade400 : _hintGray, size: 18),
         dropdownColor: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        style: const TextStyle(fontFamily: 'Poppins', fontSize: 11, color: _labelColor),
-        items: items
-            .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-            .toList(),
-        onChanged: onChanged,
+        style: TextStyle(fontFamily: 'Poppins', fontSize: 11, color: isDisabled ? Colors.grey.shade400 : _labelColor),
+        items: isDisabled
+            ? null
+            : items
+                .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                .toList(),
+        onChanged: isDisabled ? null : onChanged,
       ),
     ),
   );

@@ -140,7 +140,7 @@ class DonateScreen extends GetView<DonateController> {
   }
 
   Widget _buildFilterRow() {
-    return Row(
+    return Obx(() => Row(
       children: [
         _buildDropdown(
           selected: controller.selectedDivision,
@@ -154,6 +154,7 @@ class DonateScreen extends GetView<DonateController> {
               controller.selectedDivision.value = val;
             },
           ),
+          isLoading: controller.isDivisionsLoading.value,
         ),
         const SizedBox(width: 8),
         _buildDropdown(
@@ -175,6 +176,8 @@ class DonateScreen extends GetView<DonateController> {
               },
             );
           },
+          isDisabled: controller.selectedDivision.value == 'Division',
+          isLoading: controller.isDistrictsLoading.value,
         ),
         const SizedBox(width: 8),
         _buildDropdown(
@@ -196,61 +199,80 @@ class DonateScreen extends GetView<DonateController> {
               },
             );
           },
+          isDisabled: controller.selectedDistrict.value == 'District',
+          isLoading: controller.isUpazilasLoading.value,
         ),
       ],
-    );
+    ));
   }
 
   Widget _buildDropdown({
     required RxString selected,
     required String label,
     required VoidCallback onTap,
+    bool isDisabled = false,
+    bool isLoading = false,
   }) {
+    final isSelected = selected.value != label;
+    final actualText = isLoading ? 'Loading...' : selected.value;
     return Expanded(
-      child: Obx(() {
-        final isSelected = selected.value != label;
-        return GestureDetector(
-          onTap: onTap,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: isSelected ? primaryRed : const Color(0xFFFFCDD5),
-                width: 1.5,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.pink.withValues(alpha: 0.06),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+      child: GestureDetector(
+        onTap: (isDisabled || isLoading) ? null : onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: (isDisabled || isLoading) ? Colors.grey.shade50 : Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: (isDisabled || isLoading)
+                  ? Colors.grey.shade200
+                  : (isSelected ? primaryRed : const Color(0xFFFFCDD5)),
+              width: 1.5,
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    selected.value,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: isSelected ? primaryRed : Colors.grey.shade600,
-                    ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.pink.withValues(alpha: 0.06),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  actualText,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: (isDisabled || isLoading)
+                        ? Colors.grey.shade400
+                        : (isSelected ? primaryRed : Colors.grey.shade600),
                   ),
                 ),
+              ),
+              if (isLoading)
+                const SizedBox(
+                  width: 12,
+                  height: 12,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 1.5,
+                    color: primaryRed,
+                  ),
+                )
+              else
                 Icon(
                   Icons.keyboard_arrow_down_rounded,
-                  color: isSelected ? primaryRed : Colors.grey.shade600,
+                  color: (isDisabled || isLoading)
+                      ? Colors.grey.shade400
+                      : (isSelected ? primaryRed : Colors.grey.shade600),
                   size: 18,
                 ),
-              ],
-            ),
+            ],
           ),
-        );
-      }),
+        ),
+      ),
     );
   }
 

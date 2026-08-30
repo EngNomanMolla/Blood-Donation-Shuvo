@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:get/get.dart';
 import '../../core/constants/api_constants.dart';
+import '../../core/services/storage_service.dart';
 
 class AuthProvider {
   final http.Client client;
@@ -13,6 +15,22 @@ class AuthProvider {
       url,
       headers: {
         'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'phone': phone,
+      }),
+    );
+  }
+
+  Future<http.Response> volunteerSendCode(String phone) async {
+    final url = Uri.parse('${ApiConstants.baseUrl}/user/volunteer/send-code');
+    final storage = Get.find<StorageService>();
+    final token = storage.userToken;
+    return await client.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
       },
       body: jsonEncode({
         'phone': phone,

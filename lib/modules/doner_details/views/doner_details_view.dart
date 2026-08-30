@@ -1,7 +1,7 @@
+import 'package:blood_donation/app/routes/app_routes.dart';
 import 'package:blood_donation/modules/doner_details/controllers.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class DonerDetailsView extends StatelessWidget {
   DonerDetailsView({super.key});
@@ -367,47 +367,78 @@ class DonerDetailsView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            'Your Mobile Balance Is Not Sufficient',
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
-          ),
+          Obx(() {
+            final minutes = controller.remainingMinutes.value ?? 0;
+            if (minutes > 0) {
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.timer_outlined, size: 14, color: Color(0xFF2E7D32)),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Available Call Minutes: $minutes Min',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF2E7D32),
+                    ),
+                  ),
+                ],
+              );
+            }
+            return Text(
+              'Your Mobile Balance / Minutes Is Not Sufficient',
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+            );
+          }),
           const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
-                child: GestureDetector(
-                  onTap: () async {
-                    final phone = controller.donor.value.phone;
-                    if (phone.isNotEmpty) {
-                      final url = Uri.parse('tel:$phone');
-                      if (await canLaunchUrl(url)) {
-                        await launchUrl(url);
-                      }
-                    }
-                  },
-                  child: Container(
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Center(
-                      child: Text(
-                        'Call',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF555555),
-                        ),
+                child: Obx(() {
+                  final isChecking = controller.isCheckingMinutes.value;
+                  return GestureDetector(
+                    onTap: isChecking ? null : () => controller.initiateDonorCall(),
+                    child: Container(
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: isChecking ? Colors.grey.shade300 : const Color(0xFF2E7D32),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Center(
+                        child: isChecking
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              )
+                            : const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.call, color: Colors.white, size: 18),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Call',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
                       ),
                     ),
-                  ),
-                ),
+                  );
+                }),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: GestureDetector(
-                  onTap: () {},
+                  onTap: () => Get.toNamed(AppRoutes.subscriptionPlans),
                   child: Container(
                     height: 50,
                     decoration: BoxDecoration(
@@ -416,13 +447,20 @@ class DonerDetailsView extends StatelessWidget {
                       border: Border.all(color: primaryRed, width: 1.8),
                     ),
                     child: const Center(
-                      child: Text(
-                        'Recharge',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: primaryRed,
-                        ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.bolt_rounded, color: primaryRed, size: 20),
+                          SizedBox(width: 6),
+                          Text(
+                            'Recharge',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: primaryRed,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
