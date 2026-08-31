@@ -151,12 +151,15 @@ class CallController extends GetxController {
           await _engine.release();
         } catch (_) {}
         _isEngineInitialized = false;
+        // Brief pause to allow native audio thread release
+        await Future.delayed(const Duration(milliseconds: 150));
       }
 
       _engine = createAgoraRtcEngine();
       await _engine.initialize(RtcEngineContext(
         appId: tokenData.appId.trim(),
         channelProfile: ChannelProfileType.channelProfileCommunication,
+        audioScenario: AudioScenarioType.audioScenarioDefault,
       ));
       _isEngineInitialized = true;
       debugStep.value = 'Agora Engine Initialized';
@@ -254,6 +257,7 @@ class CallController extends GetxController {
 
       // 5. Setup Audio & Join Channel
       try {
+        await _engine.setClientRole(role: ClientRoleType.clientRoleBroadcaster);
         await _engine.enableAudio();
         await _engine.setDefaultAudioRouteToSpeakerphone(isSpeakerOn.value);
       } catch (audioErr) {
@@ -280,7 +284,11 @@ class CallController extends GetxController {
           channelProfile: ChannelProfileType.channelProfileCommunication,
           clientRoleType: ClientRoleType.clientRoleBroadcaster,
           publishMicrophoneTrack: true,
+          publishCameraTrack: false,
+          publishScreenTrack: false,
+          publishCustomAudioTrack: false,
           autoSubscribeAudio: true,
+          autoSubscribeVideo: false,
         ),
       );
       debugPrint("✅ Agora joinChannel() executed without exception");
