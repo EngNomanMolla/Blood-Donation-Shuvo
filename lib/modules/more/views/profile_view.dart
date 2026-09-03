@@ -1,7 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
 import 'package:blood_donation/core/utils/app_colors.dart';
 import 'package:blood_donation/core/utils/text_styles.dart';
+import '../../../core/constants/api_constants.dart';
 import '../../../data/repositories/profile_repository.dart';
 import '../../home/controllers/home_controller.dart';
 
@@ -20,9 +23,19 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _dobController = TextEditingController();
-  final TextEditingController _divisionController = TextEditingController();
-  final TextEditingController _districtController = TextEditingController();
-  final TextEditingController _upazilaController = TextEditingController();
+
+  // Address Dropdown states
+  String? _selectedDivision;
+  String? _selectedDistrict;
+  String? _selectedUpazila;
+
+  List<String> _divisions = [];
+  List<String> _districts = [];
+  List<String> _upazilas = [];
+
+  bool _isDivisionsLoading = false;
+  bool _isDistrictsLoading = false;
+  bool _isUpazilasLoading = false;
 
   // Controllers for Donor Info
   final TextEditingController _donationsCountController = TextEditingController();
@@ -43,7 +56,7 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _loadUserProfile();
+    _initializeData();
   }
 
   @override
@@ -53,9 +66,6 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
     _emailController.dispose();
     _phoneController.dispose();
     _dobController.dispose();
-    _divisionController.dispose();
-    _districtController.dispose();
-    _upazilaController.dispose();
     _donationsCountController.dispose();
     _lastDonationDateController.dispose();
     _preferredLocationController.dispose();
@@ -63,8 +73,14 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
     super.dispose();
   }
 
-  Future<void> _loadUserProfile() async {
+  Future<void> _initializeData() async {
     setState(() => _isLoading = true);
+    await _loadUserProfile();
+    await _fetchDivisions();
+    if (mounted) setState(() => _isLoading = false);
+  }
+
+  Future<void> _loadUserProfile() async {
     try {
       if (Get.isRegistered<ProfileRepository>()) {
         final profile = await Get.find<ProfileRepository>().getProfile();
@@ -73,9 +89,10 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
           _emailController.text = profile.email ?? '';
           _phoneController.text = profile.phone ?? '';
           _dobController.text = profile.dateOfBirth ?? '';
-          _divisionController.text = profile.division ?? '';
-          _districtController.text = profile.district ?? '';
-          _upazilaController.text = profile.upazila ?? '';
+
+          _selectedDivision = profile.division?.isNotEmpty == true ? profile.division : null;
+          _selectedDistrict = profile.district?.isNotEmpty == true ? profile.district : null;
+          _selectedUpazila = profile.upazila?.isNotEmpty == true ? profile.upazila : null;
 
           if (profile.gender != null && _genders.contains(profile.gender)) {
             _selectedGender = profile.gender!;
@@ -88,12 +105,100 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
           _isDonorAvailable = profile.isAvailable;
           _donationsCountController.text = profile.donationsCount.toString();
           _avatarUrl = profile.avatar;
+
+          // Cascade load districts and upazilas for the default user address
+          if (_selectedDivision != null) {
+            await _fetchDistricts(_selectedDivision!, setInitial: true);
+          }
         }
       }
     } catch (e) {
       debugPrint("Error loading profile: $e");
+    }
+  }
+
+  // ── Address API Calls ──────────────────────────────────────────────────────
+
+  Future<void> _fetchDivisions() async {
+    setState(() => _isDivisionsLoading = true);
+    try {
+      final response = await http.get(Uri.parse(ApiConstants.bdApisDivisions));
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        final List<dynamic> listData = decoded['data'] ?? [];
+        final fetched = listData.map((e) => e['division'].toString()).toList()..sort();
+        setState(() {
+          _divisions = fetched;
+          if (_selectedDivision != null && !_divisions.contains(_selectedDivision)) {
+            // Find match ignoring case
+            final match = _divisions.firstWhereOrNull((d) => d.toLowerCase() == _selectedDivision!.toLowerCase());
+            if (match != null) _selectedDivision = match;
+          }
+        });
+      }
+    } catch (e) {
+      debugPrint("Error fetching divisions: $e");
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) setState(() => _isDivisionsLoading = false);
+    }
+  }
+
+  Future<void> _fetchDistricts(String division, {bool setInitial = false}) async {
+    setState(() => _isDistrictsLoading = true);
+    try {
+      final response = await http.get(Uri.parse('${ApiConstants.bdApisDivisionDetail}/$division'));
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        final List<dynamic> listData = decoded['data'] ?? [];
+        final fetched = listData.map((e) => e['district'].toString()).toList()..sort();
+        setState(() {
+          _districts = fetched;
+          if (!setInitial) {
+            _selectedDistrict = null;
+            _selectedUpazila = null;
+            _upazilas = [];
+          } else if (_selectedDistrict != null && !_districts.contains(_selectedDistrict)) {
+            final match = _districts.firstWhereOrNull((d) => d.toLowerCase() == _selectedDistrict!.toLowerCase());
+            if (match != null) _selectedDistrict = match;
+          }
+        });
+
+        if (setInitial && _selectedDistrict != null) {
+          await _fetchUpazilas(_selectedDistrict!, setInitial: true);
+        }
+      }
+    } catch (e) {
+      debugPrint("Error fetching districts for $division: $e");
+    } finally {
+      if (mounted) setState(() => _isDistrictsLoading = false);
+    }
+  }
+
+  Future<void> _fetchUpazilas(String district, {bool setInitial = false}) async {
+    setState(() => _isUpazilasLoading = true);
+    try {
+      final response = await http.get(Uri.parse('${ApiConstants.bdApisDistrictDetail}/$district'));
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        final List<dynamic> listData = decoded['data'] ?? [];
+        if (listData.isNotEmpty) {
+          final List<dynamic> ups = listData[0]['upazillas'] ?? [];
+          final fetched = ups.map((e) => e.toString()).toList()..sort();
+          setState(() {
+            _upazilas = fetched;
+            if (!setInitial) {
+              _selectedUpazila = null;
+            } else if (_selectedUpazila != null && !_upazilas.contains(_selectedUpazila)) {
+              final match = _upazilas.firstWhereOrNull((u) => u.toLowerCase() == _selectedUpazila!.toLowerCase());
+              if (match != null) _selectedUpazila = match;
+            }
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint("Error fetching upazilas for $district: $e");
+    } finally {
+      if (mounted) setState(() => _isUpazilasLoading = false);
     }
   }
 
@@ -432,25 +537,63 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
             title: 'Address & Location',
             icon: Icons.location_on_outlined,
             children: [
-              _buildInputField(
-                controller: _divisionController,
-                label: 'Division (বিভাগ)',
-                hint: 'e.g. Dhaka',
+              // Division Dropdown
+              _buildDropdownField(
+                label: 'Division',
+                hint: 'Select Division',
                 icon: Icons.map_rounded,
+                value: _selectedDivision,
+                items: _divisions,
+                isLoading: _isDivisionsLoading,
+                onChanged: (val) {
+                  if (val != null && val != _selectedDivision) {
+                    setState(() {
+                      _selectedDivision = val;
+                      _selectedDistrict = null;
+                      _selectedUpazila = null;
+                      _districts = [];
+                      _upazilas = [];
+                    });
+                    _fetchDistricts(val);
+                  }
+                },
               ),
               const SizedBox(height: 16),
-              _buildInputField(
-                controller: _districtController,
-                label: 'District (জেলা)',
-                hint: 'e.g. Gazipur',
+
+              // District Dropdown
+              _buildDropdownField(
+                label: 'District',
+                hint: _selectedDivision == null ? 'Select Division first' : 'Select District',
                 icon: Icons.location_city_rounded,
+                value: _selectedDistrict,
+                items: _districts,
+                isLoading: _isDistrictsLoading,
+                onChanged: (val) {
+                  if (val != null && val != _selectedDistrict) {
+                    setState(() {
+                      _selectedDistrict = val;
+                      _selectedUpazila = null;
+                      _upazilas = [];
+                    });
+                    _fetchUpazilas(val);
+                  }
+                },
               ),
               const SizedBox(height: 16),
-              _buildInputField(
-                controller: _upazilaController,
-                label: 'Upazila / Area (উপজেলা / এলাকা)',
-                hint: 'e.g. Tongi',
+
+              // Upazila Dropdown
+              _buildDropdownField(
+                label: 'Upazila / Area',
+                hint: _selectedDistrict == null ? 'Select District first' : 'Select Upazila',
                 icon: Icons.explore_rounded,
+                value: _selectedUpazila,
+                items: _upazilas,
+                isLoading: _isUpazilasLoading,
+                onChanged: (val) {
+                  if (val != null) {
+                    setState(() => _selectedUpazila = val);
+                  }
+                },
               ),
             ],
           ),
@@ -560,7 +703,7 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
 
           // Blood Group Selection Card
           _buildCardWrapper(
-            title: 'Blood Group (রক্তের গ্রুপ)',
+            title: 'Blood Group',
             icon: Icons.water_drop_rounded,
             children: [
               Wrap(
@@ -628,7 +771,7 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
             children: [
               _buildInputField(
                 controller: _donationsCountController,
-                label: 'Total Times Donated (মোট রক্তদান)',
+                label: 'Total Times Donated',
                 hint: 'e.g. 3',
                 icon: Icons.numbers_rounded,
                 keyboardType: TextInputType.number,
@@ -636,14 +779,14 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
               const SizedBox(height: 16),
               _buildDatePickerField(
                 controller: _lastDonationDateController,
-                label: 'Last Donation Date (সর্বশেষ রক্তদান)',
+                label: 'Last Donation Date',
                 hint: 'Select last donation date',
                 icon: Icons.event_available_rounded,
               ),
               const SizedBox(height: 16),
               _buildInputField(
                 controller: _preferredLocationController,
-                label: 'Preferred Hospital / Areas (পছন্দের এলাকা)',
+                label: 'Preferred Hospital / Areas',
                 hint: 'e.g. DMCH, Uttara, Dhanmondi',
                 icon: Icons.local_hospital_rounded,
               ),
@@ -723,6 +866,88 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
           ...children,
         ],
       ),
+    );
+  }
+
+  Widget _buildDropdownField({
+    required String label,
+    required String hint,
+    required IconData icon,
+    required String? value,
+    required List<String> items,
+    required bool isLoading,
+    required ValueChanged<String?> onChanged,
+  }) {
+    final hasMatchingValue = value != null && items.contains(value);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF475569),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Row(
+            children: [
+              Icon(icon, size: 18, color: const Color(0xFF94A3B8)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: hasMatchingValue ? value : null,
+                    isExpanded: true,
+                    hint: isLoading
+                        ? const Row(
+                            children: [
+                              SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+                              ),
+                              SizedBox(width: 8),
+                              Text('Loading...', style: TextStyle(fontFamily: 'Poppins', fontSize: 13, color: Colors.grey)),
+                            ],
+                          )
+                        : Text(
+                            hint,
+                            style: TextStyle(fontFamily: 'Poppins', fontSize: 13, color: Colors.grey[400]),
+                          ),
+                    icon: isLoading
+                        ? const SizedBox.shrink()
+                        : const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF64748B)),
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF1E293B),
+                    ),
+                    items: items.map((item) {
+                      return DropdownMenuItem<String>(
+                        value: item,
+                        child: Text(item, style: const TextStyle(fontFamily: 'Poppins', fontSize: 14)),
+                      );
+                    }).toList(),
+                    onChanged: isLoading ? null : onChanged,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -836,7 +1061,7 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Gender (লিঙ্গ)',
+          'Gender',
           style: TextStyle(
             fontFamily: 'Poppins',
             fontSize: 12,
