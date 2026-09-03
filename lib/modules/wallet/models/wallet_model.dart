@@ -10,6 +10,24 @@ class WalletBalanceModel {
   });
 }
 
+// ── Pending Recharge Model ──────────────────────────────────────────────────
+
+class PendingRechargeModel {
+  final String amount;
+  final String date;
+  final String trxId;
+  final String paymentMethod;
+  final String note;
+
+  const PendingRechargeModel({
+    required this.amount,
+    required this.date,
+    this.trxId = '',
+    this.paymentMethod = '',
+    this.note = '',
+  });
+}
+
 // ── Wallet Transaction Model ───────────────────────────────────────────────
 
 class WalletTransactionModel {

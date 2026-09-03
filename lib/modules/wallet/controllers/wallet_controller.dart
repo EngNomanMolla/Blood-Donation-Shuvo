@@ -20,6 +20,9 @@ class WalletController extends GetxController {
   final subscriptionExpiryDate = RxnString();
   final hasActiveSubscription = false.obs;
 
+  // Pending Recharge Details
+  final pendingRecharge = Rxn<PendingRechargeModel>();
+
   @override
   void onInit() {
     super.onInit();
@@ -98,6 +101,40 @@ class WalletController extends GetxController {
         }).toList();
 
         transactions.assignAll(mappedTx);
+
+        // 3. Detect any Pending Recharge
+        PendingRechargeModel? foundPending;
+
+        if (decoded['pending_recharge'] != null && decoded['pending_recharge'] is Map) {
+          final p = decoded['pending_recharge'] as Map;
+          final double pAmount = (p['amount'] ?? 0).toDouble();
+          foundPending = PendingRechargeModel(
+            amount: '৳ ${pAmount.toStringAsFixed(0)}',
+            date: formatDate(p['created_at']),
+            trxId: p['transaction_id']?.toString() ?? p['trx_id']?.toString() ?? '',
+            paymentMethod: (p['method'] ?? p['payment_method'] ?? '').toString().toUpperCase(),
+            note: p['note']?.toString() ?? '',
+          );
+        } else {
+          // Check transaction list for pending recharge/deposit
+          for (var tx in txList) {
+            final String typeVal = (tx['type'] ?? '').toString().toLowerCase();
+            final String statusVal = (tx['status'] ?? '').toString().toLowerCase();
+            if ((typeVal == 'recharge' || typeVal == 'deposit') && statusVal == 'pending') {
+              final double pAmount = (tx['amount'] ?? 0).toDouble();
+              foundPending = PendingRechargeModel(
+                amount: '৳ ${pAmount.toStringAsFixed(0)}',
+                date: formatDate(tx['created_at']),
+                trxId: tx['transaction_id']?.toString() ?? tx['trx_id']?.toString() ?? '',
+                paymentMethod: (tx['method'] ?? tx['payment_method'] ?? '').toString().toUpperCase(),
+                note: tx['note']?.toString() ?? '',
+              );
+              break;
+            }
+          }
+        }
+
+        pendingRecharge.value = foundPending;
       } else {
         Get.snackbar('Error', 'Failed to fetch wallet details',
             backgroundColor: Colors.redAccent, colorText: Colors.white);

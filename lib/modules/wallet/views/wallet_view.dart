@@ -8,6 +8,7 @@ import '../../../data/providers/wallet_provider.dart';
 import '../../../data/repositories/wallet_repository.dart';
 import '../controllers/wallet_controller.dart';
 import 'widgets/balance_card.dart';
+import 'widgets/pending_recharge_card.dart';
 import 'widgets/wallet_transaction_section.dart';
 
 class WalletView extends StatelessWidget {
@@ -65,6 +66,13 @@ class WalletView extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    if (controller.pendingRecharge.value != null) ...[
+                      PendingRechargeCard(
+                        pending: controller.pendingRecharge.value!,
+                        onRefresh: () => controller.fetchWalletDetails(),
+                      ),
+                      const SizedBox(height: 14),
+                    ],
                     BalanceCard(
                       balance: balance,
                       onAddMoney: controller.onAddMoney,
