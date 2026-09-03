@@ -44,42 +44,48 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Widget _buildMainContent() {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          HomeHeader(
-            onNotificationTap: () => setState(() => _showNotification = true),
-            onBalanceTap: () {},
-          ),
-          const SizedBox(height: HomeConstants.sectionVerticalSpacing),
-          Obx(() {
-            if (controller.isLoading.value) {
-              return const SizedBox(
-                height: HomeConstants.bannerHeight,
-                child: Center(
-                  child: CircularProgressIndicator(color: Colors.red),
-                ),
-              );
-            }
-            if (controller.banners.isEmpty) {
-              return const SizedBox.shrink();
-            }
-            final images = controller.banners.map((b) => b.image).toList();
-            return BannerSlider(images: images);
-          }),
-          const SizedBox(height: HomeConstants.sectionVerticalSpacing),
-          BloodRequestSection(
-            bloodTypes: HomeConstants.bloodTypes,
-            selectedBloodType: _selectedBloodType,
-            onBloodTypeChanged: _onBloodTypeSelected,
-          ),
-          const SizedBox(height: 8),
-          BecomeDonorBanner(onTap: () => Get.toNamed(AppRoutes.donor)),
-          const SizedBox(height: HomeConstants.sectionVerticalSpacing),
-          QuickActionsSection(actions: QuickActionsSection.getDefaultActions()),
-          const SizedBox(height: 100), // Space for floating bottom nav
-        ],
+    return RefreshIndicator(
+      color: AppColors.primary,
+      backgroundColor: Colors.white,
+      onRefresh: () async => await controller.refreshHomeData(),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            HomeHeader(
+              onNotificationTap: () => setState(() => _showNotification = true),
+              onBalanceTap: () {},
+            ),
+            const SizedBox(height: HomeConstants.sectionVerticalSpacing),
+            Obx(() {
+              if (controller.isLoading.value) {
+                return const SizedBox(
+                  height: HomeConstants.bannerHeight,
+                  child: Center(
+                    child: CircularProgressIndicator(color: Colors.red),
+                  ),
+                );
+              }
+              if (controller.banners.isEmpty) {
+                return const SizedBox.shrink();
+              }
+              final images = controller.banners.map((b) => b.image).toList();
+              return BannerSlider(images: images);
+            }),
+            const SizedBox(height: HomeConstants.sectionVerticalSpacing),
+            BloodRequestSection(
+              bloodTypes: HomeConstants.bloodTypes,
+              selectedBloodType: _selectedBloodType,
+              onBloodTypeChanged: _onBloodTypeSelected,
+            ),
+            const SizedBox(height: 8),
+            BecomeDonorBanner(onTap: () => Get.toNamed(AppRoutes.donor)),
+            const SizedBox(height: HomeConstants.sectionVerticalSpacing),
+            QuickActionsSection(actions: QuickActionsSection.getDefaultActions()),
+            const SizedBox(height: 100), // Space for floating bottom nav
+          ],
+        ),
       ),
     );
   }

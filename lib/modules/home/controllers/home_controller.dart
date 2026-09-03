@@ -226,4 +226,13 @@ class HomeController extends GetxController {
       isLoading.value = false;
     }
   }
+
+  Future<void> refreshHomeData() async {
+    await Future.wait([
+      fetchBanners(),
+      fetchProfile(),
+      fetchWalletBalance(),
+      fetchNotifications(),
+    ]);
+  }
 }

@@ -121,6 +121,7 @@ class CallController extends GetxController {
           tokenTtlSeconds: 0,
           expiresAt: '',
         );
+        
         debugPrint("Incoming Call Token Data -> AppID: ${tokenData.appId}, Channel: ${tokenData.channelName}, UID: ${tokenData.uid}");
       } else {
         debugStep.value = 'Fetching Token from Backend...';
