@@ -367,69 +367,105 @@ class DonerDetailsView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Minutes / SIM Info Status
+          // Top Row: Minutes Info on Left + Recharge Button on Right
           Obx(() {
             final minutes = controller.remainingMinutes.value ?? 0;
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: minutes > 0 ? const Color(0xFFDCFCE7) : const Color(0xFFFFF1F2),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: minutes > 0 ? const Color(0xFF86EFAC) : const Color(0xFFFECDD3),
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    minutes > 0 ? Icons.timer_outlined : Icons.info_outline_rounded,
-                    size: 13,
-                    color: minutes > 0 ? const Color(0xFF16A34A) : const Color(0xFFE11D48),
-                  ),
-                  const SizedBox(width: 5),
-                  Text(
-                    minutes > 0
-                        ? 'App Minutes: $minutes min available • Or call via SIM'
-                        : '0 App Minutes • Use SIM Call or Recharge',
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: minutes > 0 ? const Color(0xFF16A34A) : const Color(0xFFE11D48),
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Minutes indicator badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: minutes > 0 ? const Color(0xFFDCFCE7) : const Color(0xFFFFF1F2),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: minutes > 0 ? const Color(0xFF86EFAC) : const Color(0xFFFECDD3),
                     ),
                   ),
-                ],
-              ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        minutes > 0 ? Icons.timer_outlined : Icons.info_outline_rounded,
+                        size: 14,
+                        color: minutes > 0 ? const Color(0xFF16A34A) : const Color(0xFFE11D48),
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        minutes > 0 ? '$minutes Min App Balance' : '0 App Minutes',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: minutes > 0 ? const Color(0xFF16A34A) : const Color(0xFFE11D48),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Quick Recharge Pill
+                Material(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  child: InkWell(
+                    onTap: () => Get.toNamed(AppRoutes.subscriptionPlans),
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: primaryRed, width: 1.2),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.bolt_rounded, color: primaryRed, size: 15),
+                          SizedBox(width: 3),
+                          Text(
+                            'Recharge',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: primaryRed,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             );
           }),
 
           const SizedBox(height: 12),
 
-          // Two Call Options: App-to-App Call & Direct Phone/SIM Call + Recharge Shortcut
+          // Two Primary Action Buttons: App Call & Direct SIM Call (100% responsive side-by-side)
           Row(
             children: [
               // 1. App-to-App Call Button
               Expanded(
-                flex: 4,
                 child: Obx(() {
                   final isChecking = controller.isCheckingMinutes.value;
                   return Material(
                     color: isChecking ? Colors.grey.shade300 : const Color(0xFF16A34A),
-                    borderRadius: BorderRadius.circular(12),
-                    elevation: 1.5,
-                    shadowColor: const Color(0xFF16A34A).withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(14),
+                    elevation: 2,
+                    shadowColor: const Color(0xFF16A34A).withValues(alpha: 0.35),
                     child: InkWell(
                       onTap: isChecking ? null : () => controller.initiateDonorCall(),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
                       child: Container(
                         height: 48,
-                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
                         child: Center(
                           child: isChecking
                               ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
+                                  width: 20,
+                                  height: 20,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
                                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
@@ -438,18 +474,16 @@ class DonerDetailsView extends StatelessWidget {
                               : const Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(Icons.wifi_calling_3_rounded, color: Colors.white, size: 18),
-                                    SizedBox(width: 6),
-                                    Flexible(
-                                      child: Text(
-                                        'App Call',
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          fontFamily: 'Poppins',
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w700,
-                                          color: Colors.white,
-                                        ),
+                                    Icon(Icons.wifi_calling_3_rounded, color: Colors.white, size: 20),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'App Call',
+                                      style: TextStyle(
+                                        fontFamily: 'Poppins',
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white,
+                                        letterSpacing: 0.2,
                                       ),
                                     ),
                                   ],
@@ -461,81 +495,39 @@ class DonerDetailsView extends StatelessWidget {
                 }),
               ),
 
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
 
               // 2. Direct SIM / Phone Call Button
               Expanded(
-                flex: 4,
                 child: Material(
                   color: const Color(0xFF0284C7),
-                  borderRadius: BorderRadius.circular(12),
-                  elevation: 1.5,
-                  shadowColor: const Color(0xFF0284C7).withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(14),
+                  elevation: 2,
+                  shadowColor: const Color(0xFF0284C7).withValues(alpha: 0.35),
                   child: InkWell(
                     onTap: () => controller.directPhoneCall(),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(14),
                     child: Container(
                       height: 48,
-                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
                       child: const Center(
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.phone_forwarded_rounded, color: Colors.white, size: 17),
-                            SizedBox(width: 6),
-                            Flexible(
-                              child: Text(
-                                'SIM Call',
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontFamily: 'Poppins',
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white,
-                                ),
+                            Icon(Icons.phone_forwarded_rounded, color: Colors.white, size: 19),
+                            SizedBox(width: 8),
+                            Text(
+                              'SIM Call',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                                letterSpacing: 0.2,
                               ),
                             ),
                           ],
                         ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(width: 8),
-
-              // 3. Recharge Minutes Shortcut
-              Material(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                elevation: 1,
-                child: InkWell(
-                  onTap: () => Get.toNamed(AppRoutes.subscriptionPlans),
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    height: 48,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: primaryRed, width: 1.5),
-                    ),
-                    child: const Center(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.bolt_rounded, color: primaryRed, size: 18),
-                          SizedBox(width: 3),
-                          Text(
-                            'Recharge',
-                            style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: primaryRed,
-                            ),
-                          ),
-                        ],
                       ),
                     ),
                   ),
