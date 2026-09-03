@@ -550,6 +550,11 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
                 hint: '01XXXXXXXXX',
                 icon: Icons.phone_rounded,
                 keyboardType: TextInputType.phone,
+                readOnly: true,
+                suffixIcon: const Padding(
+                  padding: EdgeInsets.only(right: 12),
+                  child: Icon(Icons.lock_outline_rounded, size: 16, color: Color(0xFF94A3B8)),
+                ),
               ),
               const SizedBox(height: 16),
               _buildGenderSelector(),
@@ -989,6 +994,8 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
     required String hint,
     required IconData icon,
     TextInputType keyboardType = TextInputType.text,
+    bool readOnly = false,
+    Widget? suffixIcon,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1006,18 +1013,20 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
         TextField(
           controller: controller,
           keyboardType: keyboardType,
-          style: const TextStyle(
+          readOnly: readOnly,
+          style: TextStyle(
             fontFamily: 'Poppins',
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: Color(0xFF1E293B),
+            color: readOnly ? const Color(0xFF64748B) : const Color(0xFF1E293B),
           ),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(fontFamily: 'Poppins', fontSize: 13, color: Colors.grey[400]),
             prefixIcon: Icon(icon, size: 18, color: const Color(0xFF94A3B8)),
+            suffixIcon: suffixIcon,
             filled: true,
-            fillColor: const Color(0xFFF8FAFC),
+            fillColor: readOnly ? const Color(0xFFF1F5F9) : const Color(0xFFF8FAFC),
             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -1025,7 +1034,10 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+              borderSide: BorderSide(
+                color: readOnly ? const Color(0xFFE2E8F0) : AppColors.primary,
+                width: readOnly ? 1.0 : 1.5,
+              ),
             ),
           ),
         ),
