@@ -377,30 +377,28 @@ class DonerDetailsView extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: minutes > 0 ? const Color(0xFFDCFCE7) : const Color(0xFFFFF1F2),
+                    color: minutes > 0 ? const Color(0xFFDCFCE7) : const Color(0xFFF1F5F9),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: minutes > 0 ? const Color(0xFF86EFAC) : const Color(0xFFFECDD3),
+                      color: minutes > 0 ? const Color(0xFF86EFAC) : const Color(0xFFCBD5E1),
                     ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        minutes > 0 ? Icons.timer_outlined : Icons.info_outline_rounded,
+                        Icons.timer_outlined,
                         size: 14,
-                        color: minutes > 0 ? const Color(0xFF16A34A) : const Color(0xFFE11D48),
+                        color: minutes > 0 ? const Color(0xFF16A34A) : const Color(0xFF64748B),
                       ),
                       const SizedBox(width: 5),
                       Text(
-                        minutes > 0
-                            ? '$minutes Min App Balance'
-                            : '0 App Minutes • SIM Call or Buy Subscription',
+                        '$minutes Min App Balance',
                         style: TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
-                          color: minutes > 0 ? const Color(0xFF16A34A) : const Color(0xFFE11D48),
+                          color: minutes > 0 ? const Color(0xFF16A34A) : const Color(0xFF64748B),
                         ),
                       ),
                     ],
