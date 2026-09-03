@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../app/routes/app_routes.dart';
@@ -20,6 +22,11 @@ class _IncomingCallViewState extends State<IncomingCallView> with SingleTickerPr
   late final String callerAvatar;
   late final String bloodGroup;
 
+  RtcEngine? _ringEngine;
+  bool _isRingingEngineActive = false;
+  bool _hasResponded = false;
+  Timer? _ringTimeoutTimer;
+
   @override
   void initState() {
     super.initState();
@@ -39,20 +46,115 @@ class _IncomingCallViewState extends State<IncomingCallView> with SingleTickerPr
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.15).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
+
+    _setupRingingSync();
+
+    // Auto-timeout after 45 seconds of ringing
+    _ringTimeoutTimer = Timer(const Duration(seconds: 45), () {
+      if (!_hasResponded && mounted) {
+        _declineCall();
+      }
+    });
+  }
+
+  Future<void> _setupRingingSync() async {
+    final String appId = args['agora_app_id'] ?? '';
+    final String channelName = args['channel_name'] ?? '';
+    final String rtcToken = args['rtc_token'] ?? '';
+    int uid = int.tryParse(args['uid']?.toString() ?? '0') ?? 0;
+    if (uid == 0 && channelName.isNotEmpty) {
+      final parts = channelName.split('_');
+      if (parts.length >= 3 && parts[0] == 'call') {
+        uid = int.tryParse(parts[2]) ?? 0;
+      }
+    }
+
+    if (appId.isEmpty || channelName.isEmpty || rtcToken.isEmpty) return;
+
+    try {
+      _ringEngine = createAgoraRtcEngine();
+      await _ringEngine!.initialize(RtcEngineContext(
+        appId: appId.trim(),
+        channelProfile: ChannelProfileType.channelProfileCommunication,
+      ));
+      _isRingingEngineActive = true;
+
+      _ringEngine!.registerEventHandler(
+        RtcEngineEventHandler(
+          onUserOffline: (RtcConnection connection, int remoteUid, UserOfflineReasonType reason) {
+            debugPrint("📞 [RINGING SYNC] Caller cancelled call (User Offline: $remoteUid, Reason: $reason)");
+            _onCallerCancelled();
+          },
+        ),
+      );
+
+      await _ringEngine!.joinChannel(
+        token: rtcToken.trim(),
+        channelId: channelName.trim(),
+        uid: uid,
+        options: const ChannelMediaOptions(
+          clientRoleType: ClientRoleType.clientRoleAudience,
+          autoSubscribeAudio: false,
+          publishMicrophoneTrack: false,
+        ),
+      );
+      debugPrint("✅ [RINGING SYNC] Receiver joined channel silently for sync: $channelName (UID: $uid)");
+    } catch (e) {
+      debugPrint("⚠️ [RINGING SYNC WARNING] Failed to setup ringing sync: $e");
+    }
+  }
+
+  void _onCallerCancelled() {
+    if (_hasResponded) return;
+    _hasResponded = true;
+    _cleanupRingingEngine();
+    CallKitService.endAllCalls();
+    if (mounted) {
+      Get.snackbar(
+        'Call Cancelled',
+        '$callerName cancelled the call',
+        backgroundColor: Colors.orangeAccent,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 2),
+      );
+      Get.back();
+    }
+  }
+
+  Future<void> _cleanupRingingEngine() async {
+    _ringTimeoutTimer?.cancel();
+    if (_isRingingEngineActive && _ringEngine != null) {
+      _isRingingEngineActive = false;
+      try {
+        await _ringEngine!.leaveChannel();
+        await _ringEngine!.release();
+      } catch (_) {}
+    }
   }
 
   @override
   void dispose() {
+    _ringTimeoutTimer?.cancel();
+    _cleanupRingingEngine();
     _pulseController.dispose();
     super.dispose();
   }
 
-  void _declineCall() {
+  void _declineCall() async {
+    if (_hasResponded) return;
+    _hasResponded = true;
+    await _cleanupRingingEngine();
     CallKitService.endAllCalls();
-    Get.back();
+    if (mounted) {
+      Get.back();
+    }
   }
 
-  void _acceptCall() {
+  void _acceptCall() async {
+    if (_hasResponded) return;
+    _hasResponded = true;
+    await _cleanupRingingEngine();
     if (Get.isRegistered<CallController>()) {
       Get.delete<CallController>(force: true);
     }

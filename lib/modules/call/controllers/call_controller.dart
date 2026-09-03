@@ -15,7 +15,6 @@ class CallController extends GetxController {
 
   CallController({required this.callRepository});
 
-  // Call arguments
   final recipientId = 0.obs;
   final donorName = ''.obs;
   final donorAvatar = ''.obs;
@@ -23,7 +22,6 @@ class CallController extends GetxController {
   final availableMinutes = 0.obs;
   final isIncoming = false.obs;
 
-  // On-screen Debug Info
   final debugChannel = ''.obs;
   final debugAppId = ''.obs;
   final debugUid = ''.obs;
@@ -31,7 +29,6 @@ class CallController extends GetxController {
   final debugStep = 'Starting...'.obs;
   final debugError = ''.obs;
 
-  // Call State
   final callState = CallState.connecting.obs;
   final callStatusText = 'Calling...'.obs;
   final isMuted = false.obs;
@@ -40,9 +37,9 @@ class CallController extends GetxController {
   final remoteUserJoined = false.obs;
   final errorMessage = ''.obs;
 
-  // Duration Timer
   final callDurationSeconds = 0.obs;
   Timer? _callTimer;
+  Timer? _ringingTimeoutTimer;
 
   late RtcEngine _engine;
   bool _isEngineInitialized = false;
@@ -79,7 +76,6 @@ class CallController extends GetxController {
       callState.value = CallState.connecting;
       callStatusText.value = isIncoming.value ? 'Connecting...' : 'Calling...';
 
-      // 1. Request Microphone Permission
       final status = await Permission.microphone.request();
       if (status != PermissionStatus.granted) {
         callState.value = CallState.error;
@@ -205,6 +201,7 @@ class CallController extends GetxController {
             if (remoteUserJoined.value) {
               callState.value = CallState.connected;
               callStatusText.value = 'Connected';
+              _ringingTimeoutTimer?.cancel();
               _startCallTimer();
             } else if (isIncoming.value) {
               callState.value = CallState.connecting;
@@ -212,11 +209,30 @@ class CallController extends GetxController {
             } else {
               callState.value = CallState.ringing;
               callStatusText.value = 'Ringing...';
+              
+              // 45-second Ringing Timeout for Outgoing Calls
+              _ringingTimeoutTimer?.cancel();
+              _ringingTimeoutTimer = Timer(const Duration(seconds: 45), () {
+                if (callState.value != CallState.connected && !_isEndingCall) {
+                  callState.value = CallState.ended;
+                  callStatusText.value = 'No Answer';
+                  Get.snackbar(
+                    'No Answer',
+                    'The donor did not answer the call.',
+                    backgroundColor: Colors.orangeAccent.withValues(alpha: 0.8),
+                    colorText: Colors.white,
+                    snackPosition: SnackPosition.BOTTOM,
+                    duration: const Duration(seconds: 2),
+                  );
+                  Future.delayed(const Duration(milliseconds: 1500), () => endCall());
+                }
+              });
             }
           },
           onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
             debugPrint("Agora Remote User Joined -> RemoteUid: $remoteUid");
             remoteUserJoined.value = true;
+            _ringingTimeoutTimer?.cancel();
             debugStep.value = 'Remote User Joined (UID: $remoteUid)';
             callState.value = CallState.connected;
             callStatusText.value = 'Connected';
@@ -224,11 +240,23 @@ class CallController extends GetxController {
           },
           onUserOffline: (RtcConnection connection, int remoteUid, UserOfflineReasonType reason) {
             debugPrint("Agora Remote User Offline -> RemoteUid: $remoteUid, Reason: $reason");
+            final bool wasConnected = (callState.value == CallState.connected);
             remoteUserJoined.value = false;
+            _ringingTimeoutTimer?.cancel();
             debugStep.value = 'Remote User Left ($reason)';
             callState.value = CallState.ended;
-            callStatusText.value = 'Call Ended';
-            Future.delayed(const Duration(seconds: 1), () => endCall());
+            callStatusText.value = wasConnected ? 'Call Ended' : 'Call Declined';
+            
+            Get.snackbar(
+              wasConnected ? 'Call Ended' : 'Call Declined',
+              wasConnected ? 'Call was ended by the other person' : 'Call was declined by the user',
+              backgroundColor: Colors.redAccent.withValues(alpha: 0.8),
+              colorText: Colors.white,
+              snackPosition: SnackPosition.BOTTOM,
+              duration: const Duration(seconds: 2),
+            );
+
+            Future.delayed(const Duration(milliseconds: 1500), () => endCall());
           },
           onLeaveChannel: (RtcConnection connection, RtcStats stats) {
             debugPrint("Agora onLeaveChannel");
@@ -350,6 +378,7 @@ class CallController extends GetxController {
     _isEndingCall = true;
 
     _callTimer?.cancel();
+    _ringingTimeoutTimer?.cancel();
     callState.value = CallState.ended;
     callStatusText.value = 'Call Ended';
 
@@ -385,6 +414,7 @@ class CallController extends GetxController {
   @override
   void onClose() {
     _callTimer?.cancel();
+    _ringingTimeoutTimer?.cancel();
     _isEndingCall = true;
     if (_isEngineInitialized) {
       _isEngineInitialized = false;

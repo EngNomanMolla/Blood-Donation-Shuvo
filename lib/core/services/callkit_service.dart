@@ -1,3 +1,4 @@
+import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_callkit_incoming/entities/entities.dart';
 import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
@@ -102,10 +103,12 @@ class CallKitService extends GetxService {
           break;
         case CallEventActionCallDecline(:final callKitParams):
           debugPrint("🚫 [CALLKIT] Call declined by user");
+          _notifyAgoraDeclined(callKitParams.extra);
           _endCurrentCall(callKitParams.id);
           break;
         case CallEventActionCallEnded(:final callKitParams):
           debugPrint("🛑 [CALLKIT] Call ended");
+          _notifyAgoraDeclined(callKitParams.extra);
           _endCurrentCall(callKitParams.id);
           break;
         case CallEventActionCallTimeout(:final id):
@@ -149,6 +152,43 @@ class CallKitService extends GetxService {
       }
     } catch (e) {
       debugPrint("❌ [CALLKIT ERROR] Processing accepted call: $e");
+    }
+  }
+
+  /// Notify caller on Agora channel that receiver declined
+  static Future<void> _notifyAgoraDeclined(Map<String, dynamic>? extra) async {
+    if (extra == null) return;
+    final String appId = extra['agora_app_id'] ?? '';
+    final String channelName = extra['channel_name'] ?? '';
+    final String rtcToken = extra['rtc_token'] ?? '';
+    int uid = int.tryParse(extra['uid']?.toString() ?? '0') ?? 0;
+    if (uid == 0 && channelName.isNotEmpty) {
+      final parts = channelName.split('_');
+      if (parts.length >= 3 && parts[0] == 'call') {
+        uid = int.tryParse(parts[2]) ?? 0;
+      }
+    }
+
+    if (appId.isNotEmpty && channelName.isNotEmpty && rtcToken.isNotEmpty) {
+      try {
+        final engine = createAgoraRtcEngine();
+        await engine.initialize(RtcEngineContext(appId: appId.trim()));
+        await engine.joinChannel(
+          token: rtcToken.trim(),
+          channelId: channelName.trim(),
+          uid: uid,
+          options: const ChannelMediaOptions(
+            clientRoleType: ClientRoleType.clientRoleAudience,
+            autoSubscribeAudio: false,
+            publishMicrophoneTrack: false,
+          ),
+        );
+        await Future.delayed(const Duration(milliseconds: 300));
+        await engine.leaveChannel();
+        await engine.release();
+      } catch (e) {
+        debugPrint("Agora decline notification error: $e");
+      }
     }
   }
 
