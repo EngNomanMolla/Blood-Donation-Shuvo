@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../data/repositories/wallet_repository.dart';
+import '../../../data/repositories/profile_repository.dart';
 import '../../../app/routes/app_routes.dart';
 import '../models/wallet_model.dart';
 
@@ -116,11 +117,14 @@ class WalletController extends GetxController {
             note: p['note']?.toString() ?? '',
           );
         } else {
-          // Check transaction list for pending recharge/deposit
+          // Check transaction list for any pending recharge/deposit/transaction
           for (var tx in txList) {
             final String typeVal = (tx['type'] ?? '').toString().toLowerCase();
             final String statusVal = (tx['status'] ?? '').toString().toLowerCase();
-            if ((typeVal == 'recharge' || typeVal == 'deposit') && statusVal == 'pending') {
+            final bool isPendingStatus = statusVal == 'pending' || statusVal == '0' || statusVal == 'under_review' || statusVal == 'review';
+            final bool isRechargeType = typeVal == 'recharge' || typeVal == 'deposit' || typeVal.isEmpty;
+
+            if (isRechargeType && isPendingStatus) {
               final double pAmount = (tx['amount'] ?? 0).toDouble();
               foundPending = PendingRechargeModel(
                 amount: '৳ ${pAmount.toStringAsFixed(0)}',
@@ -134,7 +138,28 @@ class WalletController extends GetxController {
           }
         }
 
+        // Fallback: Check user profile for initial activation recharge pending status
+        if (foundPending == null) {
+          try {
+            if (Get.isRegistered<ProfileRepository>()) {
+              final profile = await Get.find<ProfileRepository>().getProfile();
+              if (profile != null && profile.initialRechargeStatus == 'pending') {
+                final double pAmount = profile.initialRechargeAmount > 0 ? profile.initialRechargeAmount : 50.0;
+                foundPending = PendingRechargeModel(
+                  amount: '৳ ${pAmount.toStringAsFixed(0)}',
+                  date: 'Activation Request',
+                  paymentMethod: 'WALLET ACTIVATION',
+                  note: 'Initial wallet recharge pending verification',
+                );
+              }
+            }
+          } catch (e) {
+            debugPrint("Profile pending check error: $e");
+          }
+        }
+
         pendingRecharge.value = foundPending;
+        debugPrint("👉 [WALLET PENDING RECHARGE]: ${foundPending != null ? 'Found (${foundPending.amount})' : 'None'}");
       } else {
         Get.snackbar('Error', 'Failed to fetch wallet details',
             backgroundColor: Colors.redAccent, colorText: Colors.white);

@@ -6,6 +6,8 @@ import 'package:blood_donation/core/utils/text_styles.dart';
 import '../../../app/routes/app_routes.dart';
 import '../../../data/providers/wallet_provider.dart';
 import '../../../data/repositories/wallet_repository.dart';
+import '../../../data/providers/profile_provider.dart';
+import '../../../data/repositories/profile_repository.dart';
 import '../controllers/wallet_controller.dart';
 import 'widgets/balance_card.dart';
 import 'widgets/pending_recharge_card.dart';
@@ -28,6 +30,12 @@ class WalletView extends StatelessWidget {
     if (Get.isRegistered<WalletController>()) {
       controller = Get.find<WalletController>();
     } else {
+      if (!Get.isRegistered<ProfileProvider>()) {
+        Get.put(ProfileProvider());
+      }
+      if (!Get.isRegistered<ProfileRepository>()) {
+        Get.put(ProfileRepository(provider: Get.find<ProfileProvider>()));
+      }
       if (!Get.isRegistered<WalletProvider>()) {
         Get.put(WalletProvider());
       }
