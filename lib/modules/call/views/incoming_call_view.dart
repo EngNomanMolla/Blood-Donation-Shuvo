@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../app/routes/app_routes.dart';
+import '../../../core/services/callkit_service.dart';
 import '../controllers/call_controller.dart';
 
 class IncomingCallView extends StatefulWidget {
@@ -47,6 +48,7 @@ class _IncomingCallViewState extends State<IncomingCallView> with SingleTickerPr
   }
 
   void _declineCall() {
+    CallKitService.endAllCalls();
     Get.back();
   }
 

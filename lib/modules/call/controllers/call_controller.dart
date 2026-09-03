@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../../app/routes/app_routes.dart';
+import '../../../core/services/callkit_service.dart';
 
 enum CallState { connecting, ringing, connected, ended, error }
 
@@ -351,6 +352,9 @@ class CallController extends GetxController {
     _callTimer?.cancel();
     callState.value = CallState.ended;
     callStatusText.value = 'Call Ended';
+
+    // End any active native CallKit UI
+    CallKitService.endAllCalls();
 
     // 1. Instant Navigation - Pop screen immediately so user experiences zero lag
     try {

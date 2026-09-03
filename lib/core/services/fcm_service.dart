@@ -6,6 +6,8 @@ import 'package:get/get.dart';
 import '../../app/routes/app_routes.dart';
 import 'storage_service.dart';
 
+import 'callkit_service.dart';
+
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
@@ -21,6 +23,41 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     debugPrint("Raw Data Payload: ${message.data}");
   }
   debugPrint("=======================================================\n");
+
+  final data = message.data;
+  final String? type = data['type'] ?? data['notification_type'];
+
+  if (type == 'incoming_call') {
+    final String channelName = data['channel_name'] ?? data['channel'] ?? '';
+    final String callerId = data['caller_id']?.toString() ?? data['sender_id']?.toString() ?? '0';
+    final String callerName = data['caller_name'] ?? data['title'] ?? 'Incoming Call';
+    final String callerAvatar = data['caller_avatar'] ?? data['user_avatar'] ?? data['avatar'] ?? '';
+    final String agoraAppId = data['agora_app_id'] ?? data['app_id'] ?? data['agora_appid'] ?? '';
+    final String rtcToken = data['rtc_token'] ?? data['token'] ?? '';
+    final String bloodGroup = data['blood_group'] ?? '';
+
+    String uid = data['uid']?.toString() ?? data['recipient_id']?.toString() ?? data['user_id']?.toString() ?? '';
+    if (uid.isEmpty || uid == '0') {
+      final parts = channelName.split('_');
+      if (parts.length >= 3 && parts[0] == 'call') {
+        uid = parts[2];
+      }
+    }
+    if (uid.isEmpty) uid = '0';
+
+    await CallKitService.showIncomingCall(
+      uuid: message.messageId ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      callerName: callerName,
+      callerAvatar: callerAvatar,
+      callerNumber: bloodGroup.isNotEmpty ? 'Blood Group: $bloodGroup' : 'Incoming Call',
+      channelName: channelName,
+      callerId: callerId,
+      agoraAppId: agoraAppId,
+      rtcToken: rtcToken,
+      bloodGroup: bloodGroup,
+      uid: uid,
+    );
+  }
 }
 
 class FCMService extends GetxService {
