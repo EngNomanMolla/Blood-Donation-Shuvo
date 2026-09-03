@@ -156,7 +156,7 @@ class WalletController extends GetxController {
 
   final isPurchasing = false.obs;
 
-  Future<void> purchaseSubscriptionPlan(int planId, String planName) async {
+  Future<bool> purchaseSubscriptionPlan(int planId, String planName) async {
     isPurchasing.value = true;
     try {
       final response = await walletRepository.purchaseSubscription(planId);
@@ -164,30 +164,58 @@ class WalletController extends GetxController {
       debugPrint("Purchase Subscription API Response Body: ${response.body}");
 
       if (response.statusCode == 200 || response.statusCode == 201) {
+        // 1. Close confirm dialog if open
+        if (Get.isDialogOpen ?? false) {
+          Get.back();
+        }
+
+        // 2. Refresh active subscription & balance immediately
+        await fetchWalletDetails();
+
+        // 3. Return to Wallet screen
+        if (Get.currentRoute == AppRoutes.subscriptionPlans) {
+          Get.back();
+        } else if (Get.currentRoute != AppRoutes.wallet) {
+          Get.until((route) => route.settings.name == AppRoutes.wallet || route.isFirst);
+        }
+
         Get.snackbar(
           'Success',
           'Successfully subscribed to $planName!',
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: const Color(0xFF4CAF50),
           colorText: Colors.white,
+          duration: const Duration(seconds: 3),
         );
-        fetchWalletDetails(); // Refresh balance/transactions
+
+        return true;
       } else {
         String errorMsg = 'Failed to purchase subscription';
         try {
           final Map<String, dynamic> decoded = jsonDecode(response.body);
           errorMsg = decoded['message'] ?? decoded['error'] ?? errorMsg;
         } catch (_) {}
+
+        // Close dialog on failure too so user isn't stuck
+        if (Get.isDialogOpen ?? false) {
+          Get.back();
+        }
+
         Get.snackbar(
-          'Error',
+          'Subscription Failed',
           errorMsg,
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.redAccent,
           colorText: Colors.white,
+          duration: const Duration(seconds: 3),
         );
+        return false;
       }
     } catch (e) {
       debugPrint("Error purchasing subscription: $e");
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
       Get.snackbar(
         'Error',
         'An error occurred: $e',
@@ -195,6 +223,7 @@ class WalletController extends GetxController {
         backgroundColor: Colors.redAccent,
         colorText: Colors.white,
       );
+      return false;
     } finally {
       isPurchasing.value = false;
     }

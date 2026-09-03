@@ -269,7 +269,6 @@ class SubscriptionPlansView extends GetView<WalletController> {
                             ? null
                             : () async {
                                 await controller.purchaseSubscriptionPlan(plan.id, plan.name);
-                                Get.back();
                               },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
