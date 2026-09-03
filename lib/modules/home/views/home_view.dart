@@ -47,9 +47,11 @@ class _HomeViewState extends State<HomeView> {
     return RefreshIndicator(
       color: AppColors.primary,
       backgroundColor: Colors.white,
+      displacement: 30,
+      strokeWidth: 2.5,
       onRefresh: () async => await controller.refreshHomeData(),
       child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+        physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

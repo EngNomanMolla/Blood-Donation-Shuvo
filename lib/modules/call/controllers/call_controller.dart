@@ -121,7 +121,7 @@ class CallController extends GetxController {
           tokenTtlSeconds: 0,
           expiresAt: '',
         );
-        
+
         debugPrint("Incoming Call Token Data -> AppID: ${tokenData.appId}, Channel: ${tokenData.channelName}, UID: ${tokenData.uid}");
       } else {
         debugStep.value = 'Fetching Token from Backend...';
@@ -284,8 +284,6 @@ class CallController extends GetxController {
       );
 
       if (_isEndingCall) return;
-
-      // 5. Setup Audio & Join Channel
       try {
         await _engine.setClientRole(role: ClientRoleType.clientRoleBroadcaster);
         await _engine.enableAudio();
