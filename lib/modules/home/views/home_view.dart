@@ -83,7 +83,7 @@ class _HomeViewState extends State<HomeView> {
               selectedBloodType: _selectedBloodType,
               onBloodTypeChanged: _onBloodTypeSelected,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 2),
             BecomeDonorBanner(onTap: _onDonorTap),
             const SizedBox(height: 2),
             BecomeVolunteerBanner(onTap: _onVolunteerTap),
