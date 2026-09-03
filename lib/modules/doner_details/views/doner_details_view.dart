@@ -499,39 +499,51 @@ class DonerDetailsView extends StatelessWidget {
 
               // 2. Direct SIM / Phone Call Button
               Expanded(
-                child: Material(
-                  color: const Color(0xFF0284C7),
-                  borderRadius: BorderRadius.circular(14),
-                  elevation: 2,
-                  shadowColor: const Color(0xFF0284C7).withValues(alpha: 0.35),
-                  child: InkWell(
-                    onTap: () => controller.directPhoneCall(),
+                child: Obx(() {
+                  final isChecking = controller.isCheckingMinutes.value;
+                  return Material(
+                    color: isChecking ? Colors.grey.shade300 : const Color(0xFF0284C7),
                     borderRadius: BorderRadius.circular(14),
-                    child: Container(
-                      height: 48,
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      child: const Center(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.phone_forwarded_rounded, color: Colors.white, size: 19),
-                            SizedBox(width: 8),
-                            Text(
-                              'SIM Call',
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                                letterSpacing: 0.2,
-                              ),
-                            ),
-                          ],
+                    elevation: 2,
+                    shadowColor: const Color(0xFF0284C7).withValues(alpha: 0.35),
+                    child: InkWell(
+                      onTap: isChecking ? null : () => controller.directPhoneCall(),
+                      borderRadius: BorderRadius.circular(14),
+                      child: Container(
+                        height: 48,
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: Center(
+                          child: isChecking
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  ),
+                                )
+                              : const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.phone_forwarded_rounded, color: Colors.white, size: 19),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'SIM Call',
+                                      style: TextStyle(
+                                        fontFamily: 'Poppins',
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white,
+                                        letterSpacing: 0.2,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                         ),
                       ),
                     ),
-                  ),
-                ),
+                  );
+                }),
               ),
             ],
           ),

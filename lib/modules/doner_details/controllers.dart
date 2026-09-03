@@ -140,23 +140,33 @@ class ProfileController extends GetxController {
   }
 
   Future<void> directPhoneCall() async {
-    final phone = donor.value.phone.trim();
-    if (phone.isEmpty) {
-      Get.snackbar(
-        'Phone Unavailable',
-        'No direct phone number available for this donor.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.orangeAccent,
-        colorText: Colors.white,
-      );
-      return;
-    }
-
-    final Uri launchUri = Uri(
-      scheme: 'tel',
-      path: phone,
-    );
+    isCheckingMinutes.value = true;
     try {
+      // Re-fetch latest minutes/subscription
+      await fetchCallerMinutes();
+
+      final int minutes = remainingMinutes.value ?? 0;
+      if (minutes <= 0) {
+        _showInsufficientMinutesDialog();
+        return;
+      }
+
+      final phone = donor.value.phone.trim();
+      if (phone.isEmpty) {
+        Get.snackbar(
+          'Phone Unavailable',
+          'No direct phone number available for this donor.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.orangeAccent,
+          colorText: Colors.white,
+        );
+        return;
+      }
+
+      final Uri launchUri = Uri(
+        scheme: 'tel',
+        path: phone,
+      );
       if (await canLaunchUrl(launchUri)) {
         await launchUrl(launchUri);
       } else {
@@ -170,17 +180,17 @@ class ProfileController extends GetxController {
         backgroundColor: Colors.redAccent,
         colorText: Colors.white,
       );
+    } finally {
+      isCheckingMinutes.value = false;
     }
   }
 
   void _showInsufficientMinutesDialog() {
-    final donorPhone = donor.value.phone.trim();
-
     Get.dialog(
       Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         backgroundColor: Colors.white,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 20),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24),
         child: Padding(
           padding: const EdgeInsets.all(22),
           child: Column(
@@ -201,7 +211,7 @@ class ProfileController extends GetxController {
               ),
               const SizedBox(height: 16),
               const Text(
-                'Insufficient App Call Minutes',
+                'Subscription Required',
                 style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 17,
@@ -212,7 +222,7 @@ class ProfileController extends GetxController {
               ),
               const SizedBox(height: 8),
               Text(
-                'You have 0 App Call minutes remaining. You can recharge minutes or call directly using your mobile SIM card.',
+                'You need active call minutes or a subscription plan to call donors. Please purchase a package to continue.',
                 style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 13,
@@ -223,48 +233,7 @@ class ProfileController extends GetxController {
               ),
               const SizedBox(height: 20),
 
-              // Option 1: Direct SIM Call Button
-              if (donorPhone.isNotEmpty) ...[
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF16A34A),
-                      foregroundColor: Colors.white,
-                      elevation: 1,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    onPressed: () {
-                      Get.back();
-                      directPhoneCall();
-                    },
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.phone_forwarded_rounded, size: 18, color: Colors.white),
-                        const SizedBox(width: 8),
-                        Flexible(
-                          child: Text(
-                            'Call via Phone SIM ($donorPhone)',
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontFamily: 'Poppins',
-                              fontWeight: FontWeight.w700,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-              ],
-
-              // Option 2: Buy Subscription
+              // Buy Subscription
               SizedBox(
                 width: double.infinity,
                 height: 48,
@@ -272,7 +241,7 @@ class ProfileController extends GetxController {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFE8194B),
                     foregroundColor: Colors.white,
-                    elevation: 1,
+                    elevation: 1.5,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
