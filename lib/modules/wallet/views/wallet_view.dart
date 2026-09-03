@@ -60,20 +60,36 @@ class WalletView extends StatelessWidget {
 
               final balance = controller.walletBalance.value;
               if (balance == null) {
-                return const Center(
-                  child: Text(
-                    'No wallet information found.',
-                    style: TextStyle(fontFamily: 'Poppins', color: AppColors.darkGray),
+                return RefreshIndicator(
+                  color: AppColors.primary,
+                  backgroundColor: Colors.white,
+                  onRefresh: () async => await controller.fetchWalletDetails(),
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                    child: SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.7,
+                      child: const Center(
+                        child: Text(
+                          'No wallet information found.\nPull down to retry.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontFamily: 'Poppins', color: AppColors.darkGray),
+                        ),
+                      ),
+                    ),
                   ),
                 );
               }
 
-              return SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(16, 20, 16, 110),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+              return RefreshIndicator(
+                color: AppColors.primary,
+                backgroundColor: Colors.white,
+                onRefresh: () async => await controller.fetchWalletDetails(),
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 110),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                     if (controller.pendingRecharge.value != null) ...[
                       PendingRechargeCard(
                         pending: controller.pendingRecharge.value!,
@@ -156,9 +172,10 @@ class WalletView extends StatelessWidget {
                     ),
                   ],
                 ),
-              );
-            }),
-          ),
+              ),
+            );
+          }),
+        ),
         ],
       ),
     );
