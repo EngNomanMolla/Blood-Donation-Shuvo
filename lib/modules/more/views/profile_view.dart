@@ -88,7 +88,7 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
           _nameController.text = profile.name;
           _emailController.text = profile.email ?? '';
           _phoneController.text = profile.phone ?? '';
-          _dobController.text = profile.dateOfBirth ?? '';
+          _dobController.text = _formatDateFull(profile.dateOfBirth);
 
           _selectedDivision = profile.division?.isNotEmpty == true ? profile.division : null;
           _selectedDistrict = profile.district?.isNotEmpty == true ? profile.district : null;
@@ -202,6 +202,35 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
     }
   }
 
+  String _formatDateFull(String? dateStr) {
+    if (dateStr == null || dateStr.trim().isEmpty) return '';
+    try {
+      final dt = DateTime.parse(dateStr).toLocal();
+      final months = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+      ];
+      return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
+    } catch (_) {
+      try {
+        if (dateStr.contains('/')) {
+          final parts = dateStr.split('/');
+          if (parts.length == 3) {
+            final day = int.parse(parts[0]);
+            final month = int.parse(parts[1]);
+            final year = int.parse(parts[2]);
+            final months = [
+              'January', 'February', 'March', 'April', 'May', 'June',
+              'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+            return '$day ${months[month - 1]} $year';
+          }
+        }
+      } catch (_) {}
+      return dateStr;
+    }
+  }
+
   Future<void> _selectDate(BuildContext context, TextEditingController controller) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -222,7 +251,10 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
       },
     );
     if (picked != null) {
-      final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      final months = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+      ];
       setState(() {
         controller.text = '${picked.day} ${months[picked.month - 1]} ${picked.year}';
       });
@@ -583,7 +615,7 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
 
               // Upazila Dropdown
               _buildDropdownField(
-                label: 'Upazila / Area',
+                label: 'Upazila',
                 hint: _selectedDistrict == null ? 'Select District first' : 'Select Upazila',
                 icon: Icons.explore_rounded,
                 value: _selectedUpazila,
