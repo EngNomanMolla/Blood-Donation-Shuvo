@@ -367,95 +367,170 @@ class DonerDetailsView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // Minutes / SIM Info Status
           Obx(() {
             final minutes = controller.remainingMinutes.value ?? 0;
-            if (minutes > 0) {
-              return Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: minutes > 0 ? const Color(0xFFDCFCE7) : const Color(0xFFFFF1F2),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: minutes > 0 ? const Color(0xFF86EFAC) : const Color(0xFFFECDD3),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.timer_outlined, size: 14, color: Color(0xFF2E7D32)),
-                  const SizedBox(width: 4),
+                  Icon(
+                    minutes > 0 ? Icons.timer_outlined : Icons.info_outline_rounded,
+                    size: 13,
+                    color: minutes > 0 ? const Color(0xFF16A34A) : const Color(0xFFE11D48),
+                  ),
+                  const SizedBox(width: 5),
                   Text(
-                    'Available Call Minutes: $minutes Min',
-                    style: const TextStyle(
-                      fontSize: 12,
+                    minutes > 0
+                        ? 'App Minutes: $minutes min available • Or call via SIM'
+                        : '0 App Minutes • Use SIM Call or Recharge',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF2E7D32),
+                      color: minutes > 0 ? const Color(0xFF16A34A) : const Color(0xFFE11D48),
                     ),
                   ),
                 ],
-              );
-            }
-            return Text(
-              'Your Mobile Balance / Minutes Is Not Sufficient',
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+              ),
             );
           }),
+
           const SizedBox(height: 12),
+
+          // Two Call Options: App-to-App Call & Direct Phone/SIM Call + Recharge Shortcut
           Row(
             children: [
+              // 1. App-to-App Call Button
               Expanded(
+                flex: 4,
                 child: Obx(() {
                   final isChecking = controller.isCheckingMinutes.value;
-                  return GestureDetector(
-                    onTap: isChecking ? null : () => controller.initiateDonorCall(),
-                    child: Container(
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: isChecking ? Colors.grey.shade300 : const Color(0xFF2E7D32),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Center(
-                        child: isChecking
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                ),
-                              )
-                            : const Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.call, color: Colors.white, size: 18),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    'Call',
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w700,
-                                      color: Colors.white,
-                                    ),
+                  return Material(
+                    color: isChecking ? Colors.grey.shade300 : const Color(0xFF16A34A),
+                    borderRadius: BorderRadius.circular(12),
+                    elevation: 1.5,
+                    shadowColor: const Color(0xFF16A34A).withValues(alpha: 0.3),
+                    child: InkWell(
+                      onTap: isChecking ? null : () => controller.initiateDonorCall(),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        height: 48,
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        child: Center(
+                          child: isChecking
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                                   ),
-                                ],
-                              ),
+                                )
+                              : const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.wifi_calling_3_rounded, color: Colors.white, size: 18),
+                                    SizedBox(width: 6),
+                                    Flexible(
+                                      child: Text(
+                                        'App Call',
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontFamily: 'Poppins',
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w700,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ),
                       ),
                     ),
                   );
                 }),
               ),
-              const SizedBox(width: 12),
+
+              const SizedBox(width: 8),
+
+              // 2. Direct SIM / Phone Call Button
               Expanded(
-                child: GestureDetector(
+                flex: 4,
+                child: Material(
+                  color: const Color(0xFF0284C7),
+                  borderRadius: BorderRadius.circular(12),
+                  elevation: 1.5,
+                  shadowColor: const Color(0xFF0284C7).withValues(alpha: 0.3),
+                  child: InkWell(
+                    onTap: () => controller.directPhoneCall(),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      height: 48,
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      child: const Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.phone_forwarded_rounded, color: Colors.white, size: 17),
+                            SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                'SIM Call',
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: 8),
+
+              // 3. Recharge Minutes Shortcut
+              Material(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                elevation: 1,
+                child: InkWell(
                   onTap: () => Get.toNamed(AppRoutes.subscriptionPlans),
+                  borderRadius: BorderRadius.circular(12),
                   child: Container(
-                    height: 50,
+                    height: 48,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
-                      color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: primaryRed, width: 1.8),
+                      border: Border.all(color: primaryRed, width: 1.5),
                     ),
                     child: const Center(
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.bolt_rounded, color: primaryRed, size: 20),
-                          SizedBox(width: 6),
+                          Icon(Icons.bolt_rounded, color: primaryRed, size: 18),
+                          SizedBox(width: 3),
                           Text(
                             'Recharge',
                             style: TextStyle(
-                              fontSize: 15,
+                              fontFamily: 'Poppins',
+                              fontSize: 12,
                               fontWeight: FontWeight.w700,
                               color: primaryRed,
                             ),

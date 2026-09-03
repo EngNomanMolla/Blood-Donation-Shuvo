@@ -7,6 +7,7 @@ import 'package:blood_donation/data/repositories/wallet_repository.dart';
 import 'package:blood_donation/modules/doner_request/models/doner_list_model.dart';
 import 'package:blood_donation/modules/doner_details/models/doner_details_model.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ProfileController extends GetxController {
   final user = const UserProfile(
@@ -138,20 +139,56 @@ class ProfileController extends GetxController {
     }
   }
 
+  Future<void> directPhoneCall() async {
+    final phone = donor.value.phone.trim();
+    if (phone.isEmpty) {
+      Get.snackbar(
+        'Phone Unavailable',
+        'No direct phone number available for this donor.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.orangeAccent,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    final Uri launchUri = Uri(
+      scheme: 'tel',
+      path: phone,
+    );
+    try {
+      if (await canLaunchUrl(launchUri)) {
+        await launchUrl(launchUri);
+      } else {
+        await launchUrl(launchUri, mode: LaunchMode.externalApplication);
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Could not open dialer: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+      );
+    }
+  }
+
   void _showInsufficientMinutesDialog() {
+    final donorPhone = donor.value.phone.trim();
+
     Get.dialog(
       Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         backgroundColor: Colors.white,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20),
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(22),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 68,
-                height: 68,
+                width: 64,
+                height: 64,
                 decoration: const BoxDecoration(
                   color: Color(0xFFFFEEF1),
                   shape: BoxShape.circle,
@@ -159,76 +196,122 @@ class ProfileController extends GetxController {
                 child: const Icon(
                   Icons.phone_disabled_rounded,
                   color: Color(0xFFE8194B),
-                  size: 34,
+                  size: 32,
                 ),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 16),
               const Text(
-                'Insufficient Call Minutes',
+                'Insufficient App Call Minutes',
                 style: TextStyle(
-                  fontSize: 18,
+                  fontFamily: 'Poppins',
+                  fontSize: 17,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF1A1A2E),
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               Text(
-                'You do not have enough call minutes to make this call. Please recharge your minutes or purchase a subscription plan to connect.',
+                'You have 0 App Call minutes remaining. You can recharge minutes or call directly using your mobile SIM card.',
                 style: TextStyle(
+                  fontFamily: 'Poppins',
                   fontSize: 13,
                   color: Colors.grey.shade600,
-                  height: 1.5,
+                  height: 1.4,
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        side: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      onPressed: () => Get.back(),
-                      child: Text(
-                        'Cancel',
-                        style: TextStyle(
-                          color: Colors.grey.shade700,
-                          fontWeight: FontWeight.w600,
-                        ),
+              const SizedBox(height: 20),
+
+              // Option 1: Direct SIM Call Button
+              if (donorPhone.isNotEmpty) ...[
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF16A34A),
+                      foregroundColor: Colors.white,
+                      elevation: 1,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFE8194B),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    onPressed: () {
+                      Get.back();
+                      directPhoneCall();
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.phone_forwarded_rounded, size: 18, color: Colors.white),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            'Call via Phone SIM ($donorPhone)',
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
+                            ),
+                          ),
                         ),
-                        elevation: 0,
-                      ),
-                      onPressed: () {
-                        Get.back();
-                        Get.toNamed(AppRoutes.subscriptionPlans);
-                      },
-                      child: const Text(
-                        'Recharge Now',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      ],
                     ),
                   ),
-                ],
+                ),
+                const SizedBox(height: 10),
+              ],
+
+              // Option 2: Recharge Minutes
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFE8194B),
+                    foregroundColor: Colors.white,
+                    elevation: 1,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () {
+                    Get.back();
+                    Get.toNamed(AppRoutes.subscriptionPlans);
+                  },
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.bolt_rounded, size: 20, color: Colors.white),
+                      SizedBox(width: 6),
+                      Text(
+                        'Recharge App Minutes',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              TextButton(
+                onPressed: () => Get.back(),
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    color: Colors.grey.shade600,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
               ),
             ],
           ),
