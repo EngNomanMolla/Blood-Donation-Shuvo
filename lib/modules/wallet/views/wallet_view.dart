@@ -14,7 +14,9 @@ import 'widgets/pending_recharge_card.dart';
 import 'widgets/wallet_transaction_section.dart';
 
 class WalletView extends StatelessWidget {
-  const WalletView({super.key});
+  final bool? showBackButton;
+
+  const WalletView({super.key, this.showBackButton});
 
   @override
   Widget build(BuildContext context) {
@@ -45,11 +47,13 @@ class WalletView extends StatelessWidget {
       controller = Get.put(WalletController(walletRepository: Get.find<WalletRepository>()));
     }
 
+    final bool shouldShowBack = showBackButton ?? (Navigator.canPop(context) && Get.currentRoute == AppRoutes.wallet);
+
     return Scaffold(
       backgroundColor: const Color(0xFFFCE8EE),
       body: Column(
         children: [
-          _WalletAppBar(),
+          _WalletAppBar(showBackButton: shouldShowBack),
           Expanded(
             child: Obx(() {
               if (controller.isLoading.value) {
@@ -417,6 +421,10 @@ class WalletView extends StatelessWidget {
 // ── App Bar ────────────────────────────────────────────────────────────────
 
 class _WalletAppBar extends StatelessWidget {
+  final bool showBackButton;
+
+  const _WalletAppBar({this.showBackButton = true});
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -430,10 +438,13 @@ class _WalletAppBar extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
           child: Row(
             children: [
-              _AppBarIconButton(
-                icon: Icons.arrow_back_ios_new_rounded,
-                onTap: () => Get.back(),
-              ),
+              if (showBackButton)
+                _AppBarIconButton(
+                  icon: Icons.arrow_back_ios_new_rounded,
+                  onTap: () => Get.back(),
+                )
+              else
+                const SizedBox(width: 40),
               Expanded(
                 child: Text(
                   'Wallet',

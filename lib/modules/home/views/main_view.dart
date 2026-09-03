@@ -10,7 +10,7 @@ class MainController extends GetxController {
 
   final List<Widget> pages = [
     const HomeView(),
-    WalletView(),
+    const WalletView(showBackButton: false),
     const MoreView(),
   ];
 
