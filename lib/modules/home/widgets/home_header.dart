@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:blood_donation/core/utils/app_colors.dart';
 import 'package:blood_donation/core/utils/text_styles.dart';
+import 'package:blood_donation/app/routes/app_routes.dart';
 import '../constants.dart';
 import '../controllers/home_controller.dart';
 
@@ -64,43 +65,46 @@ class _HomeHeaderState extends State<HomeHeader> {
 
   Widget _buildAvatar() {
     final HomeController homeController = Get.find<HomeController>();
-    return SizedBox(
-      width: 60,
-      child: Container(
-        padding: const EdgeInsets.all(2),
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: AppColors.primary.withValues(alpha: .25),
-            width: 1.5,
+    return GestureDetector(
+      onTap: () => Get.toNamed(AppRoutes.profile),
+      child: SizedBox(
+        width: 60,
+        child: Container(
+          padding: const EdgeInsets.all(2),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: AppColors.primary.withValues(alpha: .25),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: .15),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              )
+            ],
           ),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primary.withValues(alpha: .15),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            )
-          ],
+          child: Obx(() {
+            final avatar = homeController.avatarUrl.value;
+            if (avatar.isNotEmpty) {
+              return CircleAvatar(
+                radius: HomeConstants.avatarRadius,
+                backgroundImage: NetworkImage(avatar),
+              );
+            } else {
+              return const CircleAvatar(
+                radius: HomeConstants.avatarRadius,
+                backgroundColor: Color(0xFFFDECF4),
+                child: Icon(
+                  Icons.person_rounded,
+                  color: AppColors.primary,
+                  size: 24,
+                ),
+              );
+            }
+          }),
         ),
-        child: Obx(() {
-          final avatar = homeController.avatarUrl.value;
-          if (avatar.isNotEmpty) {
-            return CircleAvatar(
-              radius: HomeConstants.avatarRadius,
-              backgroundImage: NetworkImage(avatar),
-            );
-          } else {
-            return const CircleAvatar(
-              radius: HomeConstants.avatarRadius,
-              backgroundColor: Color(0xFFFDECF4),
-              child: Icon(
-                Icons.person_rounded,
-                color: AppColors.primary,
-                size: 24,
-              ),
-            );
-          }
-        }),
       ),
     );
   }
