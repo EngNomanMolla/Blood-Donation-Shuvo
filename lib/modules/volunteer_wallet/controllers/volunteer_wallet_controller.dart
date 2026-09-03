@@ -77,7 +77,17 @@ class VolunteerWalletController extends GetxController {
             statusEnum = TransactionStatus.pending;
           }
 
-          final isCredit = typeVal.toLowerCase() == 'recharge' || typeVal.toLowerCase() == 'deposit' || typeVal.toLowerCase() == 'earning';
+          final t = typeVal.toLowerCase();
+          final isCredit = t.contains('recharge') ||
+              t.contains('deposit') ||
+              t.contains('earning') ||
+              t.contains('commission') ||
+              t.contains('referral') ||
+              t.contains('bonus') ||
+              t.contains('reward') ||
+              t.contains('cashback') ||
+              t == 'credit' ||
+              t == 'income';
 
           return TransactionModel(
             type: typeVal.capitalizeFirst ?? 'Transaction',

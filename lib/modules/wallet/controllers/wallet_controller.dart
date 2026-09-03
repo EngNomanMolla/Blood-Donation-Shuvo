@@ -84,12 +84,12 @@ class WalletController extends GetxController {
         final List<dynamic> txList = decoded['transactions'] ?? [];
         final mappedTx = txList.map((tx) {
           final double amountVal = (tx['amount'] ?? 0).toDouble();
-          final String typeVal = tx['type'] ?? 'recharge';
-          final String descVal = tx['description'] ?? '';
+          final String typeVal = (tx['type'] ?? 'recharge').toString();
+          final String descVal = (tx['description'] ?? '').toString();
           final String dateVal = formatDate(tx['created_at']);
-          final String statusVal = tx['status'] ?? 'completed';
+          final String statusVal = (tx['status'] ?? 'completed').toString();
           
-          final isCredit = typeVal == 'recharge' || typeVal == 'deposit';
+          final isCredit = _checkIsCredit(tx, typeVal, descVal);
 
           return WalletTransactionModel(
             title: typeVal.capitalizeFirst ?? 'Transaction',
@@ -182,6 +182,52 @@ class WalletController extends GetxController {
     } catch (_) {
       return dateStr;
     }
+  }
+
+  bool _checkIsCredit(dynamic tx, String typeVal, String descVal) {
+    if (tx is Map) {
+      if (tx['is_credit'] == true || tx['is_credit'] == 1 || tx['is_credit'] == '1') return true;
+      if (tx['is_credit'] == false || tx['is_credit'] == 0 || tx['is_credit'] == '0') return false;
+      final action = (tx['action'] ?? tx['transaction_type'] ?? tx['entry_type'] ?? '').toString().toLowerCase();
+      if (action == 'credit' || action == 'in' || action == 'add') return true;
+      if (action == 'debit' || action == 'out' || action == 'deduct') return false;
+    }
+
+    final t = typeVal.toLowerCase();
+    final d = descVal.toLowerCase();
+
+    // Explicit debit types
+    if (t.contains('subscript') ||
+        t.contains('purchase') ||
+        t.contains('withdraw') ||
+        t.contains('deduct') ||
+        t.contains('fee') ||
+        t == 'debit' ||
+        t == 'spent' ||
+        t == 'payment') {
+      return false;
+    }
+
+    // Credit types: commission, referral, earning, recharge, deposit, bonus, reward, cashback, refund
+    if (t.contains('commission') ||
+        t.contains('earning') ||
+        t.contains('referral') ||
+        t.contains('recharge') ||
+        t.contains('deposit') ||
+        t.contains('bonus') ||
+        t.contains('reward') ||
+        t.contains('refund') ||
+        t.contains('cashback') ||
+        t == 'credit' ||
+        t == 'income' ||
+        d.contains('commission') ||
+        d.contains('earning') ||
+        d.contains('referral') ||
+        d.contains('bonus')) {
+      return true;
+    }
+
+    return t == 'recharge' || t == 'deposit';
   }
 
   final isLoadingPlans = false.obs;
