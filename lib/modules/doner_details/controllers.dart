@@ -264,7 +264,7 @@ class ProfileController extends GetxController {
                 const SizedBox(height: 10),
               ],
 
-              // Option 2: Recharge Minutes
+              // Option 2: Buy Subscription
               SizedBox(
                 width: double.infinity,
                 height: 48,
@@ -284,10 +284,10 @@ class ProfileController extends GetxController {
                   child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.bolt_rounded, size: 20, color: Colors.white),
-                      SizedBox(width: 6),
+                      Icon(Icons.workspace_premium_rounded, size: 20, color: Colors.white),
+                      SizedBox(width: 8),
                       Text(
-                        'Recharge App Minutes',
+                        'Buy Subscription',
                         style: TextStyle(
                           fontFamily: 'Poppins',
                           fontWeight: FontWeight.w700,

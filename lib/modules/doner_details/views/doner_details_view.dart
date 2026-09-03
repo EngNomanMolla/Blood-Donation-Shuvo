@@ -393,7 +393,9 @@ class DonerDetailsView extends StatelessWidget {
                       ),
                       const SizedBox(width: 5),
                       Text(
-                        minutes > 0 ? '$minutes Min App Balance' : '0 App Minutes',
+                        minutes > 0
+                            ? '$minutes Min App Balance'
+                            : '0 App Minutes • SIM Call or Buy Subscription',
                         style: TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 11,
@@ -405,7 +407,7 @@ class DonerDetailsView extends StatelessWidget {
                   ),
                 ),
 
-                // Quick Recharge Pill
+                // Buy Subscription Pill
                 Material(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
@@ -421,10 +423,10 @@ class DonerDetailsView extends StatelessWidget {
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.bolt_rounded, color: primaryRed, size: 15),
-                          SizedBox(width: 3),
+                          Icon(Icons.workspace_premium_rounded, color: primaryRed, size: 15),
+                          SizedBox(width: 4),
                           Text(
-                            'Recharge',
+                            'Buy Subscription',
                             style: TextStyle(
                               fontFamily: 'Poppins',
                               fontSize: 11,
