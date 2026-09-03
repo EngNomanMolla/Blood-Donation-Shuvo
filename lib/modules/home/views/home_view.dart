@@ -85,7 +85,7 @@ class _HomeViewState extends State<HomeView> {
             ),
             const SizedBox(height: 8),
             BecomeDonorBanner(onTap: _onDonorTap),
-            const SizedBox(height: 8),
+            const SizedBox(height: 2),
             BecomeVolunteerBanner(onTap: _onVolunteerTap),
             const SizedBox(height: HomeConstants.sectionVerticalSpacing),
             QuickActionsSection(actions: QuickActionsSection.getDefaultActions()),

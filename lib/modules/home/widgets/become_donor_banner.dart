@@ -62,7 +62,7 @@ class _BecomeDonorBannerState extends State<BecomeDonorBanner>
         child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: HomeConstants.headerPadding,
-            vertical: 4,
+            vertical: 2,
           ),
           child: AnimatedBuilder(
             animation: _elevationAnim,
