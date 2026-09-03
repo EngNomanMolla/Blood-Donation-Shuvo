@@ -9,8 +9,9 @@ class SubscriptionPlansView extends GetView<WalletController> {
 
   @override
   Widget build(BuildContext context) {
-    // Fetch plans on entry
+    // Fetch latest plans & wallet balance on entry
     controller.fetchSubscriptionPlans();
+    controller.fetchWalletDetails();
 
     return Scaffold(
       backgroundColor: const Color(0xFFFCE8EE),
@@ -42,38 +43,199 @@ class SubscriptionPlansView extends GetView<WalletController> {
           );
         }
 
-        if (controller.subscriptionPlans.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.card_membership_rounded, size: 64, color: AppColors.darkGray.withValues(alpha: 0.5)),
-                const SizedBox(height: 16),
-                const Text(
-                  'No subscription plans available',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    color: AppColors.darkGray,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
+        return ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+          physics: const BouncingScrollPhysics(),
+          children: [
+            // ── Top Balance Card ──────────────────────────────────────
+            _buildTopBalanceCard(context),
+
+            // ── Section Title ─────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.only(left: 4, bottom: 12),
+              child: Row(
+                children: [
+                  const Icon(Icons.card_membership_rounded, size: 18, color: AppColors.primary),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Available Packages',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1E293B),
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '${controller.subscriptionPlans.length} Plans',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // ── Empty State or Plans List ─────────────────────────────
+            if (controller.subscriptionPlans.isEmpty)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 40),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.card_membership_rounded, size: 56, color: AppColors.darkGray.withValues(alpha: 0.4)),
+                      const SizedBox(height: 14),
+                      const Text(
+                        'No subscription plans available right now',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          color: AppColors.darkGray,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
-          );
-        }
-
-        return ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-          physics: const BouncingScrollPhysics(),
-          itemCount: controller.subscriptionPlans.length,
-          itemBuilder: (context, index) {
-            final plan = controller.subscriptionPlans[index];
-            return _buildPlanCard(context, plan);
-          },
+              )
+            else
+              ...controller.subscriptionPlans.map((plan) => _buildPlanCard(context, plan)),
+          ],
         );
       }),
     );
+  }
+
+  Widget _buildTopBalanceCard(BuildContext context) {
+    return Obx(() {
+      final balanceStr = controller.walletBalance.value?.balance ?? '৳ 0';
+      final minutes = controller.remainingMinutes.value ?? 0;
+      final hasSub = controller.hasActiveSubscription.value;
+
+      return Container(
+        margin: const EdgeInsets.only(bottom: 18),
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFE8194B), Color(0xFF9E1B3B)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFE8194B).withValues(alpha: 0.3),
+              blurRadius: 14,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // Left: Balance Info & Minutes
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.account_balance_wallet_rounded,
+                          color: Colors.white,
+                          size: 14,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Current Balance',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          color: Colors.white.withValues(alpha: 0.9),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    balanceStr,
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      color: Colors.white,
+                      fontSize: 26,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  if (hasSub && minutes > 0) ...[
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        const Icon(Icons.timer_outlined, size: 12, color: Colors.white70),
+                        const SizedBox(width: 4),
+                        Text(
+                          '$minutes Mins Call Balance Left',
+                          style: const TextStyle(
+                            fontFamily: 'Poppins',
+                            color: Colors.white70,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+
+            // Right: Add Money / Top-up Button
+            Material(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              elevation: 2,
+              child: InkWell(
+                onTap: controller.onAddMoney,
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.add_circle_outline_rounded, color: Color(0xFFE8194B), size: 16),
+                      SizedBox(width: 5),
+                      Text(
+                        'Add Money',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          color: Color(0xFFE8194B),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    });
   }
 
   Widget _buildPlanCard(BuildContext context, SubscriptionPlanModel plan) {
