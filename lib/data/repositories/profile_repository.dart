@@ -48,6 +48,23 @@ class ProfileData {
     this.initialRechargeRejectReason,
     this.volunteerPaymentStatus,
   });
+
+  static String? sanitizeAvatarUrl(dynamic raw) {
+    if (raw == null) return null;
+    String url = raw.toString().trim();
+    if (url.isEmpty || url == 'null') return null;
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    const base = 'http://www.bloodlinkonline.xyz';
+    if (url.startsWith('/')) {
+      return '$base$url';
+    }
+    if (url.startsWith('storage/')) {
+      return '$base/$url';
+    }
+    return '$base/storage/$url';
+  }
 }
 
 class ProfileRepository {
@@ -60,7 +77,13 @@ class ProfileRepository {
       final response = await provider.getProfile();
       if (response.statusCode == 200) {
         final body = jsonDecode(response.body);
-        final data = body['data'] as Map<String, dynamic>;
+        final data = (body['data'] is Map<String, dynamic>)
+            ? body['data'] as Map<String, dynamic>
+            : (body is Map<String, dynamic> ? body : <String, dynamic>{});
+
+        final rawAvatar = data['avatar'] ?? data['avatar_url'] ?? data['image'] ?? data['profile_image'] ?? data['photo'];
+        final sanitizedAvatar = ProfileData.sanitizeAvatarUrl(rawAvatar);
+
         return ProfileData(
           isDonor: data['is_donor'] == true || data['is_donor'] == 1 || data['is_donor'] == '1' || data['is_donor'] == 'true',
           isVolunteer: data['is_volunteer'] == true || data['is_volunteer'] == 1 || data['is_volunteer'] == '1' || data['is_volunteer'] == 'true',
@@ -73,7 +96,7 @@ class ProfileRepository {
           upazila: data['upazila'],
           email: data['email'],
           dateOfBirth: data['date_of_birth'] ?? data['dob'],
-          avatar: data['avatar'],
+          avatar: sanitizedAvatar,
           isAvailable: data['is_available'] == true || data['is_available'] == 1 || data['is_available'] == '1' || data['is_available'] == 'true',
           donationsCount: data['donations_count'] ?? 0,
           livesSavedCount: data['lives_saved_count'] ?? 0,

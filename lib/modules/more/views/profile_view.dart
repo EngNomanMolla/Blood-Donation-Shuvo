@@ -368,35 +368,48 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
                         )
                       ],
                     ),
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        CircleAvatar(
-                          radius: 44,
-                          backgroundColor: Colors.white.withValues(alpha: 0.2),
-                          backgroundImage: _localSelectedImage != null
-                              ? FileImage(_localSelectedImage!) as ImageProvider
-                              : (displayAvatar.isNotEmpty ? NetworkImage(displayAvatar) : null),
-                          child: (_localSelectedImage == null && displayAvatar.isEmpty)
-                              ? const Icon(Icons.person_rounded, size: 48, color: Colors.white)
-                              : null,
-                        ),
-                        if (_isUploadingImage)
-                          Container(
-                            width: 88,
-                            height: 88,
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.4),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Center(
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2.5,
+                    child: ClipOval(
+                      child: SizedBox(
+                        width: 88,
+                        height: 88,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            if (_localSelectedImage != null)
+                              Image.file(
+                                _localSelectedImage!,
+                                fit: BoxFit.cover,
+                              )
+                            else if (displayAvatar.isNotEmpty)
+                              Image.network(
+                                displayAvatar,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  debugPrint("Avatar Image Load Error: $error on '$displayAvatar'");
+                                  return Container(
+                                    color: Colors.white.withValues(alpha: 0.2),
+                                    child: const Icon(Icons.person_rounded, size: 48, color: Colors.white),
+                                  );
+                                },
+                              )
+                            else
+                              Container(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                child: const Icon(Icons.person_rounded, size: 48, color: Colors.white),
                               ),
-                            ),
-                          ),
-                      ],
+                            if (_isUploadingImage)
+                              Container(
+                                color: Colors.black.withValues(alpha: 0.45),
+                                child: const Center(
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2.5,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                   Material(
@@ -1480,10 +1493,13 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         String? newAvatarUrl;
-        if (decoded['data'] is Map && decoded['data']['avatar'] != null) {
-          newAvatarUrl = decoded['data']['avatar'].toString();
-        } else if (decoded['avatar'] != null) {
-          newAvatarUrl = decoded['avatar'].toString();
+        if (decoded['data'] is Map) {
+          final d = decoded['data'] as Map<String, dynamic>;
+          final raw = d['avatar'] ?? d['avatar_url'] ?? d['image'] ?? d['profile_image'] ?? d['photo'];
+          newAvatarUrl = ProfileData.sanitizeAvatarUrl(raw);
+        } else if (decoded['avatar'] != null || decoded['image'] != null) {
+          final raw = decoded['avatar'] ?? decoded['image'] ?? decoded['avatar_url'] ?? decoded['profile_image'];
+          newAvatarUrl = ProfileData.sanitizeAvatarUrl(raw);
         }
 
         if (newAvatarUrl != null && newAvatarUrl.isNotEmpty) {
@@ -1491,6 +1507,9 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
             _avatarUrl = newAvatarUrl;
           });
         }
+
+        // Reload user profile from server to ensure complete sync
+        await _loadUserProfile();
 
         if (Get.isRegistered<HomeController>()) {
           Get.find<HomeController>().fetchProfile();

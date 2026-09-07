@@ -155,9 +155,22 @@ class MoreView extends GetView<MoreController> {
                                     child: Obx(() {
                                       final avatar = controller.avatarUrl.value;
                                       if (avatar.isNotEmpty) {
-                                        return CircleAvatar(
-                                          radius: 36,
-                                          backgroundImage: NetworkImage(avatar),
+                                        return ClipOval(
+                                          child: Image.network(
+                                            avatar,
+                                            width: 72,
+                                            height: 72,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (_, __, ___) => CircleAvatar(
+                                              radius: 36,
+                                              backgroundColor: Colors.grey.shade200,
+                                              child: Icon(
+                                                Icons.person_rounded,
+                                                size: 38,
+                                                color: Colors.grey.shade600,
+                                              ),
+                                            ),
+                                          ),
                                         );
                                       } else {
                                         return CircleAvatar(

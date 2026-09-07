@@ -88,9 +88,22 @@ class _HomeHeaderState extends State<HomeHeader> {
           child: Obx(() {
             final avatar = homeController.avatarUrl.value;
             if (avatar.isNotEmpty) {
-              return CircleAvatar(
-                radius: HomeConstants.avatarRadius,
-                backgroundImage: NetworkImage(avatar),
+              return ClipOval(
+                child: Image.network(
+                  avatar,
+                  width: HomeConstants.avatarRadius * 2,
+                  height: HomeConstants.avatarRadius * 2,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => const CircleAvatar(
+                    radius: HomeConstants.avatarRadius,
+                    backgroundColor: Color(0xFFFDECF4),
+                    child: Icon(
+                      Icons.person_rounded,
+                      color: AppColors.primary,
+                      size: 24,
+                    ),
+                  ),
+                ),
               );
             } else {
               return const CircleAvatar(
