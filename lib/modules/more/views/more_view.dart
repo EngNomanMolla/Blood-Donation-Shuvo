@@ -140,7 +140,11 @@ class MoreView extends GetView<MoreController> {
                           children: [
                             // Profile Image with Glow
                             GestureDetector(
-                              onTap: controller.changeProfileImage,
+                              onTap: () {
+                                if (!controller.isUploadingImage.value) {
+                                  controller.changeProfileImage();
+                                }
+                              },
                               child: Stack(
                                 children: [
                                   Container(
@@ -153,8 +157,18 @@ class MoreView extends GetView<MoreController> {
                                       ),
                                     ),
                                     child: Obx(() {
+                                      final localFile = controller.localSelectedImage.value;
                                       final avatar = controller.avatarUrl.value;
-                                      if (avatar.isNotEmpty) {
+                                      if (localFile != null) {
+                                        return ClipOval(
+                                          child: Image.file(
+                                            localFile,
+                                            width: 72,
+                                            height: 72,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        );
+                                      } else if (avatar.isNotEmpty) {
                                         return ClipOval(
                                           child: Image.network(
                                             avatar,
@@ -201,11 +215,23 @@ class MoreView extends GetView<MoreController> {
                                           ),
                                         ],
                                       ),
-                                      child: const Icon(
-                                        Icons.camera_alt_rounded,
-                                        size: 14,
-                                        color: white,
-                                      ),
+                                      child: Obx(() {
+                                        if (controller.isUploadingImage.value) {
+                                          return const SizedBox(
+                                            width: 14,
+                                            height: 14,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: white,
+                                            ),
+                                          );
+                                        }
+                                        return const Icon(
+                                          Icons.camera_alt_rounded,
+                                          size: 14,
+                                          color: white,
+                                        );
+                                      }),
                                     ),
                                   ),
                                 ],

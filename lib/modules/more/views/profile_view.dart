@@ -1459,75 +1459,6 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
     );
   }
 
-  void _showUploadingDialog() {
-    Get.dialog(
-      PopScope(
-        canPop: false,
-        child: Center(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-            margin: const EdgeInsets.symmetric(horizontal: 36),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.18),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                )
-              ],
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  width: 28,
-                  height: 28,
-                  child: CircularProgressIndicator(
-                    color: AppColors.primary,
-                    strokeWidth: 3,
-                  ),
-                ),
-                SizedBox(width: 18),
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Uploading photo...',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF1E293B),
-                          decoration: TextDecoration.none,
-                        ),
-                      ),
-                      SizedBox(height: 2),
-                      Text(
-                        'Please wait a moment',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF64748B),
-                          decoration: TextDecoration.none,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-      barrierDismissible: false,
-    );
-  }
-
   Future<void> _pickAndUploadImage(ImageSource source) async {
     try {
       final ImagePicker picker = ImagePicker();
@@ -1544,8 +1475,6 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
         _isUploadingImage = true;
         _localSelectedImage = File(pickedFile.path);
       });
-
-      _showUploadingDialog();
 
       final repo = Get.isRegistered<ProfileRepository>()
           ? Get.find<ProfileRepository>()
@@ -1627,9 +1556,6 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
         borderRadius: 12,
       );
     } finally {
-      if (Get.isDialogOpen ?? false) {
-        Get.back();
-      }
       if (mounted) setState(() => _isUploadingImage = false);
     }
   }

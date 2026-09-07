@@ -1,9 +1,13 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:blood_donation/app/routes/app_routes.dart';
 import 'package:blood_donation/core/services/storage_service.dart';
+import '../../../data/providers/profile_provider.dart';
 import '../../../data/repositories/profile_repository.dart';
+import '../../home/controllers/home_controller.dart';
 import '../../volunteer_registration/views/volunteer_status_view.dart';
 import '../../../data/providers/donor_provider.dart';
 import '../../../data/repositories/donor_repository.dart';
@@ -35,6 +39,8 @@ class MoreController extends GetxController {
   final RxBool isVolunteer = false.obs;
   final RxString volunteerPaymentStatus = ''.obs;
   final RxBool isLoading = false.obs;
+  final RxBool isUploadingImage = false.obs;
+  final Rx<File?> localSelectedImage = Rx<File?>(null);
 
   List<MoreMenuItem> get filteredMenuItems {
     final list = <MoreMenuItem>[
@@ -256,44 +262,91 @@ class MoreController extends GetxController {
   }
 
   Future<void> changeProfileImage() async {
-    final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 80,
-    );
-
-    if (image == null) return;
-
-    isLoading.value = true;
     try {
-      final profileRepository = Get.find<ProfileRepository>();
-      final response = await profileRepository.updateProfileImage(image.path);
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+        maxWidth: 1024,
+        maxHeight: 1024,
+      );
 
-      if (response.statusCode == 200) {
+      if (image == null) return;
+
+      localSelectedImage.value = File(image.path);
+      isUploadingImage.value = true;
+
+      final profileRepository = Get.isRegistered<ProfileRepository>()
+          ? Get.find<ProfileRepository>()
+          : Get.put(ProfileRepository(
+              provider: Get.isRegistered<ProfileProvider>()
+                  ? Get.find<ProfileProvider>()
+                  : Get.put(ProfileProvider())));
+
+      final response = await profileRepository.updateProfileImage(image.path);
+      debugPrint("Upload Profile Image Response: ${response.statusCode} - ${response.body}");
+
+      Map<String, dynamic> decoded = {};
+      try {
+        decoded = jsonDecode(response.body);
+      } catch (_) {}
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        String? newAvatarUrl;
+        if (decoded['data'] is Map) {
+          final d = decoded['data'] as Map<String, dynamic>;
+          final raw = d['avatar'] ?? d['avatar_url'] ?? d['image'] ?? d['profile_image'] ?? d['photo'];
+          newAvatarUrl = ProfileData.sanitizeAvatarUrl(raw);
+        } else if (decoded['avatar'] != null || decoded['image'] != null) {
+          final raw = decoded['avatar'] ?? decoded['image'] ?? decoded['avatar_url'] ?? decoded['profile_image'];
+          newAvatarUrl = ProfileData.sanitizeAvatarUrl(raw);
+        }
+
+        if (newAvatarUrl != null && newAvatarUrl.isNotEmpty) {
+          avatarUrl.value = newAvatarUrl;
+        }
+
         await fetchUserProfile();
+
+        if (Get.isRegistered<HomeController>()) {
+          Get.find<HomeController>().fetchProfile();
+        }
+
         Get.snackbar(
           'Success',
-          'Profile picture updated successfully!',
+          decoded['message'] ?? 'Profile picture updated successfully!',
           backgroundColor: const Color(0xFF4CAF50),
           colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 12,
         );
       } else {
+        localSelectedImage.value = null;
+        final errorMsg = decoded['message'] ?? decoded['error'] ?? 'Failed to update profile picture (${response.statusCode})';
         Get.snackbar(
           'Error',
-          'Failed to update profile picture. Server responded with status: ${response.statusCode}',
+          errorMsg.toString(),
           backgroundColor: Colors.redAccent,
           colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 12,
         );
       }
     } catch (e) {
+      localSelectedImage.value = null;
       Get.snackbar(
         'Error',
         'An error occurred: $e',
         backgroundColor: Colors.redAccent,
         colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+        margin: const EdgeInsets.all(16),
+        borderRadius: 12,
       );
     } finally {
-      isLoading.value = false;
+      isUploadingImage.value = false;
     }
   }
 }
