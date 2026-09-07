@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:blood_donation/app/routes/app_routes.dart';
+import '../../home/controllers/home_controller.dart';
 import '../controllers/more_controller.dart';
 
 class MoreView extends GetView<MoreController> {
@@ -21,15 +22,25 @@ class MoreView extends GetView<MoreController> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9FB),
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          SliverToBoxAdapter(child: _buildHeader(context)),
-          SliverToBoxAdapter(child: _buildStatsCard()),
-          SliverToBoxAdapter(child: _buildActionCards()),
-          SliverToBoxAdapter(child: _buildMenuList()),
-          const SliverToBoxAdapter(child: SizedBox(height: 120)),
-        ],
+      body: RefreshIndicator(
+        color: primaryPink,
+        backgroundColor: white,
+        onRefresh: () async {
+          await controller.fetchUserProfile();
+          if (Get.isRegistered<HomeController>()) {
+            Get.find<HomeController>().fetchProfile();
+          }
+        },
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+          slivers: [
+            SliverToBoxAdapter(child: _buildHeader(context)),
+            SliverToBoxAdapter(child: _buildStatsCard()),
+            SliverToBoxAdapter(child: _buildActionCards()),
+            SliverToBoxAdapter(child: _buildMenuList()),
+            const SliverToBoxAdapter(child: SizedBox(height: 120)),
+          ],
+        ),
       ),
     );
   }

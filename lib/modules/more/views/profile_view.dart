@@ -275,17 +275,30 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
       backgroundColor: const Color(0xFFF8FAFC),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-          : SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              child: Column(
-                children: [
-                  _buildHeader(context),
-                  _buildTabBar(),
-                  _tabController.index == 0
-                      ? _buildPersonalInfoTab()
-                      : _buildDonorInfoTab(),
-                ],
+          : RefreshIndicator(
+              color: AppColors.primary,
+              backgroundColor: Colors.white,
+              onRefresh: () async {
+                await _loadUserProfile();
+                if (Get.isRegistered<HomeController>()) {
+                  Get.find<HomeController>().fetchProfile();
+                }
+                if (Get.isRegistered<MoreController>()) {
+                  Get.find<MoreController>().fetchUserProfile();
+                }
+              },
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                child: Column(
+                  children: [
+                    _buildHeader(context),
+                    _buildTabBar(),
+                    _tabController.index == 0
+                        ? _buildPersonalInfoTab()
+                        : _buildDonorInfoTab(),
+                  ],
+                ),
               ),
             ),
     );
