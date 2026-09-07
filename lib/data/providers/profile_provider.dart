@@ -55,6 +55,7 @@ class ProfileProvider {
       request.headers['Authorization'] = 'Bearer $token';
     }
 
+    request.fields['_method'] = 'PUT';
     request.files.add(await http.MultipartFile.fromPath('avatar', imagePath));
 
     final streamedResponse = await request.send();

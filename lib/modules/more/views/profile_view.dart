@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import 'package:blood_donation/core/utils/app_colors.dart';
 import 'package:blood_donation/core/utils/text_styles.dart';
 import '../../../core/constants/api_constants.dart';
@@ -50,6 +52,8 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
   bool _isLoading = true;
   bool _isSavingBasicInfo = false;
   bool _isSavingDonorInfo = false;
+  bool _isUploadingImage = false;
+  File? _localSelectedImage;
   String? _avatarUrl;
 
   final List<String> _bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
@@ -364,13 +368,35 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
                         )
                       ],
                     ),
-                    child: CircleAvatar(
-                      radius: 44,
-                      backgroundColor: Colors.white.withValues(alpha: 0.2),
-                      backgroundImage: displayAvatar.isNotEmpty ? NetworkImage(displayAvatar) : null,
-                      child: displayAvatar.isEmpty
-                          ? const Icon(Icons.person_rounded, size: 48, color: Colors.white)
-                          : null,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        CircleAvatar(
+                          radius: 44,
+                          backgroundColor: Colors.white.withValues(alpha: 0.2),
+                          backgroundImage: _localSelectedImage != null
+                              ? FileImage(_localSelectedImage!) as ImageProvider
+                              : (displayAvatar.isNotEmpty ? NetworkImage(displayAvatar) : null),
+                          child: (_localSelectedImage == null && displayAvatar.isEmpty)
+                              ? const Icon(Icons.person_rounded, size: 48, color: Colors.white)
+                              : null,
+                        ),
+                        if (_isUploadingImage)
+                          Container(
+                            width: 88,
+                            height: 88,
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.4),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Center(
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2.5,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                   Material(
@@ -379,17 +405,7 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
                     elevation: 4,
                     shadowColor: Colors.black26,
                     child: InkWell(
-                      onTap: () {
-                        Get.snackbar(
-                          'Update Photo',
-                          'Camera & Gallery upload will be available in next update',
-                          snackPosition: SnackPosition.BOTTOM,
-                          backgroundColor: Colors.white,
-                          colorText: const Color(0xFF2D2D2D),
-                          margin: const EdgeInsets.all(16),
-                          borderRadius: 12,
-                        );
-                      },
+                      onTap: _isUploadingImage ? null : _showImagePickerBottomSheet,
                       customBorder: const CircleBorder(),
                       child: const Padding(
                         padding: EdgeInsets.all(7),
@@ -1327,5 +1343,201 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
               ),
       ),
     );
+  }
+
+  // ── Image Picker & Upload ──────────────────────────────────────────────────
+
+  void _showImagePickerBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              const SizedBox(height: 18),
+              const Text(
+                'Change Profile Photo',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1E293B),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildImagePickerOption(
+                    icon: Icons.camera_alt_rounded,
+                    label: 'Camera',
+                    color: const Color(0xFF3B82F6),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _pickAndUploadImage(ImageSource.camera);
+                    },
+                  ),
+                  _buildImagePickerOption(
+                    icon: Icons.photo_library_rounded,
+                    label: 'Gallery',
+                    color: const Color(0xFFE8285A),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _pickAndUploadImage(ImageSource.gallery);
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImagePickerOption({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        width: 110,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 30),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickAndUploadImage(ImageSource source) async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? pickedFile = await picker.pickImage(
+        source: source,
+        imageQuality: 85,
+        maxWidth: 1024,
+        maxHeight: 1024,
+      );
+
+      if (pickedFile == null) return;
+
+      setState(() {
+        _isUploadingImage = true;
+        _localSelectedImage = File(pickedFile.path);
+      });
+
+      final repo = Get.isRegistered<ProfileRepository>()
+          ? Get.find<ProfileRepository>()
+          : Get.put(ProfileRepository(
+              provider: Get.isRegistered<ProfileProvider>()
+                  ? Get.find<ProfileProvider>()
+                  : Get.put(ProfileProvider())));
+
+      final response = await repo.updateProfileImage(pickedFile.path);
+      debugPrint("Upload Profile Image Response: ${response.statusCode} - ${response.body}");
+
+      Map<String, dynamic> decoded = {};
+      try {
+        decoded = jsonDecode(response.body);
+      } catch (_) {}
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        String? newAvatarUrl;
+        if (decoded['data'] is Map && decoded['data']['avatar'] != null) {
+          newAvatarUrl = decoded['data']['avatar'].toString();
+        } else if (decoded['avatar'] != null) {
+          newAvatarUrl = decoded['avatar'].toString();
+        }
+
+        if (newAvatarUrl != null && newAvatarUrl.isNotEmpty) {
+          setState(() {
+            _avatarUrl = newAvatarUrl;
+          });
+        }
+
+        if (Get.isRegistered<HomeController>()) {
+          Get.find<HomeController>().fetchProfile();
+        }
+        if (Get.isRegistered<MoreController>()) {
+          Get.find<MoreController>().fetchUserProfile();
+        }
+
+        Get.snackbar(
+          'Success',
+          decoded['message'] ?? 'Profile photo updated successfully!',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFF4CAF50),
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 12,
+        );
+      } else {
+        setState(() {
+          _localSelectedImage = null;
+        });
+        final errorMsg = decoded['message'] ?? decoded['error'] ?? 'Failed to upload photo (${response.statusCode})';
+        Get.snackbar(
+          'Upload Failed',
+          errorMsg.toString(),
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.redAccent,
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 12,
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _localSelectedImage = null;
+      });
+      Get.snackbar(
+        'Error',
+        'An error occurred while uploading photo: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+        borderRadius: 12,
+      );
+    } finally {
+      if (mounted) setState(() => _isUploadingImage = false);
+    }
   }
 }
