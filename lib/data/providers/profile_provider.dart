@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import '../../core/constants/api_constants.dart';
@@ -23,6 +24,23 @@ class ProfileProvider {
     }
 
     return await client.get(url, headers: headers);
+  }
+
+  Future<http.Response> updateProfile(Map<String, dynamic> body) async {
+    final url = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.profile}');
+    final storage = Get.find<StorageService>();
+    final token = storage.userToken;
+
+    final Map<String, String> headers = {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    };
+
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    return await client.put(url, headers: headers, body: jsonEncode(body));
   }
 
   Future<http.Response> updateProfileImage(String imagePath) async {

@@ -89,6 +89,10 @@ class ProfileRepository {
     return null;
   }
 
+  Future<http.Response> updateProfile(Map<String, dynamic> body) async {
+    return await provider.updateProfile(body);
+  }
+
   Future<http.Response> updateProfileImage(String imagePath) async {
     return await provider.updateProfileImage(imagePath);
   }

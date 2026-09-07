@@ -26,6 +26,7 @@ class CallKitService extends GetxService {
     required String rtcToken,
     required String bloodGroup,
     required String uid,
+    int availableMinutes = 0,
   }) async {
     final CallKitParams callKitParams = CallKitParams(
       id: uuid.isNotEmpty ? uuid : DateTime.now().millisecondsSinceEpoch.toString(),
@@ -51,6 +52,7 @@ class CallKitService extends GetxService {
         'rtc_token': rtcToken,
         'blood_group': bloodGroup,
         'uid': uid,
+        'available_minutes': availableMinutes,
       },
       headers: <String, dynamic>{'apiKey': 'blood_donation'},
       android: const AndroidParams(

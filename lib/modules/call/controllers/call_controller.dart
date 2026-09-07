@@ -56,12 +56,15 @@ class CallController extends GetxController {
       donorName.value = args['caller_name'] ?? 'Caller';
       donorAvatar.value = args['caller_avatar'] ?? '';
       bloodGroup.value = args['blood_group'] ?? '';
+      if (args['available_minutes'] != null) {
+        availableMinutes.value = int.tryParse(args['available_minutes'].toString()) ?? 0;
+      }
     } else {
       recipientId.value = args['recipient_id'] ?? 0;
       donorName.value = args['donor_name'] ?? 'Donor';
       donorAvatar.value = args['donor_avatar'] ?? '';
       bloodGroup.value = args['blood_group'] ?? '';
-      availableMinutes.value = args['available_minutes'] ?? 0;
+      availableMinutes.value = int.tryParse(args['available_minutes']?.toString() ?? '0') ?? 0;
     }
 
     initiateCallSession(args);
@@ -336,11 +339,63 @@ class CallController extends GetxController {
     }
   }
 
+  int get remainingSeconds {
+    if (availableMinutes.value <= 0) return 0;
+    final int totalSec = availableMinutes.value * 60;
+    final int rem = totalSec - callDurationSeconds.value;
+    return rem > 0 ? rem : 0;
+  }
+
+  String get formattedRemainingTime {
+    final int rem = remainingSeconds;
+    final int minutes = rem ~/ 60;
+    final int seconds = rem % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
   void _startCallTimer() {
     _callTimer?.cancel();
     callDurationSeconds.value = 0;
     _callTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_isEndingCall) {
+        timer.cancel();
+        return;
+      }
       callDurationSeconds.value++;
+
+      // Automatic disconnect when available call minutes run out
+      if (availableMinutes.value > 0) {
+        final int maxSeconds = availableMinutes.value * 60;
+        final int remSeconds = maxSeconds - callDurationSeconds.value;
+
+        // Warning when 30 seconds remaining
+        if (remSeconds == 30) {
+          Get.snackbar(
+            'Call Time Alert',
+            'Only 30 seconds remaining for this call.',
+            backgroundColor: Colors.orangeAccent.withValues(alpha: 0.9),
+            colorText: Colors.white,
+            snackPosition: SnackPosition.TOP,
+            duration: const Duration(seconds: 3),
+          );
+        }
+
+        // Available minutes finished -> End call for both caller and receiver
+        if (callDurationSeconds.value >= maxSeconds) {
+          timer.cancel();
+          callState.value = CallState.ended;
+          callStatusText.value = 'Call Time Expired';
+          Get.snackbar(
+            'Call Ended',
+            'Your available call minutes have expired.',
+            backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
+            colorText: Colors.white,
+            snackPosition: SnackPosition.TOP,
+            duration: const Duration(seconds: 3),
+          );
+          Future.delayed(const Duration(milliseconds: 500), () => endCall());
+        }
+      }
     });
   }
 

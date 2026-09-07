@@ -5,8 +5,11 @@ import 'package:http/http.dart' as http;
 import 'package:blood_donation/core/utils/app_colors.dart';
 import 'package:blood_donation/core/utils/text_styles.dart';
 import '../../../core/constants/api_constants.dart';
+import '../../../data/providers/profile_provider.dart';
+import '../../../data/repositories/donor_repository.dart';
 import '../../../data/repositories/profile_repository.dart';
 import '../../home/controllers/home_controller.dart';
+import '../controllers/more_controller.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key});
@@ -40,13 +43,13 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
   // Controllers for Donor Info
   final TextEditingController _donationsCountController = TextEditingController();
   final TextEditingController _lastDonationDateController = TextEditingController();
-  final TextEditingController _preferredLocationController = TextEditingController();
-  final TextEditingController _emergencyContactController = TextEditingController();
 
   String _selectedGender = 'Male';
   String _selectedBloodGroup = 'B+';
   bool _isDonorAvailable = true;
   bool _isLoading = true;
+  bool _isSavingBasicInfo = false;
+  bool _isSavingDonorInfo = false;
   String? _avatarUrl;
 
   final List<String> _bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
@@ -56,6 +59,9 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      if (mounted) setState(() {});
+    });
     _initializeData();
   }
 
@@ -68,8 +74,6 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
     _dobController.dispose();
     _donationsCountController.dispose();
     _lastDonationDateController.dispose();
-    _preferredLocationController.dispose();
-    _emergencyContactController.dispose();
     super.dispose();
   }
 
@@ -267,20 +271,18 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
       backgroundColor: const Color(0xFFF8FAFC),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-          : Column(
-              children: [
-                _buildHeader(context),
-                _buildTabBar(),
-                Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildPersonalInfoTab(),
-                      _buildDonorInfoTab(),
-                    ],
-                  ),
-                ),
-              ],
+          : SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              child: Column(
+                children: [
+                  _buildHeader(context),
+                  _buildTabBar(),
+                  _tabController.index == 0
+                      ? _buildPersonalInfoTab()
+                      : _buildDonorInfoTab(),
+                ],
+              ),
             ),
     );
   }
@@ -473,6 +475,9 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
       ),
       child: TabBar(
         controller: _tabController,
+        onTap: (index) {
+          setState(() {});
+        },
         indicator: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
@@ -519,8 +524,7 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
   // ── Tab 1: Personal Info ───────────────────────────────────────────────────
 
   Widget _buildPersonalInfoTab() {
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
+    return Padding(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 30),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -639,28 +643,103 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
 
           _buildSaveButton(
             title: 'Save Profile Changes',
-            onTap: () {
-              Get.snackbar(
-                'Success',
-                'Personal profile details updated successfully!',
-                snackPosition: SnackPosition.BOTTOM,
-                backgroundColor: const Color(0xFF4CAF50),
-                colorText: Colors.white,
-                margin: const EdgeInsets.all(16),
-                borderRadius: 12,
-              );
-            },
+            isLoading: _isSavingBasicInfo,
+            onTap: _saveBasicInfo,
           ),
         ],
       ),
     );
   }
 
+  Future<void> _saveBasicInfo() async {
+    final name = _nameController.text.trim();
+    if (name.isEmpty) {
+      Get.snackbar(
+        'Validation Error',
+        'Please enter your full name',
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
+    setState(() => _isSavingBasicInfo = true);
+
+    try {
+      final repo = Get.isRegistered<ProfileRepository>()
+          ? Get.find<ProfileRepository>()
+          : Get.put(ProfileRepository(
+              provider: Get.isRegistered<ProfileProvider>()
+                  ? Get.find<ProfileProvider>()
+                  : Get.put(ProfileProvider())));
+
+      final body = {
+        'name': name,
+        if (_emailController.text.trim().isNotEmpty) 'email': _emailController.text.trim(),
+        if (_phoneController.text.trim().isNotEmpty) 'phone': _phoneController.text.trim(),
+        'gender': _selectedGender.toLowerCase(),
+        'date_of_birth': _dobController.text.trim(),
+        'division': _selectedDivision ?? '',
+        'district': _selectedDistrict ?? '',
+        'upazila': _selectedUpazila ?? '',
+        'address': [
+          if (_selectedUpazila != null && _selectedUpazila!.isNotEmpty) _selectedUpazila,
+          if (_selectedDistrict != null && _selectedDistrict!.isNotEmpty) _selectedDistrict,
+          if (_selectedDivision != null && _selectedDivision!.isNotEmpty) _selectedDivision,
+        ].join(', '),
+      };
+
+      final response = await repo.updateProfile(body);
+      Map<String, dynamic> decoded = {};
+      try {
+        decoded = jsonDecode(response.body);
+      } catch (_) {}
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        Get.snackbar(
+          'Success',
+          decoded['message'] ?? 'Personal profile details updated successfully!',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFF4CAF50),
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 12,
+        );
+        if (Get.isRegistered<MoreController>()) {
+          Get.find<MoreController>().fetchUserProfile();
+        }
+      } else {
+        final errorMsg = decoded['message'] ?? decoded['error'] ?? 'Failed to update profile (${response.statusCode})';
+        Get.snackbar(
+          'Update Failed',
+          errorMsg.toString(),
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.redAccent,
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 12,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'An error occurred while updating profile: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+        borderRadius: 12,
+      );
+    } finally {
+      if (mounted) setState(() => _isSavingBasicInfo = false);
+    }
+  }
+
   // ── Tab 2: Donor Info ──────────────────────────────────────────────────────
 
   Widget _buildDonorInfoTab() {
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
+    return Padding(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 30),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -801,9 +880,9 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
 
           const SizedBox(height: 16),
 
-          // Donation History & Preferred Locations
+          // Donation History
           _buildCardWrapper(
-            title: 'Donation History & Preferences',
+            title: 'Donation History',
             icon: Icons.history_rounded,
             children: [
               _buildInputField(
@@ -820,21 +899,6 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
                 hint: 'Select last donation date',
                 icon: Icons.event_available_rounded,
               ),
-              const SizedBox(height: 16),
-              _buildInputField(
-                controller: _preferredLocationController,
-                label: 'Preferred Hospital / Areas',
-                hint: 'e.g. DMCH, Uttara, Dhanmondi',
-                icon: Icons.local_hospital_rounded,
-              ),
-              const SizedBox(height: 16),
-              _buildInputField(
-                controller: _emergencyContactController,
-                label: 'Emergency / Alternate Contact',
-                hint: '01XXXXXXXXX',
-                icon: Icons.contact_phone_rounded,
-                keyboardType: TextInputType.phone,
-              ),
             ],
           ),
 
@@ -842,21 +906,85 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
 
           _buildSaveButton(
             title: 'Save Donor Information',
-            onTap: () {
-              Get.snackbar(
-                'Success',
-                'Donor information & availability updated successfully!',
-                snackPosition: SnackPosition.BOTTOM,
-                backgroundColor: const Color(0xFF4CAF50),
-                colorText: Colors.white,
-                margin: const EdgeInsets.all(16),
-                borderRadius: 12,
-              );
-            },
+            isLoading: _isSavingDonorInfo,
+            onTap: _saveDonorInfo,
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _saveDonorInfo() async {
+    setState(() => _isSavingDonorInfo = true);
+
+    try {
+      final repo = Get.isRegistered<ProfileRepository>()
+          ? Get.find<ProfileRepository>()
+          : Get.put(ProfileRepository(
+              provider: Get.isRegistered<ProfileProvider>()
+                  ? Get.find<ProfileProvider>()
+                  : Get.put(ProfileProvider())));
+
+      final int donationsCount = int.tryParse(_donationsCountController.text.trim()) ?? 0;
+      final body = {
+        'blood_group': _selectedBloodGroup,
+        'is_available': _isDonorAvailable,
+        'donations_count': donationsCount,
+        if (_lastDonationDateController.text.trim().isNotEmpty)
+          'last_donation_date': _lastDonationDateController.text.trim(),
+        'is_donor': true,
+      };
+
+      if (Get.isRegistered<DonorRepository>()) {
+        try {
+          await Get.find<DonorRepository>().updateAvailability(_isDonorAvailable);
+        } catch (_) {}
+      }
+
+      final response = await repo.updateProfile(body);
+      Map<String, dynamic> decoded = {};
+      try {
+        decoded = jsonDecode(response.body);
+      } catch (_) {}
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        Get.snackbar(
+          'Success',
+          decoded['message'] ?? 'Donor information & availability updated successfully!',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFF4CAF50),
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 12,
+        );
+        if (Get.isRegistered<MoreController>()) {
+          Get.find<MoreController>().fetchUserProfile();
+        }
+      } else {
+        final errorMsg = decoded['message'] ?? decoded['error'] ?? 'Failed to update donor info (${response.statusCode})';
+        Get.snackbar(
+          'Update Failed',
+          errorMsg.toString(),
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.redAccent,
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 12,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'An error occurred while updating donor info: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+        borderRadius: 12,
+      );
+    } finally {
+      if (mounted) setState(() => _isSavingDonorInfo = false);
+    }
   }
 
   // ── Helper UI Components ───────────────────────────────────────────────────
@@ -1156,12 +1284,13 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
   Widget _buildSaveButton({
     required String title,
     required VoidCallback onTap,
+    bool isLoading = false,
   }) {
     return SizedBox(
       width: double.infinity,
       height: 52,
       child: ElevatedButton(
-        onPressed: onTap,
+        onPressed: isLoading ? null : onTap,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
@@ -1171,22 +1300,31 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
             borderRadius: BorderRadius.circular(14),
           ),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.check_circle_rounded, size: 20, color: Colors.white),
-            const SizedBox(width: 8),
-            Text(
-              title,
-              style: const TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.3,
+        child: isLoading
+            ? const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2.2,
+                ),
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.check_circle_rounded, size: 20, color: Colors.white),
+                  const SizedBox(width: 8),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
       ),
     );
   }

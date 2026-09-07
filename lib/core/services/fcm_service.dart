@@ -35,6 +35,7 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     final String agoraAppId = data['agora_app_id'] ?? data['app_id'] ?? data['agora_appid'] ?? '';
     final String rtcToken = data['rtc_token'] ?? data['token'] ?? '';
     final String bloodGroup = data['blood_group'] ?? '';
+    final int availableMinutes = int.tryParse(data['available_minutes']?.toString() ?? data['remaining_call_minutes']?.toString() ?? '0') ?? 0;
 
     String uid = data['uid']?.toString() ?? data['recipient_id']?.toString() ?? data['user_id']?.toString() ?? '';
     if (uid.isEmpty || uid == '0') {
@@ -56,6 +57,7 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       rtcToken: rtcToken,
       bloodGroup: bloodGroup,
       uid: uid,
+      availableMinutes: availableMinutes,
     );
   }
 }
@@ -163,6 +165,8 @@ class FCMService extends GetxService {
       debugPrint("   • RTC Token   : ${rtcToken.isNotEmpty ? (rtcToken.length > 30 ? '${rtcToken.substring(0, 30)}...' : rtcToken) : 'EMPTY'} (Length: ${rtcToken.length})");
       debugPrint("-------------------------------------------------------\n");
 
+      final int availableMinutes = int.tryParse(data['available_minutes']?.toString() ?? data['remaining_call_minutes']?.toString() ?? '0') ?? 0;
+
       final callArgs = {
         'is_incoming': true,
         'channel_name': channelName,
@@ -173,6 +177,7 @@ class FCMService extends GetxService {
         'rtc_token': rtcToken,
         'blood_group': bloodGroup,
         'uid': uid,
+        'available_minutes': availableMinutes,
       };
 
       // Navigate to Incoming Call Screen

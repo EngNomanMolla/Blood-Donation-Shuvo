@@ -66,43 +66,36 @@ class CallView extends GetView<CallController> {
               ),
             ),
           ),
-          Obx(() {
-            final minutes = controller.availableMinutes.value;
-            final isIncoming = controller.isIncoming.value;
-            final badgeText = isIncoming
-                ? 'Voice Call'
-                : (minutes > 0 ? '$minutes Min Left' : 'Voice Call');
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.12),
-                  width: 1,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.12),
+                width: 1,
+              ),
+            ),
+            child: const Row(
+              children: [
+                Icon(
+                  Icons.phone_in_talk_rounded,
+                  color: Color(0xFF4ADE80),
+                  size: 15,
                 ),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.timer_outlined,
-                    color: Color(0xFF4ADE80),
-                    size: 15,
+                SizedBox(width: 6),
+                Text(
+                  'Voice Call',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
                   ),
-                  const SizedBox(width: 6),
-                  Text(
-                    badgeText,
-                    style: const TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
