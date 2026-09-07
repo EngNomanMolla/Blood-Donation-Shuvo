@@ -341,7 +341,7 @@ class MoreView extends GetView<MoreController> {
           ? controller.bloodGroup.value
           : 'N/A';
       final donations = controller.donationsCount.value.toString().padLeft(2, '0');
-      final livesSaved = controller.livesSavedCount.value.toString().padLeft(2, '0');
+      final livesSaved = controller.donationsCount.value.toString().padLeft(2, '0');
 
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24),

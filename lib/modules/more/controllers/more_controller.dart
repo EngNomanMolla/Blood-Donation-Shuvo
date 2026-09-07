@@ -93,7 +93,7 @@ class MoreController extends GetxController {
         avatarUrl.value = profile.avatar ?? '';
         bloodGroup.value = profile.bloodGroup ?? '';
         donationsCount.value = profile.donationsCount;
-        livesSavedCount.value = profile.livesSavedCount;
+        livesSavedCount.value = profile.donationsCount;
         isAvailable.value = profile.isAvailable;
         isDonor.value = profile.isDonor;
         isVolunteer.value = profile.isVolunteer;
