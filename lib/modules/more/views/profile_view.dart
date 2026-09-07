@@ -242,6 +242,50 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
     }
   }
 
+  String _formatDateForApi(String? dateStr) {
+    if (dateStr == null || dateStr.trim().isEmpty) return '';
+    final trimmed = dateStr.trim();
+    if (RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(trimmed)) {
+      return trimmed;
+    }
+    try {
+      final dt = DateTime.parse(trimmed);
+      return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+    } catch (_) {}
+
+    final months = [
+      'january', 'february', 'march', 'april', 'may', 'june',
+      'july', 'august', 'september', 'october', 'november', 'december'
+    ];
+    final parts = trimmed.split(RegExp(r'[\s/-]+'));
+    if (parts.length == 3) {
+      int? day, month, year;
+      final monthIdx = months.indexOf(parts[1].toLowerCase());
+      if (monthIdx != -1) {
+        day = int.tryParse(parts[0]);
+        month = monthIdx + 1;
+        year = int.tryParse(parts[2]);
+      } else if (int.tryParse(parts[0]) != null && int.tryParse(parts[1]) != null && int.tryParse(parts[2]) != null) {
+        final p0 = int.parse(parts[0]);
+        final p1 = int.parse(parts[1]);
+        final p2 = int.parse(parts[2]);
+        if (p0 > 1000) {
+          year = p0;
+          month = p1;
+          day = p2;
+        } else if (p2 > 1000) {
+          day = p0;
+          month = p1;
+          year = p2;
+        }
+      }
+      if (day != null && month != null && year != null) {
+        return '$year-${month.toString().padLeft(2, '0')}-${day.toString().padLeft(2, '0')}';
+      }
+    }
+    return trimmed;
+  }
+
   Future<void> _selectDate(BuildContext context, TextEditingController controller) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -719,12 +763,15 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
                   ? Get.find<ProfileProvider>()
                   : Get.put(ProfileProvider())));
 
+      final dobApi = _formatDateForApi(_dobController.text.trim());
+      final rawDob = _dobController.text.trim();
       final body = {
         'name': name,
         if (_emailController.text.trim().isNotEmpty) 'email': _emailController.text.trim(),
         if (_phoneController.text.trim().isNotEmpty) 'phone': _phoneController.text.trim(),
         'gender': _selectedGender.toLowerCase(),
-        'date_of_birth': _dobController.text.trim(),
+        'date_of_birth': dobApi.isNotEmpty ? dobApi : rawDob,
+        'dob': dobApi.isNotEmpty ? dobApi : rawDob,
         'division': _selectedDivision ?? '',
         'district': _selectedDistrict ?? '',
         'upazila': _selectedUpazila ?? '',
@@ -976,13 +1023,18 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
                   : Get.put(ProfileProvider())));
 
       final int donationsCount = int.tryParse(_donationsCountController.text.trim()) ?? 0;
+      final dateApi = _formatDateForApi(_lastDonationDateController.text.trim());
+      final rawDate = _lastDonationDateController.text.trim();
+
       final body = {
         'blood_group': _selectedBloodGroup,
         'is_available': _isDonorAvailable,
         'donations_count': donationsCount,
-        if (_lastDonationDateController.text.trim().isNotEmpty) ...{
-          'last_donation_date': _lastDonationDateController.text.trim(),
-          'last_donated_at': _lastDonationDateController.text.trim(),
+        if (rawDate.isNotEmpty) ...{
+          'last_donation_date': dateApi.isNotEmpty ? dateApi : rawDate,
+          'last_donated_at': dateApi.isNotEmpty ? dateApi : rawDate,
+          'last_donation': dateApi.isNotEmpty ? dateApi : rawDate,
+          'last_donated_date': dateApi.isNotEmpty ? dateApi : rawDate,
         },
         'is_donor': true,
       };
