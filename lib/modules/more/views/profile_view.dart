@@ -112,6 +112,9 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
 
           _isDonorAvailable = profile.isAvailable;
           _donationsCountController.text = profile.donationsCount.toString();
+          if (profile.lastDonationDate != null && profile.lastDonationDate!.isNotEmpty) {
+            _lastDonationDateController.text = _formatDateFull(profile.lastDonationDate);
+          }
           _avatarUrl = profile.avatar;
 
           // Cascade load districts and upazilas for the default user address
@@ -739,6 +742,14 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
       } catch (_) {}
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
+        await _loadUserProfile();
+        if (Get.isRegistered<HomeController>()) {
+          Get.find<HomeController>().fetchProfile();
+        }
+        if (Get.isRegistered<MoreController>()) {
+          Get.find<MoreController>().fetchUserProfile();
+        }
+
         Get.snackbar(
           'Success',
           decoded['message'] ?? 'Personal profile details updated successfully!',
@@ -748,9 +759,6 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
           margin: const EdgeInsets.all(16),
           borderRadius: 12,
         );
-        if (Get.isRegistered<MoreController>()) {
-          Get.find<MoreController>().fetchUserProfile();
-        }
       } else {
         final errorMsg = decoded['message'] ?? decoded['error'] ?? 'Failed to update profile (${response.statusCode})';
         Get.snackbar(
@@ -972,8 +980,10 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
         'blood_group': _selectedBloodGroup,
         'is_available': _isDonorAvailable,
         'donations_count': donationsCount,
-        if (_lastDonationDateController.text.trim().isNotEmpty)
+        if (_lastDonationDateController.text.trim().isNotEmpty) ...{
           'last_donation_date': _lastDonationDateController.text.trim(),
+          'last_donated_at': _lastDonationDateController.text.trim(),
+        },
         'is_donor': true,
       };
 
@@ -990,6 +1000,14 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
       } catch (_) {}
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
+        await _loadUserProfile();
+        if (Get.isRegistered<HomeController>()) {
+          Get.find<HomeController>().fetchProfile();
+        }
+        if (Get.isRegistered<MoreController>()) {
+          Get.find<MoreController>().fetchUserProfile();
+        }
+
         Get.snackbar(
           'Success',
           decoded['message'] ?? 'Donor information & availability updated successfully!',
@@ -999,9 +1017,6 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
           margin: const EdgeInsets.all(16),
           borderRadius: 12,
         );
-        if (Get.isRegistered<MoreController>()) {
-          Get.find<MoreController>().fetchUserProfile();
-        }
       } else {
         final errorMsg = decoded['message'] ?? decoded['error'] ?? 'Failed to update donor info (${response.statusCode})';
         Get.snackbar(

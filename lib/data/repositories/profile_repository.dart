@@ -14,6 +14,7 @@ class ProfileData {
   final String? upazila;
   final String? email;
   final String? dateOfBirth;
+  final String? lastDonationDate;
   final String? avatar;
   final bool isAvailable;
   final int donationsCount;
@@ -37,6 +38,7 @@ class ProfileData {
     this.upazila,
     this.email,
     this.dateOfBirth,
+    this.lastDonationDate,
     this.avatar,
     required this.isAvailable,
     required this.donationsCount,
@@ -96,6 +98,7 @@ class ProfileRepository {
           upazila: data['upazila'],
           email: data['email'],
           dateOfBirth: data['date_of_birth'] ?? data['dob'],
+          lastDonationDate: data['last_donation_date'] ?? data['last_donated_at'] ?? data['last_donation'] ?? data['last_donated_date'],
           avatar: sanitizedAvatar,
           isAvailable: data['is_available'] == true || data['is_available'] == 1 || data['is_available'] == '1' || data['is_available'] == 'true',
           donationsCount: data['donations_count'] ?? 0,
