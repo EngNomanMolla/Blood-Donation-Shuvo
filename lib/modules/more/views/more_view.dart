@@ -119,7 +119,7 @@ class MoreView extends GetView<MoreController> {
                       filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                       child: Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.all(20),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.85),
                           borderRadius: BorderRadius.circular(28),
@@ -314,7 +314,7 @@ class MoreView extends GetView<MoreController> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 10),
               ],
             ),
           ),
