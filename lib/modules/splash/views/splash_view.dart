@@ -32,14 +32,20 @@ class _SplashViewState extends State<SplashView> {
           return;
         } 
         
-        if (!storage.isLoggedIn) {
+        final token = storage.userToken;
+        if (!storage.isLoggedIn || token == null || token.trim().isEmpty) {
           Get.offAllNamed(AppRoutes.login);
           return;
         }
 
         try {
-          final profileProvider = Get.put(ProfileProvider());
-          final profileRepository = Get.put(ProfileRepository(provider: profileProvider));
+          final profileProvider = Get.isRegistered<ProfileProvider>()
+              ? Get.find<ProfileProvider>()
+              : Get.put(ProfileProvider());
+          final profileRepository = Get.isRegistered<ProfileRepository>()
+              ? Get.find<ProfileRepository>()
+              : Get.put(ProfileRepository(provider: profileProvider));
+          
           final profile = await profileRepository.getProfile();
           if (profile != null) {
             await storage.setIsDonor(profile.isDonor);
@@ -55,11 +61,19 @@ class _SplashViewState extends State<SplashView> {
               Get.offAllNamed(AppRoutes.initialRecharge);
             }
             return;
+          } else {
+            // Profile is null (Token expired, 401 Unauthorized, or invalid session)
+            debugPrint("Splash: Profile is null or token expired. Clearing auth and redirecting to login.");
+            await storage.clearAuth();
+            Get.offAllNamed(AppRoutes.login);
+            return;
           }
-        } catch (_) {}
-
-        // Fallback to initial recharge if fetch fails but they are logged in
-        Get.offAllNamed(AppRoutes.initialRecharge);
+        } catch (e) {
+          debugPrint("Splash: Error verifying user session ($e). Clearing auth and redirecting to login.");
+          await storage.clearAuth();
+          Get.offAllNamed(AppRoutes.login);
+          return;
+        }
       }
     });
   }

@@ -86,6 +86,11 @@ class InitialRechargeController extends GetxController {
           }
         }
       } else {
+        final storage = Get.find<StorageService>();
+        if (!storage.isLoggedIn || storage.userToken == null || storage.userToken!.isEmpty) {
+          Get.offAllNamed(AppRoutes.login);
+          return;
+        }
         if (showFeedback) {
           Get.snackbar('Error', 'Failed to fetch user status from server.',
               backgroundColor: Colors.redAccent, colorText: Colors.white);
