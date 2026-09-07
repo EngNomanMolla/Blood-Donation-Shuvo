@@ -121,6 +121,7 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
           if (_selectedDivision != null) {
             await _fetchDistricts(_selectedDivision!, setInitial: true);
           }
+          if (mounted) setState(() {});
         }
       }
     } catch (e) {
@@ -287,9 +288,22 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
   }
 
   Future<void> _selectDate(BuildContext context, TextEditingController controller) async {
+    DateTime initial = DateTime.now();
+    if (controller.text.trim().isNotEmpty) {
+      final iso = _formatDateForApi(controller.text.trim());
+      try {
+        final parsed = DateTime.parse(iso);
+        if (parsed.isBefore(DateTime.now()) && parsed.isAfter(DateTime(1950))) {
+          initial = parsed;
+        }
+      } catch (_) {}
+    } else if (controller == _dobController) {
+      initial = DateTime.now().subtract(const Duration(days: 365 * 20));
+    }
+
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now().subtract(const Duration(days: 365 * 20)),
+      initialDate: initial,
       firstDate: DateTime(1950),
       lastDate: DateTime.now(),
       builder: (context, child) {

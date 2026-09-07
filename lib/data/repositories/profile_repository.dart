@@ -87,8 +87,10 @@ class ProfileRepository {
 
         final donorObj = (data['donor'] is Map<String, dynamic>) ? data['donor'] as Map<String, dynamic> : null;
         final donorInfoObj = (data['donor_info'] is Map<String, dynamic>) ? data['donor_info'] as Map<String, dynamic> : null;
+        final donorProfileObj = (data['donor_profile'] is Map<String, dynamic>) ? data['donor_profile'] as Map<String, dynamic> : null;
+        final userObj = (data['user'] is Map<String, dynamic>) ? data['user'] as Map<String, dynamic> : null;
 
-        final rawAvatar = data['avatar'] ?? data['avatar_url'] ?? data['image'] ?? data['profile_image'] ?? data['photo'];
+        final rawAvatar = data['avatar'] ?? data['avatar_url'] ?? data['image'] ?? data['profile_image'] ?? data['photo'] ?? userObj?['avatar'];
         final sanitizedAvatar = ProfileData.sanitizeAvatarUrl(rawAvatar);
 
         final lastDonation = data['last_donation_date'] ??
@@ -101,11 +103,19 @@ class ProfileRepository {
             donorObj?['last_donation_date'] ??
             donorObj?['last_donated_at'] ??
             donorObj?['last_donation'] ??
+            donorObj?['last_donated_date'] ??
+            donorObj?['last_donate_date'] ??
+            donorObj?['last_donation_at'] ??
             donorInfoObj?['last_donation_date'] ??
-            donorInfoObj?['last_donated_at'];
+            donorInfoObj?['last_donated_at'] ??
+            donorInfoObj?['last_donation'] ??
+            donorProfileObj?['last_donation_date'] ??
+            donorProfileObj?['last_donated_at'] ??
+            userObj?['last_donation_date'] ??
+            userObj?['last_donated_at'];
 
-        final bloodGroup = data['blood_group'] ?? donorObj?['blood_group'] ?? donorInfoObj?['blood_group'];
-        final rawDonations = data['donations_count'] ?? data['total_donations'] ?? donorObj?['donations_count'] ?? donorInfoObj?['donations_count'] ?? 0;
+        final bloodGroup = data['blood_group'] ?? donorObj?['blood_group'] ?? donorInfoObj?['blood_group'] ?? donorProfileObj?['blood_group'] ?? userObj?['blood_group'];
+        final rawDonations = data['donations_count'] ?? data['total_donations'] ?? donorObj?['donations_count'] ?? donorInfoObj?['donations_count'] ?? donorProfileObj?['donations_count'] ?? userObj?['donations_count'] ?? 0;
         final donationsCount = int.tryParse(rawDonations.toString()) ?? 0;
 
         return ProfileData(
