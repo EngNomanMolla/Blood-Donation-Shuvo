@@ -65,49 +65,52 @@ class _HomeHeaderState extends State<HomeHeader> {
 
   Widget _buildAvatar() {
     final HomeController homeController = Get.find<HomeController>();
+    const double avatarRadius = HomeConstants.avatarRadius;
+    const double imageSize = avatarRadius * 2;
+    const double containerSize = imageSize + 4;
+
     return GestureDetector(
       onTap: () => Get.toNamed(AppRoutes.profile),
-      child: SizedBox(
-        width: 60,
-        child: Container(
-          padding: const EdgeInsets.all(2),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: AppColors.primary.withValues(alpha: .25),
-              width: 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withValues(alpha: .15),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              )
-            ],
+      child: Container(
+        width: containerSize,
+        height: containerSize,
+        padding: const EdgeInsets.all(2),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: AppColors.primary.withValues(alpha: .25),
+            width: 1.5,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: .15),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            )
+          ],
+        ),
+        child: ClipOval(
           child: Obx(() {
             final avatar = homeController.avatarUrl.value;
             if (avatar.isNotEmpty) {
-              return ClipOval(
-                child: Image.network(
-                  avatar,
-                  width: HomeConstants.avatarRadius * 2,
-                  height: HomeConstants.avatarRadius * 2,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => const CircleAvatar(
-                    radius: HomeConstants.avatarRadius,
-                    backgroundColor: Color(0xFFFDECF4),
-                    child: Icon(
-                      Icons.person_rounded,
-                      color: AppColors.primary,
-                      size: 24,
-                    ),
+              return Image.network(
+                avatar,
+                width: imageSize,
+                height: imageSize,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const CircleAvatar(
+                  radius: avatarRadius,
+                  backgroundColor: Color(0xFFFDECF4),
+                  child: Icon(
+                    Icons.person_rounded,
+                    color: AppColors.primary,
+                    size: 24,
                   ),
                 ),
               );
             } else {
               return const CircleAvatar(
-                radius: HomeConstants.avatarRadius,
+                radius: avatarRadius,
                 backgroundColor: Color(0xFFFDECF4),
                 child: Icon(
                   Icons.person_rounded,
