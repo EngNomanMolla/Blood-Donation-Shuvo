@@ -94,6 +94,7 @@ class ProfileRepository {
         final sanitizedAvatar = ProfileData.sanitizeAvatarUrl(rawAvatar);
 
         final lastDonation = data['last_donation_date'] ??
+            data['last_date_donated'] ??
             data['last_donated_at'] ??
             data['last_donation'] ??
             data['last_donated_date'] ??
@@ -101,21 +102,34 @@ class ProfileRepository {
             data['last_donate'] ??
             data['last_donation_at'] ??
             donorObj?['last_donation_date'] ??
+            donorObj?['last_date_donated'] ??
             donorObj?['last_donated_at'] ??
             donorObj?['last_donation'] ??
             donorObj?['last_donated_date'] ??
             donorObj?['last_donate_date'] ??
             donorObj?['last_donation_at'] ??
             donorInfoObj?['last_donation_date'] ??
+            donorInfoObj?['last_date_donated'] ??
             donorInfoObj?['last_donated_at'] ??
             donorInfoObj?['last_donation'] ??
             donorProfileObj?['last_donation_date'] ??
+            donorProfileObj?['last_date_donated'] ??
             donorProfileObj?['last_donated_at'] ??
             userObj?['last_donation_date'] ??
+            userObj?['last_date_donated'] ??
             userObj?['last_donated_at'];
 
         final bloodGroup = data['blood_group'] ?? donorObj?['blood_group'] ?? donorInfoObj?['blood_group'] ?? donorProfileObj?['blood_group'] ?? userObj?['blood_group'];
-        final rawDonations = data['donations_count'] ?? data['total_donations'] ?? donorObj?['donations_count'] ?? donorInfoObj?['donations_count'] ?? donorProfileObj?['donations_count'] ?? userObj?['donations_count'] ?? 0;
+        final rawDonations = data['donations_count'] ??
+            data['total_times_donated'] ??
+            data['total_time_donated'] ??
+            data['total_donations'] ??
+            donorObj?['donations_count'] ??
+            donorObj?['total_times_donated'] ??
+            donorInfoObj?['donations_count'] ??
+            donorProfileObj?['donations_count'] ??
+            userObj?['donations_count'] ??
+            0;
         final donationsCount = int.tryParse(rawDonations.toString()) ?? 0;
 
         return ProfileData(

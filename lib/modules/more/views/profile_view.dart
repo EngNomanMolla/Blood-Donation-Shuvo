@@ -112,8 +112,12 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
 
           _isDonorAvailable = profile.isAvailable;
           _donationsCountController.text = profile.donationsCount.toString();
-          if (profile.lastDonationDate != null && profile.lastDonationDate!.isNotEmpty) {
+          if (profile.lastDonationDate != null &&
+              profile.lastDonationDate!.isNotEmpty &&
+              profile.lastDonationDate != 'null') {
             _lastDonationDateController.text = _formatDateFull(profile.lastDonationDate);
+          } else {
+            _lastDonationDateController.text = '';
           }
           _avatarUrl = profile.avatar;
 
@@ -1044,8 +1048,11 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
         'blood_group': _selectedBloodGroup,
         'is_available': _isDonorAvailable,
         'donations_count': donationsCount,
+        'total_times_donated': donationsCount,
+        'total_time_donated': donationsCount,
         if (rawDate.isNotEmpty) ...{
           'last_donation_date': dateApi.isNotEmpty ? dateApi : rawDate,
+          'last_date_donated': dateApi.isNotEmpty ? dateApi : rawDate,
           'last_donated_at': dateApi.isNotEmpty ? dateApi : rawDate,
           'last_donation': dateApi.isNotEmpty ? dateApi : rawDate,
           'last_donated_date': dateApi.isNotEmpty ? dateApi : rawDate,
