@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:blood_donation/core/services/storage_service.dart';
 import '../../../data/providers/donor_provider.dart';
@@ -319,8 +320,8 @@ class QuickRegisterView extends StatelessWidget {
               const SizedBox(height: 16),
 
               // Payment Numbers
-              Obx(() => Container(
-                padding: const EdgeInsets.all(14),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
                   color: primaryColor.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(14),
@@ -334,11 +335,21 @@ class QuickRegisterView extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Send Money to: 01717006474',
-                            style: const TextStyle(
+                          const Text(
+                            'Send Money to:',
+                            style: TextStyle(
                               fontFamily: 'Poppins',
-                              fontSize: 13,
+                              fontSize: 11,
+                              color: Colors.grey,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          const Text(
+                            '01717006474',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 14,
                               fontWeight: FontWeight.bold,
                               color: Color(0xFF2D2D2D),
                             ),
@@ -346,9 +357,22 @@ class QuickRegisterView extends StatelessWidget {
                         ],
                       ),
                     ),
+                    IconButton(
+                      icon: Icon(Icons.copy_rounded, size: 18, color: primaryColor),
+                      onPressed: () {
+                        Clipboard.setData(const ClipboardData(text: '01717006474'));
+                        Get.snackbar('Copied', 'Payment number copied to clipboard',
+                            snackPosition: SnackPosition.BOTTOM,
+                            duration: const Duration(seconds: 2),
+                            backgroundColor: Colors.black87,
+                            colorText: Colors.white,
+                            margin: const EdgeInsets.all(16));
+                      },
+                      tooltip: 'Copy Number',
+                    ),
                   ],
                 ),
-              )),
+              ),
               const SizedBox(height: 20),
 
               // Method Selector
