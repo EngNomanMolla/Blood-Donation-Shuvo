@@ -103,6 +103,7 @@ class MoreController extends GetxController {
         final storage = Get.find<StorageService>();
         await storage.setIsDonor(profile.isDonor);
         await storage.setIsVolunteer(profile.isVolunteer);
+        await storage.setVolunteerPaymentStatus(profile.volunteerPaymentStatus ?? '');
         if (profile.phone != null) {
           await storage.setUserPhone(profile.phone!);
         }

@@ -12,6 +12,8 @@ import '../widgets/become_donor_banner.dart';
 import '../widgets/become_volunteer_banner.dart';
 import '../widgets/quick_actions_section.dart';
 import '../../../core/services/storage_service.dart';
+import '../../volunteer_registration/views/volunteer_status_view.dart';
+import '../../more/controllers/more_controller.dart';
 
 /// Main home view - displays dashboard with blood request, banners, and quick actions
 class HomeView extends StatefulWidget {
@@ -91,6 +93,7 @@ class _HomeViewState extends State<HomeView> {
             const SizedBox(height: 2),
             Obx(() => BecomeVolunteerBanner(
                   isVolunteer: controller.isVolunteer.value,
+                  volunteerPaymentStatus: controller.volunteerPaymentStatus.value,
                   onTap: _onVolunteerTap,
                 )),
             const SizedBox(height: HomeConstants.sectionVerticalSpacing),
@@ -121,8 +124,25 @@ class _HomeViewState extends State<HomeView> {
     Get.toNamed(AppRoutes.donor);
   }
 
-  void _onVolunteerTap() {
+  void _onVolunteerTap() async {
     try {
+      final paymentStatus = controller.volunteerPaymentStatus.value.toLowerCase().trim();
+      if (paymentStatus == 'pending') {
+        if (!Get.isRegistered<MoreController>()) {
+          Get.lazyPut<MoreController>(() => MoreController());
+        }
+        await Get.to(() => const VolunteerStatusView(status: 'pending'));
+        controller.fetchProfile();
+        return;
+      } else if (paymentStatus == 'rejected') {
+        if (!Get.isRegistered<MoreController>()) {
+          Get.lazyPut<MoreController>(() => MoreController());
+        }
+        await Get.to(() => const VolunteerStatusView(status: 'rejected'));
+        controller.fetchProfile();
+        return;
+      }
+
       if (Get.isRegistered<StorageService>()) {
         final storage = Get.find<StorageService>();
         if (storage.isVolunteer || controller.isVolunteer.value) {

@@ -28,6 +28,7 @@ class HomeController extends GetxController {
   final avatarUrl = ''.obs;
   final isDonor = false.obs;
   final isVolunteer = false.obs;
+  final volunteerPaymentStatus = ''.obs;
   final walletBalance = '৳ 0'.obs;
 
   @override
@@ -45,6 +46,7 @@ class HomeController extends GetxController {
       final storage = Get.find<StorageService>();
       isDonor.value = storage.isDonor;
       isVolunteer.value = storage.isVolunteer;
+      volunteerPaymentStatus.value = storage.volunteerPaymentStatus ?? '';
     }
   }
 
@@ -187,9 +189,11 @@ class HomeController extends GetxController {
         avatarUrl.value = profile.avatar ?? '';
         isDonor.value = profile.isDonor;
         isVolunteer.value = profile.isVolunteer;
+        volunteerPaymentStatus.value = profile.volunteerPaymentStatus ?? '';
         final storage = Get.find<StorageService>();
         await storage.setIsDonor(profile.isDonor);
         await storage.setIsVolunteer(profile.isVolunteer);
+        await storage.setVolunteerPaymentStatus(profile.volunteerPaymentStatus ?? '');
         if (profile.phone != null) {
           await storage.setUserPhone(profile.phone!);
         }

@@ -6,11 +6,13 @@ import '../constants.dart';
 class BecomeVolunteerBanner extends StatefulWidget {
   final VoidCallback? onTap;
   final bool isVolunteer;
+  final String volunteerPaymentStatus;
 
   const BecomeVolunteerBanner({
     super.key,
     this.onTap,
     this.isVolunteer = false,
+    this.volunteerPaymentStatus = '',
   });
 
   @override
@@ -221,7 +223,11 @@ class _BecomeVolunteerBannerState extends State<BecomeVolunteerBanner>
           Icon(
             widget.isVolunteer
                 ? Icons.dashboard_rounded
-                : Icons.volunteer_activism_rounded,
+                : widget.volunteerPaymentStatus == 'pending'
+                    ? Icons.hourglass_top_rounded
+                    : widget.volunteerPaymentStatus == 'rejected'
+                        ? Icons.error_outline_rounded
+                        : Icons.volunteer_activism_rounded,
             color: Colors.white,
             size: 30,
           ),
@@ -231,14 +237,29 @@ class _BecomeVolunteerBannerState extends State<BecomeVolunteerBanner>
   }
 
   Widget _buildTextSection() {
+    final String subtitle;
+    final String title;
+
+    if (widget.isVolunteer) {
+      subtitle = 'Manage Volunteer Activities';
+      title = 'Volunteer Dashboard';
+    } else if (widget.volunteerPaymentStatus == 'pending') {
+      subtitle = 'Application Under Review';
+      title = 'Verification Pending';
+    } else if (widget.volunteerPaymentStatus == 'rejected') {
+      subtitle = 'Application Rejected — Tap to review';
+      title = 'Become a Volunteer';
+    } else {
+      subtitle = 'Make A Difference';
+      title = 'Become a Volunteer';
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          widget.isVolunteer
-              ? 'Manage Volunteer Activities'
-              : 'Make A Difference',
+          subtitle,
           style: AllStyles.subtitleTextStyle.copyWith(
             color: Colors.white.withValues(alpha: 0.9),
             fontSize: 12,
@@ -248,9 +269,7 @@ class _BecomeVolunteerBannerState extends State<BecomeVolunteerBanner>
         ),
         const SizedBox(height: 2),
         Text(
-          widget.isVolunteer
-              ? 'Volunteer Dashboard'
-              : 'Become a Volunteer',
+          title,
           style: AllStyles.titleTextStyle.copyWith(
             color: Colors.white,
             fontWeight: FontWeight.w700,
