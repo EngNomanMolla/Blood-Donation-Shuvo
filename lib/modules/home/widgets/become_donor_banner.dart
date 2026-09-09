@@ -236,6 +236,8 @@ class _BecomeDonorBannerState extends State<BecomeDonorBanner>
       children: [
         Text(
           widget.isDonor ? 'Manage Donations & Requests' : 'Save Lives Today',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: AllStyles.subtitleTextStyle.copyWith(
             color: Colors.white.withValues(alpha: 0.9),
             fontSize: 12,
@@ -246,6 +248,8 @@ class _BecomeDonorBannerState extends State<BecomeDonorBanner>
         const SizedBox(height: 2),
         Text(
           widget.isDonor ? 'Donor Dashboard' : 'Become a Blood Donor',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: AllStyles.titleTextStyle.copyWith(
             color: Colors.white,
             fontWeight: FontWeight.w700,

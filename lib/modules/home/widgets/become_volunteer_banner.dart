@@ -260,6 +260,8 @@ class _BecomeVolunteerBannerState extends State<BecomeVolunteerBanner>
       children: [
         Text(
           subtitle,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: AllStyles.subtitleTextStyle.copyWith(
             color: Colors.white.withValues(alpha: 0.9),
             fontSize: 12,
@@ -270,6 +272,8 @@ class _BecomeVolunteerBannerState extends State<BecomeVolunteerBanner>
         const SizedBox(height: 2),
         Text(
           title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: AllStyles.titleTextStyle.copyWith(
             color: Colors.white,
             fontWeight: FontWeight.w700,

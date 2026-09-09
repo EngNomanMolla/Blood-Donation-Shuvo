@@ -542,6 +542,8 @@ class MoreView extends GetView<MoreController> {
                       Expanded(
                         child: Text(
                           doneTitle,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontFamily: 'Poppins',
                             color: mainColor,
@@ -626,6 +628,8 @@ class MoreView extends GetView<MoreController> {
                     ),
                     Text(
                       displayTitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontFamily: 'Poppins',
                         color: white,
