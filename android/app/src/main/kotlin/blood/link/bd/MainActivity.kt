@@ -1,4 +1,4 @@
-package com.example.blood_donation
+package blood.link.bd
 
 import io.flutter.embedding.android.FlutterActivity
 

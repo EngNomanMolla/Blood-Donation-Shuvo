@@ -120,6 +120,7 @@ class ProfileRepository {
             userObj?['last_donated_at'];
 
         final bloodGroup = data['blood_group'] ?? donorObj?['blood_group'] ?? donorInfoObj?['blood_group'] ?? donorProfileObj?['blood_group'] ?? userObj?['blood_group'];
+        final gender = data['gender'] ?? userObj?['gender'] ?? donorObj?['gender'] ?? donorInfoObj?['gender'] ?? donorProfileObj?['gender'];
         final rawDonations = data['donations_count'] ??
             data['total_times_donated'] ??
             data['total_time_donated'] ??
@@ -138,7 +139,7 @@ class ProfileRepository {
           name: data['name'] ?? '',
           phone: data['phone'],
           bloodGroup: bloodGroup?.toString(),
-          gender: data['gender']?.toString(),
+          gender: gender?.toString(),
           division: data['division']?.toString(),
           district: data['district']?.toString(),
           upazila: data['upazila']?.toString(),

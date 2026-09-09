@@ -1,8 +1,6 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../core/constants/api_constants.dart';
+import '../../../core/data/bd_locations.dart';
 import '../../../core/services/storage_service.dart';
 import '../../../data/repositories/donor_repository.dart';
 import '../../more/controllers/more_controller.dart';
@@ -191,11 +189,7 @@ class VolunteerRegistrationController extends GetxController {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            selectedMethod.value == 'bkash'
-                                ? 'Send Money (Personal) to: 01700-000000'
-                                : selectedMethod.value == 'nagad'
-                                    ? 'Send Money (Personal) to: 01800-000000'
-                                    : 'Send Money (Personal) to: 01900-000000',
+                            'Send Money to: 01717006474',
                             style: const TextStyle(
                               fontFamily: 'Poppins',
                               fontSize: 13,
@@ -513,17 +507,9 @@ class VolunteerRegistrationController extends GetxController {
   Future<void> fetchDivisionsList() async {
     isDivisionsLoading.value = true;
     try {
-      final response = await http.get(Uri.parse(ApiConstants.bdApisDivisions));
-      if (response.statusCode == 200) {
-        final decoded = jsonDecode(response.body);
-        final List<dynamic> listData = decoded['data'] ?? [];
-        divisions.value = listData
-            .map((e) => e['division'] as String)
-            .toList()
-          ..sort();
-      }
+      divisions.value = BDLocations.getDivisions();
     } catch (e) {
-      Get.printError(info: "Error fetching divisions list from bdapis: $e");
+      Get.printError(info: "Error fetching divisions list: $e");
     } finally {
       isDivisionsLoading.value = false;
     }
@@ -532,17 +518,9 @@ class VolunteerRegistrationController extends GetxController {
   Future<void> fetchDistrictsList(String division) async {
     isDistrictsLoading.value = true;
     try {
-      final response = await http.get(Uri.parse('${ApiConstants.bdApisDivisionDetail}/$division'));
-      if (response.statusCode == 200) {
-        final decoded = jsonDecode(response.body);
-        final List<dynamic> listData = decoded['data'] ?? [];
-        districts.value = listData
-            .map((e) => e['district'] as String)
-            .toList()
-          ..sort();
-      }
+      districts.value = BDLocations.getDistricts(division);
     } catch (e) {
-      Get.printError(info: "Error fetching districts list for $division from bdapis: $e");
+      Get.printError(info: "Error fetching districts list for $division: $e");
     } finally {
       isDistrictsLoading.value = false;
     }
@@ -551,17 +529,10 @@ class VolunteerRegistrationController extends GetxController {
   Future<void> fetchUpazilasList(String district) async {
     isUpazilasLoading.value = true;
     try {
-      final response = await http.get(Uri.parse('${ApiConstants.bdApisDistrictDetail}/$district'));
-      if (response.statusCode == 200) {
-        final decoded = jsonDecode(response.body);
-        final List<dynamic> listData = decoded['data'] ?? [];
-        if (listData.isNotEmpty) {
-          final List<dynamic> ups = listData[0]['upazillas'] ?? [];
-          upazilas.value = ups.map((e) => e.toString()).toList()..sort();
-        }
-      }
+      upazilas.value = BDLocations.getUpazilasByDivisionAndDistrict(
+          selectedDivision.value, district);
     } catch (e) {
-      Get.printError(info: "Error fetching upazilas list for $district from bdapis: $e");
+      Get.printError(info: "Error fetching upazilas list for $district: $e");
     } finally {
       isUpazilasLoading.value = false;
     }

@@ -7,33 +7,35 @@ import 'package:blood_donation/data/repositories/wallet_repository.dart';
 import 'package:blood_donation/modules/doner_request/models/doner_list_model.dart';
 import 'package:blood_donation/modules/doner_details/models/doner_details_model.dart';
 import 'package:get/get.dart';
+import 'package:blood_donation/data/repositories/profile_repository.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ProfileController extends GetxController {
   final user = const UserProfile(
-    name: 'Miraj Ahmed',
-    email: 'Mirajahmed3540@Gmail.Com',
-    bloodType: 'A+',
+    name: '',
+    email: '',
+    bloodType: '',
     donated: 0,
     liveSave: 0,
-    imageUrl: 'https://randomuser.me/api/portraits/men/75.jpg',
+    imageUrl: '',
   ).obs;
  
   final donor = const DonorProfile(
-    name: 'Emili Dash',
-    age: 24,
-    gender: 'Female',
-    hospital: 'Dhaka Medical',
-    location: 'Dhaka, Bangladesh',
-    date: '24 Apr 2024',
-    imageUrl: 'https://randomuser.me/api/portraits/women/44.jpg',
+    name: '',
+    age: 0,
+    gender: '',
+    hospital: '',
+    location: '',
+    date: '',
+    imageUrl: '',
     phone: '',
   ).obs;
 
   final donorId = 0.obs;
   final isLoading = false.obs;
   final remainingMinutes = Rxn<int>();
-  final isCheckingMinutes = false.obs;
+  final isAppCallLoading = false.obs;
+  final isSimCallLoading = false.obs;
   final hasActiveSubscription = false.obs;
 
   @override
@@ -64,11 +66,13 @@ class ProfileController extends GetxController {
         imageUrl: argDonor.imageUrl,
         phone: argDonor.phone,
       );
-      fetchDonorDetails(argDonor.id);
-    } else if (passedId != null) {
-      fetchDonorDetails(passedId);
     }
+
+    // Refresh active subscription and minutes immediately upon opening
     fetchCallerMinutes();
+    if (donorId.value > 0) {
+      fetchDonorDetails(donorId.value);
+    }
   }
 
   Future<void> fetchCallerMinutes() async {
@@ -115,7 +119,7 @@ class ProfileController extends GetxController {
   }
 
   Future<void> initiateDonorCall() async {
-    isCheckingMinutes.value = true;
+    isAppCallLoading.value = true;
     try {
       // Re-fetch latest minutes from wallet
       await fetchCallerMinutes();
@@ -135,12 +139,12 @@ class ProfileController extends GetxController {
         colorText: Colors.white,
       );
     } finally {
-      isCheckingMinutes.value = false;
+      isAppCallLoading.value = false;
     }
   }
 
   Future<void> directPhoneCall() async {
-    isCheckingMinutes.value = true;
+    isSimCallLoading.value = true;
     try {
       // Re-fetch latest minutes/subscription
       await fetchCallerMinutes();
@@ -181,7 +185,7 @@ class ProfileController extends GetxController {
         colorText: Colors.white,
       );
     } finally {
-      isCheckingMinutes.value = false;
+      isSimCallLoading.value = false;
     }
   }
 
@@ -309,9 +313,13 @@ class ProfileController extends GetxController {
       final details = await donorRepository.getDonorDetails(id);
       
       final String genderVal = details['gender_label'] ?? details['gender'] ?? 'Male';
-      final String defaultImgUrl = genderVal.toLowerCase() == 'female'
-          ? 'https://randomuser.me/api/portraits/women/${id % 100}.jpg'
-          : 'https://randomuser.me/api/portraits/men/${id % 100}.jpg';
+      final rawAvatar = details['avatar'] ??
+          details['avatar_url'] ??
+          details['image'] ??
+          details['profile_image'] ??
+          details['photo'] ??
+          (details['user'] is Map ? (details['user']['avatar'] ?? details['user']['image'] ?? details['user']['avatar_url']) : null);
+      final String sanitizedImg = ProfileData.sanitizeAvatarUrl(rawAvatar) ?? '';
 
       final locationMap = details['location'];
       String locStr = details['address'] ?? '';
@@ -337,7 +345,7 @@ class ProfileController extends GetxController {
         bloodType: details['blood_group'] ?? '',
         donated: details['donations_count'] ?? 0,
         liveSave: details['lives_saved_count'] ?? 0,
-        imageUrl: defaultImgUrl,
+        imageUrl: sanitizedImg,
       );
 
       donor.value = DonorProfile(
@@ -347,7 +355,7 @@ class ProfileController extends GetxController {
         hospital: details['address'] ?? '',
         location: locStr,
         date: formattedDate.isNotEmpty ? 'Registered: $formattedDate' : '',
-        imageUrl: defaultImgUrl,
+        imageUrl: sanitizedImg,
         phone: details['phone'] ?? '',
       );
     } catch (e) {

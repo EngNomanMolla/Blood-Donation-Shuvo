@@ -335,11 +335,7 @@ class QuickRegisterView extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            selectedMethod.value == 'bkash'
-                                ? 'Send Money (Personal) to: 01700-000000'
-                                : selectedMethod.value == 'nagad'
-                                    ? 'Send Money (Personal) to: 01800-000000'
-                                    : 'Send Money (Personal) to: 01900-000000',
+                            'Send Money to: 01717006474',
                             style: const TextStyle(
                               fontFamily: 'Poppins',
                               fontSize: 13,

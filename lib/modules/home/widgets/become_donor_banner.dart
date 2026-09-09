@@ -6,8 +6,13 @@ import '../constants.dart';
 /// Beautiful and modern become a donor promotional banner
 class BecomeDonorBanner extends StatefulWidget {
   final VoidCallback? onTap;
+  final bool isDonor;
 
-  const BecomeDonorBanner({super.key, this.onTap});
+  const BecomeDonorBanner({
+    super.key,
+    this.onTap,
+    this.isDonor = false,
+  });
 
   @override
   State<BecomeDonorBanner> createState() => _BecomeDonorBannerState();
@@ -215,7 +220,7 @@ class _BecomeDonorBannerState extends State<BecomeDonorBanner>
           ),
           // Icon
           Icon(
-            Icons.water_drop_rounded,
+            widget.isDonor ? Icons.dashboard_rounded : Icons.water_drop_rounded,
             color: Colors.white,
             size: 32,
           ),
@@ -230,7 +235,7 @@ class _BecomeDonorBannerState extends State<BecomeDonorBanner>
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          'Save Lives Today',
+          widget.isDonor ? 'Manage Donations & Requests' : 'Save Lives Today',
           style: AllStyles.subtitleTextStyle.copyWith(
             color: Colors.white.withValues(alpha: 0.9),
             fontSize: 12,
@@ -240,7 +245,7 @@ class _BecomeDonorBannerState extends State<BecomeDonorBanner>
         ),
         const SizedBox(height: 2),
         Text(
-          'Become a Blood Donor',
+          widget.isDonor ? 'Donor Dashboard' : 'Become a Blood Donor',
           style: AllStyles.titleTextStyle.copyWith(
             color: Colors.white,
             fontWeight: FontWeight.w700,

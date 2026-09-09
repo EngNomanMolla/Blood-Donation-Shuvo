@@ -576,16 +576,21 @@ class DonateScreen extends GetView<DonateController> {
                   border: Border.all(color: softPink, width: 2),
                 ),
                 child: ClipOval(
-                child: Image.network(
-                  donor.imageUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
-                    color: softPink,
-                    child: const Icon(Icons.person, color: primaryRed),
-                  ),
+                  child: donor.imageUrl.isNotEmpty
+                      ? Image.network(
+                          donor.imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            color: softPink,
+                            child: const Icon(Icons.person, color: primaryRed, size: 28),
+                          ),
+                        )
+                      : Container(
+                          color: softPink,
+                          child: const Icon(Icons.person, color: primaryRed, size: 28),
+                        ),
                 ),
               ),
-            ),
  
             const SizedBox(width: 12),
  

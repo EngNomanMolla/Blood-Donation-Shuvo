@@ -2,11 +2,10 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:blood_donation/core/utils/app_colors.dart';
 import 'package:blood_donation/core/utils/text_styles.dart';
-import '../../../core/constants/api_constants.dart';
+import '../../../core/data/bd_locations.dart';
 import '../../../data/providers/profile_provider.dart';
 import '../../../data/repositories/donor_repository.dart';
 import '../../../data/repositories/profile_repository.dart';
@@ -102,8 +101,15 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
           _selectedDistrict = profile.district?.isNotEmpty == true ? profile.district : null;
           _selectedUpazila = profile.upazila?.isNotEmpty == true ? profile.upazila : null;
 
-          if (profile.gender != null && _genders.contains(profile.gender)) {
-            _selectedGender = profile.gender!;
+          if (profile.gender != null && profile.gender!.isNotEmpty) {
+            final g = profile.gender!.trim().toLowerCase();
+            if (g == 'female' || g == 'f') {
+              _selectedGender = 'Female';
+            } else if (g == 'other' || g == 'o') {
+              _selectedGender = 'Other';
+            } else {
+              _selectedGender = 'Male';
+            }
           }
 
           if (profile.bloodGroup != null && _bloodGroups.contains(profile.bloodGroup)) {
@@ -138,20 +144,15 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
   Future<void> _fetchDivisions() async {
     setState(() => _isDivisionsLoading = true);
     try {
-      final response = await http.get(Uri.parse(ApiConstants.bdApisDivisions));
-      if (response.statusCode == 200) {
-        final decoded = jsonDecode(response.body);
-        final List<dynamic> listData = decoded['data'] ?? [];
-        final fetched = listData.map((e) => e['division'].toString()).toList()..sort();
-        setState(() {
-          _divisions = fetched;
-          if (_selectedDivision != null && !_divisions.contains(_selectedDivision)) {
-            // Find match ignoring case
-            final match = _divisions.firstWhereOrNull((d) => d.toLowerCase() == _selectedDivision!.toLowerCase());
-            if (match != null) _selectedDivision = match;
-          }
-        });
-      }
+      final fetched = BDLocations.getDivisions();
+      setState(() {
+        _divisions = fetched;
+        if (_selectedDivision != null && !_divisions.contains(_selectedDivision)) {
+          // Find match ignoring case
+          final match = _divisions.firstWhereOrNull((d) => d.toLowerCase() == _selectedDivision!.toLowerCase());
+          if (match != null) _selectedDivision = match;
+        }
+      });
     } catch (e) {
       debugPrint("Error fetching divisions: $e");
     } finally {
@@ -162,26 +163,21 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
   Future<void> _fetchDistricts(String division, {bool setInitial = false}) async {
     setState(() => _isDistrictsLoading = true);
     try {
-      final response = await http.get(Uri.parse('${ApiConstants.bdApisDivisionDetail}/$division'));
-      if (response.statusCode == 200) {
-        final decoded = jsonDecode(response.body);
-        final List<dynamic> listData = decoded['data'] ?? [];
-        final fetched = listData.map((e) => e['district'].toString()).toList()..sort();
-        setState(() {
-          _districts = fetched;
-          if (!setInitial) {
-            _selectedDistrict = null;
-            _selectedUpazila = null;
-            _upazilas = [];
-          } else if (_selectedDistrict != null && !_districts.contains(_selectedDistrict)) {
-            final match = _districts.firstWhereOrNull((d) => d.toLowerCase() == _selectedDistrict!.toLowerCase());
-            if (match != null) _selectedDistrict = match;
-          }
-        });
-
-        if (setInitial && _selectedDistrict != null) {
-          await _fetchUpazilas(_selectedDistrict!, setInitial: true);
+      final fetched = BDLocations.getDistricts(division);
+      setState(() {
+        _districts = fetched;
+        if (!setInitial) {
+          _selectedDistrict = null;
+          _selectedUpazila = null;
+          _upazilas = [];
+        } else if (_selectedDistrict != null && !_districts.contains(_selectedDistrict)) {
+          final match = _districts.firstWhereOrNull((d) => d.toLowerCase() == _selectedDistrict!.toLowerCase());
+          if (match != null) _selectedDistrict = match;
         }
+      });
+
+      if (setInitial && _selectedDistrict != null) {
+        await _fetchUpazilas(_selectedDistrict!, setInitial: true);
       }
     } catch (e) {
       debugPrint("Error fetching districts for $division: $e");
@@ -193,24 +189,17 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
   Future<void> _fetchUpazilas(String district, {bool setInitial = false}) async {
     setState(() => _isUpazilasLoading = true);
     try {
-      final response = await http.get(Uri.parse('${ApiConstants.bdApisDistrictDetail}/$district'));
-      if (response.statusCode == 200) {
-        final decoded = jsonDecode(response.body);
-        final List<dynamic> listData = decoded['data'] ?? [];
-        if (listData.isNotEmpty) {
-          final List<dynamic> ups = listData[0]['upazillas'] ?? [];
-          final fetched = ups.map((e) => e.toString()).toList()..sort();
-          setState(() {
-            _upazilas = fetched;
-            if (!setInitial) {
-              _selectedUpazila = null;
-            } else if (_selectedUpazila != null && !_upazilas.contains(_selectedUpazila)) {
-              final match = _upazilas.firstWhereOrNull((u) => u.toLowerCase() == _selectedUpazila!.toLowerCase());
-              if (match != null) _selectedUpazila = match;
-            }
-          });
+      final fetched = BDLocations.getUpazilasByDivisionAndDistrict(
+          _selectedDivision ?? '', district);
+      setState(() {
+        _upazilas = fetched;
+        if (!setInitial) {
+          _selectedUpazila = null;
+        } else if (_selectedUpazila != null && !_upazilas.contains(_selectedUpazila)) {
+          final match = _upazilas.firstWhereOrNull((u) => u.toLowerCase() == _selectedUpazila!.toLowerCase());
+          if (match != null) _selectedUpazila = match;
         }
-      }
+      });
     } catch (e) {
       debugPrint("Error fetching upazilas for $district: $e");
     } finally {
@@ -1047,16 +1036,13 @@ class _ProfileViewState extends State<ProfileView> with SingleTickerProviderStat
       final body = {
         'blood_group': _selectedBloodGroup,
         'is_available': _isDonorAvailable,
+        'gender': _selectedGender.toLowerCase(),
         'donations_count': donationsCount,
         'total_times_donated': donationsCount,
-        'total_time_donated': donationsCount,
-        if (rawDate.isNotEmpty) ...{
-          'last_donation_date': dateApi.isNotEmpty ? dateApi : rawDate,
-          'last_date_donated': dateApi.isNotEmpty ? dateApi : rawDate,
-          'last_donated_at': dateApi.isNotEmpty ? dateApi : rawDate,
-          'last_donation': dateApi.isNotEmpty ? dateApi : rawDate,
-          'last_donated_date': dateApi.isNotEmpty ? dateApi : rawDate,
-        },
+        if (dateApi.isNotEmpty)
+          'last_donation_date': dateApi
+        else if (rawDate.isNotEmpty)
+          'last_donation_date': rawDate,
         'is_donor': true,
       };
 

@@ -5,8 +5,13 @@ import '../constants.dart';
 /// Beautiful and modern become a volunteer promotional banner
 class BecomeVolunteerBanner extends StatefulWidget {
   final VoidCallback? onTap;
+  final bool isVolunteer;
 
-  const BecomeVolunteerBanner({super.key, this.onTap});
+  const BecomeVolunteerBanner({
+    super.key,
+    this.onTap,
+    this.isVolunteer = false,
+  });
 
   @override
   State<BecomeVolunteerBanner> createState() => _BecomeVolunteerBannerState();
@@ -213,8 +218,10 @@ class _BecomeVolunteerBannerState extends State<BecomeVolunteerBanner>
             ),
           ),
           // Icon
-          const Icon(
-            Icons.volunteer_activism_rounded,
+          Icon(
+            widget.isVolunteer
+                ? Icons.dashboard_rounded
+                : Icons.volunteer_activism_rounded,
             color: Colors.white,
             size: 30,
           ),
@@ -229,7 +236,9 @@ class _BecomeVolunteerBannerState extends State<BecomeVolunteerBanner>
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          'Make A Difference',
+          widget.isVolunteer
+              ? 'Manage Volunteer Activities'
+              : 'Make A Difference',
           style: AllStyles.subtitleTextStyle.copyWith(
             color: Colors.white.withValues(alpha: 0.9),
             fontSize: 12,
@@ -239,7 +248,9 @@ class _BecomeVolunteerBannerState extends State<BecomeVolunteerBanner>
         ),
         const SizedBox(height: 2),
         Text(
-          'Become a Volunteer',
+          widget.isVolunteer
+              ? 'Volunteer Dashboard'
+              : 'Become a Volunteer',
           style: AllStyles.titleTextStyle.copyWith(
             color: Colors.white,
             fontWeight: FontWeight.w700,

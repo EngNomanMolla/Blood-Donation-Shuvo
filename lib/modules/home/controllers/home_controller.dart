@@ -24,17 +24,28 @@ class HomeController extends GetxController {
   final notifications = <NotificationItem>[].obs;
   final isNotificationsLoading = false.obs;
 
-  // Profile Avatar and Wallet Balance
+  // Profile Avatar, Donor/Volunteer status, and Wallet Balance
   final avatarUrl = ''.obs;
+  final isDonor = false.obs;
+  final isVolunteer = false.obs;
   final walletBalance = '৳ 0'.obs;
 
   @override
   void onInit() {
     super.onInit();
+    refreshUserStatus();
     fetchBanners();
     fetchProfile();
     fetchWalletBalance();
     fetchNotifications();
+  }
+
+  void refreshUserStatus() {
+    if (Get.isRegistered<StorageService>()) {
+      final storage = Get.find<StorageService>();
+      isDonor.value = storage.isDonor;
+      isVolunteer.value = storage.isVolunteer;
+    }
   }
 
   Future<void> fetchWalletBalance() async {
@@ -174,6 +185,8 @@ class HomeController extends GetxController {
       final profile = await profileRepository.getProfile();
       if (profile != null) {
         avatarUrl.value = profile.avatar ?? '';
+        isDonor.value = profile.isDonor;
+        isVolunteer.value = profile.isVolunteer;
         final storage = Get.find<StorageService>();
         await storage.setIsDonor(profile.isDonor);
         await storage.setIsVolunteer(profile.isVolunteer);

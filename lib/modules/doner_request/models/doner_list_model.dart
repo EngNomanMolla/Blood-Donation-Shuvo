@@ -1,3 +1,5 @@
+import 'package:blood_donation/data/repositories/profile_repository.dart';
+
 class Donor {
   final int id;
   final String name;
@@ -30,19 +32,23 @@ class Donor {
     // Determine gender value
     final String genderVal = json['gender_label'] ?? json['gender'] ?? 'Male';
 
-    // Generate/get profile image (API has no avatar key in provided JSON, use randomuser.me mock avatar)
-    final int id = json['id'] ?? 0;
-    final String defaultImgUrl = genderVal.toLowerCase() == 'female'
-        ? 'https://randomuser.me/api/portraits/women/${id % 100}.jpg'
-        : 'https://randomuser.me/api/portraits/men/${id % 100}.jpg';
+    // Parse real profile image from API, otherwise empty string (fallback to default icon)
+    final rawAvatar = json['avatar'] ??
+        json['avatar_url'] ??
+        json['image'] ??
+        json['profile_image'] ??
+        json['photo'] ??
+        (json['user'] is Map ? (json['user']['avatar'] ?? json['user']['image'] ?? json['user']['avatar_url']) : null);
+
+    final String sanitizedImg = ProfileData.sanitizeAvatarUrl(rawAvatar) ?? '';
 
     return Donor(
-      id: id,
+      id: json['id'] ?? 0,
       name: json['name'] ?? '',
       age: json['age'] ?? 0,
       gender: genderVal,
       location: locStr,
-      imageUrl: defaultImgUrl,
+      imageUrl: sanitizedImg,
       phone: json['phone'] ?? '',
       bloodGroup: json['blood_group'] ?? '',
     );

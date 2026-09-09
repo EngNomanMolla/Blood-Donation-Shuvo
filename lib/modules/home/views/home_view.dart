@@ -84,9 +84,15 @@ class _HomeViewState extends State<HomeView> {
               onBloodTypeChanged: _onBloodTypeSelected,
             ),
             const SizedBox(height: 2),
-            BecomeDonorBanner(onTap: _onDonorTap),
+            Obx(() => BecomeDonorBanner(
+                  isDonor: controller.isDonor.value,
+                  onTap: _onDonorTap,
+                )),
             const SizedBox(height: 2),
-            BecomeVolunteerBanner(onTap: _onVolunteerTap),
+            Obx(() => BecomeVolunteerBanner(
+                  isVolunteer: controller.isVolunteer.value,
+                  onTap: _onVolunteerTap,
+                )),
             const SizedBox(height: HomeConstants.sectionVerticalSpacing),
             QuickActionsSection(actions: QuickActionsSection.getDefaultActions()),
             const SizedBox(height: 100), // Space for floating bottom nav
@@ -100,7 +106,10 @@ class _HomeViewState extends State<HomeView> {
     try {
       if (Get.isRegistered<StorageService>()) {
         final storage = Get.find<StorageService>();
-        if (storage.isVolunteer && !storage.isDonor) {
+        if (storage.isDonor || controller.isDonor.value) {
+          Get.toNamed(AppRoutes.donorDashboard);
+          return;
+        } else if (storage.isVolunteer || controller.isVolunteer.value) {
           Get.toNamed(AppRoutes.quickRegister, arguments: {
             'targetRole': 'donor',
             'existingRole': 'volunteer',
@@ -116,10 +125,10 @@ class _HomeViewState extends State<HomeView> {
     try {
       if (Get.isRegistered<StorageService>()) {
         final storage = Get.find<StorageService>();
-        if (storage.isVolunteer) {
+        if (storage.isVolunteer || controller.isVolunteer.value) {
           Get.toNamed(AppRoutes.volunteerDashboard);
           return;
-        } else if (storage.isDonor) {
+        } else if (storage.isDonor || controller.isDonor.value) {
           Get.toNamed(AppRoutes.quickRegister, arguments: {
             'targetRole': 'volunteer',
             'existingRole': 'donor',

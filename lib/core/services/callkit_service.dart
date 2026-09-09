@@ -105,12 +105,12 @@ class CallKitService extends GetxService {
           break;
         case CallEventActionCallDecline(:final callKitParams):
           debugPrint("🚫 [CALLKIT] Call declined by user");
-          _notifyAgoraDeclined(callKitParams.extra);
+          notifyAgoraDeclined(callKitParams.extra);
           _endCurrentCall(callKitParams.id);
           break;
         case CallEventActionCallEnded(:final callKitParams):
           debugPrint("🛑 [CALLKIT] Call ended");
-          _notifyAgoraDeclined(callKitParams.extra);
+          notifyAgoraDeclined(callKitParams.extra);
           _endCurrentCall(callKitParams.id);
           break;
         case CallEventActionCallTimeout(:final id):
@@ -158,7 +158,7 @@ class CallKitService extends GetxService {
   }
 
   /// Notify caller on Agora channel that receiver declined
-  static Future<void> _notifyAgoraDeclined(Map<String, dynamic>? extra) async {
+  static Future<void> notifyAgoraDeclined(Map<String, dynamic>? extra) async {
     if (extra == null) return;
     final String appId = extra['agora_app_id'] ?? '';
     final String channelName = extra['channel_name'] ?? '';
@@ -180,7 +180,7 @@ class CallKitService extends GetxService {
           channelId: channelName.trim(),
           uid: uid,
           options: const ChannelMediaOptions(
-            clientRoleType: ClientRoleType.clientRoleAudience,
+            clientRoleType: ClientRoleType.clientRoleBroadcaster,
             autoSubscribeAudio: false,
             publishMicrophoneTrack: false,
           ),

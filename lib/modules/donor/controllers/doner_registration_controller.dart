@@ -1,8 +1,6 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../core/constants/api_constants.dart';
+import '../../../core/data/bd_locations.dart';
 import '../../../core/services/storage_service.dart';
 import '../../../data/repositories/donor_repository.dart';
 import '../../more/controllers/more_controller.dart';
@@ -125,6 +123,14 @@ class RegistrationController extends GetxController {
       final token = storage.userToken;
       debugPrint("Donor Registration API Debug - Current Token: '$token'");
 
+      String dobApi = dobController.text.trim();
+      if (dobApi.contains('/')) {
+        final parts = dobApi.split('/');
+        if (parts.length == 3) {
+          dobApi = '${parts[2]}-${parts[1].padLeft(2, '0')}-${parts[0].padLeft(2, '0')}';
+        }
+      }
+
       final body = {
         "name": fullNameController.text.trim(),
         "gender": selectedGender.value.toLowerCase(),
@@ -135,7 +141,7 @@ class RegistrationController extends GetxController {
         "upazila": selectedUpazila.value,
         "address": "${selectedUpazila.value}, ${selectedDistrict.value}, ${selectedDivision.value}",
         "email": emailController.text.trim(),
-        "date_of_birth": dobController.text.trim(),
+        "date_of_birth": dobApi,
         "donations_count": 0,
         "is_donor": true,
         "is_volunteer": storage.isVolunteer
@@ -199,17 +205,9 @@ class RegistrationController extends GetxController {
   Future<void> fetchDivisionsList() async {
     isDivisionsLoading.value = true;
     try {
-      final response = await http.get(Uri.parse(ApiConstants.bdApisDivisions));
-      if (response.statusCode == 200) {
-        final decoded = jsonDecode(response.body);
-        final List<dynamic> listData = decoded['data'] ?? [];
-        divisions.value = listData
-            .map((e) => e['division'] as String)
-            .toList()
-          ..sort();
-      }
+      divisions.value = BDLocations.getDivisions();
     } catch (e) {
-      Get.printError(info: "Error fetching divisions list from bdapis: $e");
+      Get.printError(info: "Error fetching divisions list: $e");
     } finally {
       isDivisionsLoading.value = false;
     }
@@ -218,17 +216,9 @@ class RegistrationController extends GetxController {
   Future<void> fetchDistrictsList(String division) async {
     isDistrictsLoading.value = true;
     try {
-      final response = await http.get(Uri.parse('${ApiConstants.bdApisDivisionDetail}/$division'));
-      if (response.statusCode == 200) {
-        final decoded = jsonDecode(response.body);
-        final List<dynamic> listData = decoded['data'] ?? [];
-        districts.value = listData
-            .map((e) => e['district'] as String)
-            .toList()
-          ..sort();
-      }
+      districts.value = BDLocations.getDistricts(division);
     } catch (e) {
-      Get.printError(info: "Error fetching districts list for $division from bdapis: $e");
+      Get.printError(info: "Error fetching districts list for $division: $e");
     } finally {
       isDistrictsLoading.value = false;
     }
@@ -237,17 +227,10 @@ class RegistrationController extends GetxController {
   Future<void> fetchUpazilasList(String district) async {
     isUpazilasLoading.value = true;
     try {
-      final response = await http.get(Uri.parse('${ApiConstants.bdApisDistrictDetail}/$district'));
-      if (response.statusCode == 200) {
-        final decoded = jsonDecode(response.body);
-        final List<dynamic> listData = decoded['data'] ?? [];
-        if (listData.isNotEmpty) {
-          final List<dynamic> ups = listData[0]['upazillas'] ?? [];
-          upazilas.value = ups.map((e) => e.toString()).toList()..sort();
-        }
-      }
+      upazilas.value = BDLocations.getUpazilasByDivisionAndDistrict(
+          selectedDivision.value, district);
     } catch (e) {
-      Get.printError(info: "Error fetching upazilas list for $district from bdapis: $e");
+      Get.printError(info: "Error fetching upazilas list for $district: $e");
     } finally {
       isUpazilasLoading.value = false;
     }

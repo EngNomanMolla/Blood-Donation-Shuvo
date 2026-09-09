@@ -138,14 +138,19 @@ class DonerDetailsView extends StatelessWidget {
           ],
         ),
         child: ClipOval(
-          child: Image.network(
-            controller.user.value.imageUrl,
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => Container(
-              color: softPink,
-              child: const Icon(Icons.person, color: primaryRed, size: 36),
-            ),
-          ),
+          child: controller.user.value.imageUrl.isNotEmpty
+              ? Image.network(
+                  controller.user.value.imageUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    color: softPink,
+                    child: const Icon(Icons.person, color: primaryRed, size: 36),
+                  ),
+                )
+              : Container(
+                  color: softPink,
+                  child: const Icon(Icons.person, color: primaryRed, size: 36),
+                ),
         ),
       ),
     );
@@ -449,20 +454,21 @@ class DonerDetailsView extends StatelessWidget {
               // 1. App-to-App Call Button
               Expanded(
                 child: Obx(() {
-                  final isChecking = controller.isCheckingMinutes.value;
+                  final isAppLoading = controller.isAppCallLoading.value;
+                  final isSimLoading = controller.isSimCallLoading.value;
                   return Material(
-                    color: isChecking ? Colors.grey.shade300 : const Color(0xFF16A34A),
+                    color: isAppLoading ? Colors.grey.shade300 : const Color(0xFF16A34A),
                     borderRadius: BorderRadius.circular(14),
                     elevation: 2,
                     shadowColor: const Color(0xFF16A34A).withValues(alpha: 0.35),
                     child: InkWell(
-                      onTap: isChecking ? null : () => controller.initiateDonorCall(),
+                      onTap: (isAppLoading || isSimLoading) ? null : () => controller.initiateDonorCall(),
                       borderRadius: BorderRadius.circular(14),
                       child: Container(
                         height: 48,
                         padding: const EdgeInsets.symmetric(horizontal: 10),
                         child: Center(
-                          child: isChecking
+                          child: isAppLoading
                               ? const SizedBox(
                                   width: 20,
                                   height: 20,
@@ -500,20 +506,21 @@ class DonerDetailsView extends StatelessWidget {
               // 2. Direct SIM / Phone Call Button
               Expanded(
                 child: Obx(() {
-                  final isChecking = controller.isCheckingMinutes.value;
+                  final isAppLoading = controller.isAppCallLoading.value;
+                  final isSimLoading = controller.isSimCallLoading.value;
                   return Material(
-                    color: isChecking ? Colors.grey.shade300 : const Color(0xFF0284C7),
+                    color: isSimLoading ? Colors.grey.shade300 : const Color(0xFF0284C7),
                     borderRadius: BorderRadius.circular(14),
                     elevation: 2,
                     shadowColor: const Color(0xFF0284C7).withValues(alpha: 0.35),
                     child: InkWell(
-                      onTap: isChecking ? null : () => controller.directPhoneCall(),
+                      onTap: (isAppLoading || isSimLoading) ? null : () => controller.directPhoneCall(),
                       borderRadius: BorderRadius.circular(14),
                       child: Container(
                         height: 48,
                         padding: const EdgeInsets.symmetric(horizontal: 10),
                         child: Center(
-                          child: isChecking
+                          child: isSimLoading
                               ? const SizedBox(
                                   width: 20,
                                   height: 20,

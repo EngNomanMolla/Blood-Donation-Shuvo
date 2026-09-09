@@ -8,6 +8,8 @@ import 'package:permission_handler/permission_handler.dart';
 import '../../../app/routes/app_routes.dart';
 import '../../../core/services/callkit_service.dart';
 
+import '../../../data/repositories/profile_repository.dart';
+
 enum CallState { connecting, ringing, connected, ended, error }
 
 class CallController extends GetxController {
@@ -54,7 +56,7 @@ class CallController extends GetxController {
     
     if (isIncoming.value) {
       donorName.value = args['caller_name'] ?? 'Caller';
-      donorAvatar.value = args['caller_avatar'] ?? '';
+      donorAvatar.value = ProfileData.sanitizeAvatarUrl(args['caller_avatar']) ?? '';
       bloodGroup.value = args['blood_group'] ?? '';
       if (args['available_minutes'] != null) {
         availableMinutes.value = int.tryParse(args['available_minutes'].toString()) ?? 0;
@@ -62,7 +64,7 @@ class CallController extends GetxController {
     } else {
       recipientId.value = args['recipient_id'] ?? 0;
       donorName.value = args['donor_name'] ?? 'Donor';
-      donorAvatar.value = args['donor_avatar'] ?? '';
+      donorAvatar.value = ProfileData.sanitizeAvatarUrl(args['donor_avatar']) ?? '';
       bloodGroup.value = args['blood_group'] ?? '';
       availableMinutes.value = int.tryParse(args['available_minutes']?.toString() ?? '0') ?? 0;
     }
@@ -210,6 +212,23 @@ class CallController extends GetxController {
             } else if (isIncoming.value) {
               callState.value = CallState.connecting;
               callStatusText.value = 'Connecting...';
+              // If caller already left before receiver joined, timeout and end call
+              _ringingTimeoutTimer?.cancel();
+              _ringingTimeoutTimer = Timer(const Duration(seconds: 8), () {
+                if (!remoteUserJoined.value && !_isEndingCall) {
+                  callState.value = CallState.ended;
+                  callStatusText.value = 'Call Ended';
+                  Get.snackbar(
+                    'Call Ended',
+                    'The caller has hung up.',
+                    backgroundColor: Colors.orangeAccent.withValues(alpha: 0.8),
+                    colorText: Colors.white,
+                    snackPosition: SnackPosition.BOTTOM,
+                    duration: const Duration(seconds: 2),
+                  );
+                  endCall();
+                }
+              });
             } else {
               callState.value = CallState.ringing;
               callStatusText.value = 'Ringing...';
@@ -228,7 +247,7 @@ class CallController extends GetxController {
                     snackPosition: SnackPosition.BOTTOM,
                     duration: const Duration(seconds: 2),
                   );
-                  Future.delayed(const Duration(milliseconds: 1500), () => endCall());
+                  endCall();
                 }
               });
             }
@@ -244,23 +263,23 @@ class CallController extends GetxController {
           },
           onUserOffline: (RtcConnection connection, int remoteUid, UserOfflineReasonType reason) {
             debugPrint("Agora Remote User Offline -> RemoteUid: $remoteUid, Reason: $reason");
-            final bool wasConnected = (callState.value == CallState.connected);
+            final bool wasRealConversation = (callState.value == CallState.connected && callDurationSeconds.value > 1);
             remoteUserJoined.value = false;
             _ringingTimeoutTimer?.cancel();
             debugStep.value = 'Remote User Left ($reason)';
             callState.value = CallState.ended;
-            callStatusText.value = wasConnected ? 'Call Ended' : 'Call Declined';
+            callStatusText.value = wasRealConversation ? 'Call Ended' : 'Call Declined';
             
             Get.snackbar(
-              wasConnected ? 'Call Ended' : 'Call Declined',
-              wasConnected ? 'Call was ended by the other person' : 'Call was declined by the user',
+              wasRealConversation ? 'Call Ended' : 'Call Declined',
+              wasRealConversation ? 'Call was ended by the other person' : 'Call was declined by the user',
               backgroundColor: Colors.redAccent.withValues(alpha: 0.8),
               colorText: Colors.white,
               snackPosition: SnackPosition.BOTTOM,
               duration: const Duration(seconds: 2),
             );
 
-            Future.delayed(const Duration(milliseconds: 1500), () => endCall());
+            endCall();
           },
           onLeaveChannel: (RtcConnection connection, RtcStats stats) {
             debugPrint("Agora onLeaveChannel");
@@ -296,16 +315,6 @@ class CallController extends GetxController {
       }
 
       if (_isEndingCall) return;
-
-      debugPrint("\n-------------------------------------------------------");
-      debugPrint("🚀 [AGORA JOIN CHANNEL INITIATED]");
-      debugPrint("   • Channel ID : ${tokenData.channelName.trim()}");
-      debugPrint("   • Joining UID: ${tokenData.uid}");
-      debugPrint("   • App ID     : ${tokenData.appId.trim()}");
-      debugPrint("   • Token Len  : ${tokenData.rtcToken.trim().length}");
-      debugPrint("   • Full Token : ${tokenData.rtcToken.trim()}");
-      debugPrint("-------------------------------------------------------\n");
-
       debugStep.value = 'Joining Channel (UID: ${tokenData.uid})...';
       await _engine.joinChannel(
         token: tokenData.rtcToken.trim(),
@@ -322,6 +331,7 @@ class CallController extends GetxController {
           autoSubscribeVideo: false,
         ),
       );
+
       debugPrint("✅ Agora joinChannel() executed without exception");
     } catch (e, stack) {
       if (_isEndingCall) return;
