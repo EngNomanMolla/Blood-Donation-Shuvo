@@ -194,6 +194,10 @@ class HomeController extends GetxController {
         await storage.setIsDonor(profile.isDonor);
         await storage.setIsVolunteer(profile.isVolunteer);
         await storage.setVolunteerPaymentStatus(profile.volunteerPaymentStatus ?? '');
+        await storage.setHasRecharged(profile.hasCompletedInitialRecharge);
+        if (profile.initialRechargeStatus != null) {
+          await storage.setInitialRechargeStatus(profile.initialRechargeStatus!);
+        }
         if (profile.phone != null) {
           await storage.setUserPhone(profile.phone!);
         }

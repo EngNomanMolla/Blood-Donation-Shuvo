@@ -70,11 +70,17 @@ class InitialRechargeView extends GetView<InitialRechargeController> {
       ),
       child: Row(
         children: [
-          if (controller.isGeneralRecharge)
+          if (Navigator.of(context).canPop() || controller.isGeneralRecharge)
             IconButton(
               icon: const Icon(Icons.arrow_back_ios_new_rounded,
                   color: Colors.white, size: 20),
-              onPressed: () => Get.back(),
+              onPressed: () {
+                if (Navigator.of(context).canPop()) {
+                  Get.back();
+                } else {
+                  Get.offAllNamed(AppRoutes.home);
+                }
+              },
             ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -82,7 +88,7 @@ class InitialRechargeView extends GetView<InitialRechargeController> {
               Text(
                 controller.isGeneralRecharge
                     ? 'Recharge Wallet'
-                    : 'Activate Wallet',
+                    : 'Membership Activation',
                 style: const TextStyle(
                   fontFamily: 'Poppins',
                   color: Colors.white,
@@ -95,7 +101,7 @@ class InitialRechargeView extends GetView<InitialRechargeController> {
               Text(
                 controller.isGeneralRecharge
                     ? 'Add balance to your account'
-                    : 'Complete one-time activation',
+                    : 'Recharge ৳50 to access donor profiles',
                 style: TextStyle(
                   fontFamily: 'Poppins',
                   color: Colors.white.withValues(alpha: 0.85),
@@ -106,7 +112,7 @@ class InitialRechargeView extends GetView<InitialRechargeController> {
             ],
           ),
           const Spacer(),
-          if (!controller.isGeneralRecharge)
+          if (!Navigator.of(context).canPop())
             Container(
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.15),
@@ -194,58 +200,11 @@ class InitialRechargeView extends GetView<InitialRechargeController> {
   }
 
   Widget _buildAmountSection() {
-    final quickAmounts = ['50', '100', '200', '500'];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildTextField(
-          controller: controller.amountController,
-          hint: '50',
-          keyboardType: TextInputType.number,
-          prefixText: '৳ ',
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: quickAmounts.map((amt) {
-            return Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 3),
-                child: InkWell(
-                  onTap: () {
-                    controller.amountController.text = amt;
-                  },
-                  borderRadius: BorderRadius.circular(8),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 7),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: _borderColor),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.02),
-                          blurRadius: 3,
-                          offset: const Offset(0, 1),
-                        ),
-                      ],
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      '৳$amt',
-                      style: const TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: _primaryRed,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ],
+    return _buildTextField(
+      controller: controller.amountController,
+      hint: '50',
+      keyboardType: TextInputType.number,
+      prefixText: '৳ ',
     );
   }
 
@@ -345,22 +304,54 @@ class InitialRechargeView extends GetView<InitialRechargeController> {
               ),
             ),
             const SizedBox(height: 14),
-            TextButton.icon(
-              onPressed: () async {
-                final storage = Get.find<StorageService>();
-                await storage.clearAuth();
-                Get.offAllNamed(AppRoutes.login);
-              },
-              icon:
-                  const Icon(Icons.logout_rounded, color: Colors.grey, size: 18),
-              label: const Text(
-                'Log Out from Account',
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  color: Colors.grey,
-                  fontWeight: FontWeight.w600,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (Navigator.of(context).canPop())
+                  TextButton.icon(
+                    onPressed: () => Get.back(),
+                    icon: const Icon(Icons.arrow_back_rounded, color: _primaryRed, size: 18),
+                    label: const Text(
+                      'Back to App',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        color: _primaryRed,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  )
+                else
+                  TextButton.icon(
+                    onPressed: () => Get.offAllNamed(AppRoutes.home),
+                    icon: const Icon(Icons.home_rounded, color: _primaryRed, size: 18),
+                    label: const Text(
+                      'Go to Home',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        color: _primaryRed,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                const SizedBox(width: 12),
+                TextButton.icon(
+                  onPressed: () async {
+                    final storage = Get.find<StorageService>();
+                    await storage.clearAuth();
+                    Get.offAllNamed(AppRoutes.login);
+                  },
+                  icon:
+                      const Icon(Icons.logout_rounded, color: Colors.grey, size: 18),
+                  label: const Text(
+                    'Log Out',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      color: Colors.grey,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
           ],
         ),
@@ -475,22 +466,54 @@ class InitialRechargeView extends GetView<InitialRechargeController> {
               ),
             ),
             const SizedBox(height: 14),
-            TextButton.icon(
-              onPressed: () async {
-                final storage = Get.find<StorageService>();
-                await storage.clearAuth();
-                Get.offAllNamed(AppRoutes.login);
-              },
-              icon:
-                  const Icon(Icons.logout_rounded, color: Colors.grey, size: 18),
-              label: const Text(
-                'Log Out from Account',
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  color: Colors.grey,
-                  fontWeight: FontWeight.w600,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (Navigator.of(context).canPop())
+                  TextButton.icon(
+                    onPressed: () => Get.back(),
+                    icon: const Icon(Icons.arrow_back_rounded, color: _primaryRed, size: 18),
+                    label: const Text(
+                      'Back to App',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        color: _primaryRed,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  )
+                else
+                  TextButton.icon(
+                    onPressed: () => Get.offAllNamed(AppRoutes.home),
+                    icon: const Icon(Icons.home_rounded, color: _primaryRed, size: 18),
+                    label: const Text(
+                      'Go to Home',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        color: _primaryRed,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                const SizedBox(width: 12),
+                TextButton.icon(
+                  onPressed: () async {
+                    final storage = Get.find<StorageService>();
+                    await storage.clearAuth();
+                    Get.offAllNamed(AppRoutes.login);
+                  },
+                  icon:
+                      const Icon(Icons.logout_rounded, color: Colors.grey, size: 18),
+                  label: const Text(
+                    'Log Out',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      color: Colors.grey,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
           ],
         ),

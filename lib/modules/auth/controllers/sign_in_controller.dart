@@ -142,11 +142,18 @@ class SignInController extends GetxController {
         if (user != null) {
           final isDonor = user['is_donor'] == true || user['is_donor'] == 1 || user['is_donor'] == '1' || user['is_donor'] == 'true';
           final isVolunteer = user['is_volunteer'] == true || user['is_volunteer'] == 1 || user['is_volunteer'] == '1' || user['is_volunteer'] == 'true';
+          final hasRecharged = user['has_completed_initial_recharge'] == true || user['has_completed_initial_recharge'] == 1 || user['has_completed_initial_recharge'] == '1' || user['has_completed_initial_recharge'] == 'true';
+          final initialRechargeStatus = user['initial_recharge_status']?.toString();
+
           await storage.setIsDonor(isDonor);
           await storage.setIsVolunteer(isVolunteer);
+          await storage.setHasRecharged(hasRecharged);
+          if (initialRechargeStatus != null) {
+            await storage.setInitialRechargeStatus(initialRechargeStatus);
+          }
         }
 
-        Get.offAllNamed(AppRoutes.initialRecharge);
+        Get.offAllNamed(AppRoutes.home);
         Get.snackbar('Success', 'Login successful!',
             backgroundColor: const Color(0xFFE53935), colorText: Colors.white);
       } else {

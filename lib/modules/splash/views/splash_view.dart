@@ -51,15 +51,14 @@ class _SplashViewState extends State<SplashView> {
             await storage.setIsDonor(profile.isDonor);
             await storage.setIsVolunteer(profile.isVolunteer);
             await storage.setHasRecharged(profile.hasCompletedInitialRecharge);
+            if (profile.initialRechargeStatus != null) {
+              await storage.setInitialRechargeStatus(profile.initialRechargeStatus!);
+            }
             if (profile.phone != null) {
               await storage.setUserPhone(profile.phone!);
             }
 
-            if (profile.initialRechargeStatus == 'approved' || profile.hasCompletedInitialRecharge) {
-              Get.offAllNamed(AppRoutes.home);
-            } else {
-              Get.offAllNamed(AppRoutes.initialRecharge);
-            }
+            Get.offAllNamed(AppRoutes.home);
             return;
           } else {
             // Profile is null (Token expired, 401 Unauthorized, or invalid session)

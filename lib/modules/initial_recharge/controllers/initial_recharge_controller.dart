@@ -51,14 +51,23 @@ class InitialRechargeController extends GetxController {
       if (profile != null) {
         final storage = Get.find<StorageService>();
         await storage.setHasRecharged(profile.hasCompletedInitialRecharge);
+        if (profile.initialRechargeStatus != null) {
+          await storage.setInitialRechargeStatus(profile.initialRechargeStatus!);
+        }
 
         if (!isGeneralRecharge) {
           if (profile.initialRechargeStatus == 'approved' || profile.hasCompletedInitialRecharge) {
+            await storage.setHasRecharged(true);
+            await storage.setInitialRechargeStatus('approved');
             if (showFeedback) {
-              Get.snackbar('Success', 'Verification approved! Welcome to Blood Donation.',
+              Get.snackbar('Success', 'Verification approved! Membership activated.',
                   backgroundColor: const Color(0xFF4CAF50), colorText: Colors.white);
             }
-            Get.offAllNamed(AppRoutes.home);
+            if (Get.key.currentState?.canPop() ?? false) {
+              Get.back();
+            } else {
+              Get.offAllNamed(AppRoutes.home);
+            }
             return;
           }
         }
@@ -173,9 +182,11 @@ class InitialRechargeController extends GetxController {
           Get.snackbar('Success', 'Recharge request submitted successfully!',
               backgroundColor: const Color(0xFF4CAF50), colorText: Colors.white);
         } else {
+          final storage = Get.find<StorageService>();
+          await storage.setInitialRechargeStatus('pending');
           rechargeStatus.value = 'pending';
-          Get.snackbar('Success', 'Initial recharge submitted successfully!',
-              backgroundColor: const Color(0xFFE53935), colorText: Colors.white);
+          Get.snackbar('Success', 'Initial recharge submitted successfully! Admin review pending.',
+              backgroundColor: const Color(0xFF4CAF50), colorText: Colors.white);
         }
       } else {
         Get.snackbar('Error', 'Recharge failed: ${response.body}',

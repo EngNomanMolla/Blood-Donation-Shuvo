@@ -19,6 +19,8 @@ class StorageService extends GetxService {
   static const String _keyFcmToken = 'fcm_token';
   static const String _keyVolunteerPaymentStatus = 'volunteer_payment_status';
 
+  static const String _keyInitialRechargeStatus = 'initial_recharge_status';
+
   bool get hasShownOnboarding => _prefs.getBool(_keyHasShownOnboarding) ?? false;
   
   Future<bool> setHasShownOnboarding(bool value) async {
@@ -55,6 +57,12 @@ class StorageService extends GetxService {
     return await _prefs.setString(_keyVolunteerPaymentStatus, status);
   }
 
+  String? get initialRechargeStatus => _prefs.getString(_keyInitialRechargeStatus);
+
+  Future<bool> setInitialRechargeStatus(String status) async {
+    return await _prefs.setString(_keyInitialRechargeStatus, status);
+  }
+
   bool get isDonor => _prefs.getBool(_keyIsDonor) ?? false;
 
   Future<bool> setIsDonor(bool value) async {
@@ -79,6 +87,7 @@ class StorageService extends GetxService {
     await _prefs.remove(_keyIsDonor);
     await _prefs.remove(_keyIsVolunteer);
     await _prefs.remove(_keyHasRecharged);
+    await _prefs.remove(_keyInitialRechargeStatus);
     await _prefs.remove(_keyUserPhone);
     await _prefs.remove(_keyVolunteerPaymentStatus);
     await _prefs.remove(_keyFcmToken);

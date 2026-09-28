@@ -147,9 +147,9 @@ class WalletController extends GetxController {
                 final double pAmount = profile.initialRechargeAmount > 0 ? profile.initialRechargeAmount : 50.0;
                 foundPending = PendingRechargeModel(
                   amount: '৳ ${pAmount.toStringAsFixed(0)}',
-                  date: 'Activation Request',
-                  paymentMethod: 'WALLET ACTIVATION',
-                  note: 'Initial wallet recharge pending verification',
+                  date: 'Initial Recharge',
+                  paymentMethod: '',
+                  note: 'Initial recharge pending verification',
                 );
               }
             }

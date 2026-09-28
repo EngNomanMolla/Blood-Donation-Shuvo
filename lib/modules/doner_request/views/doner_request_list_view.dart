@@ -1,4 +1,7 @@
 import 'package:blood_donation/app/routes/app_routes.dart';
+import 'package:blood_donation/core/services/storage_service.dart';
+import 'package:blood_donation/data/providers/profile_provider.dart';
+import 'package:blood_donation/data/repositories/profile_repository.dart';
 import 'package:blood_donation/modules/doner_request/controllers/doner_request_controller.dart';
 import 'package:blood_donation/modules/doner_request/models/doner_list_model.dart';
 import 'package:flutter/material.dart';
@@ -541,15 +544,7 @@ class DonateScreen extends GetView<DonateController> {
  
   Widget _buildDonorCard(Donor donor, int index) {
     return GestureDetector(
-      onTap: () {
-        Get.toNamed(
-          AppRoutes.donorDetails,
-          arguments: {
-            'donor': donor,
-            'bloodType': _bloodType,
-          },
-        );
-      },
+      onTap: () => _onDonorCardTapped(donor),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
@@ -688,6 +683,250 @@ class DonateScreen extends GetView<DonateController> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Future<void> _onDonorCardTapped(Donor donor) async {
+    final storage = Get.find<StorageService>();
+
+    // 1. Fast path: check local storage status
+    final isApprovedLocal = storage.hasRecharged || storage.initialRechargeStatus == 'approved';
+    if (isApprovedLocal) {
+      Get.toNamed(
+        AppRoutes.donorDetails,
+        arguments: {
+          'donor': donor,
+          'bloodType': _bloodType,
+        },
+      );
+      return;
+    }
+
+    // 2. Fetch fresh profile status to be 100% accurate (e.g. if recently approved by admin)
+    try {
+      final profileProvider = Get.isRegistered<ProfileProvider>()
+          ? Get.find<ProfileProvider>()
+          : Get.put(ProfileProvider());
+      final profileRepo = Get.isRegistered<ProfileRepository>()
+          ? Get.find<ProfileRepository>()
+          : Get.put(ProfileRepository(provider: profileProvider));
+
+      final profile = await profileRepo.getProfile();
+      if (profile != null) {
+        await storage.setHasRecharged(profile.hasCompletedInitialRecharge);
+        if (profile.initialRechargeStatus != null) {
+          await storage.setInitialRechargeStatus(profile.initialRechargeStatus!);
+        }
+
+        if (profile.initialRechargeStatus == 'approved' || profile.hasCompletedInitialRecharge) {
+          Get.toNamed(
+            AppRoutes.donorDetails,
+            arguments: {
+              'donor': donor,
+              'bloodType': _bloodType,
+            },
+          );
+          return;
+        }
+
+        // Show membership & status modal
+        _showMembershipStatusDialog(
+          status: profile.initialRechargeStatus ?? 'initial',
+          rejectReason: profile.initialRechargeRejectReason,
+          amount: profile.initialRechargeAmount > 0 ? profile.initialRechargeAmount : 50.0,
+        );
+        return;
+      }
+    } catch (e) {
+      debugPrint("Error checking membership on donor click: $e");
+    }
+
+    // 3. Fallback with storage status
+    _showMembershipStatusDialog(
+      status: storage.initialRechargeStatus ?? 'initial',
+      amount: 50.0,
+    );
+  }
+
+  void _showMembershipStatusDialog({
+    required String status,
+    String? rejectReason,
+    double amount = 50.0,
+  }) {
+    final isPending = status == 'pending';
+    final isRejected = status == 'rejected';
+
+    Color themeColor;
+    IconData icon;
+    String statusTitle;
+    String statusBadge;
+    String message;
+    String actionButtonText;
+
+    if (isPending) {
+      themeColor = const Color(0xFFF59E0B);
+      icon = Icons.hourglass_top_rounded;
+      statusTitle = 'ভেরিফিকেশন প্রক্রিয়াধীন';
+      statusBadge = 'Pending Review';
+      message = 'আপনার ৳${amount.toStringAsFixed(0)} মেম্বারশিপ রিচার্জ ভেরিফিকেশন অ্যাডমিন পর্যালোচনায় রয়েছে। অনুমোদন সম্পন্ন হলে আপনি ডোনারের সম্পূর্ণ প্রোফাইল ও নম্বর দেখতে পারবেন।';
+      actionButtonText = 'ভেরিফিকেশন স্ট্যাটাস দেখুন';
+    } else if (isRejected) {
+      themeColor = const Color(0xFFEF4444);
+      icon = Icons.cancel_outlined;
+      statusTitle = 'রিচার্জ বাতিল হয়েছে';
+      statusBadge = 'Rejected';
+      message = 'আপনার পূর্ববর্তী রিচার্জ রিকোয়েস্টটি গৃহীত হয়নি${(rejectReason != null && rejectReason.isNotEmpty) ? ' (কারণ: $rejectReason)' : ''}। ডোনারের প্রোফাইল দেখতে পুনরায় রিচার্জ করুন।';
+      actionButtonText = 'পুনরায় রিচার্জ করুন';
+    } else {
+      themeColor = primaryRed;
+      icon = Icons.workspace_premium_rounded;
+      statusTitle = 'মেম্বারশিপ প্রয়োজন';
+      statusBadge = '৳${amount.toStringAsFixed(0)} এককালীন রিচার্জ';
+      message = 'ডোনারের সম্পূর্ণ প্রোফাইল, ঠিকানা এবং সরাসরি ফোন নম্বর দেখতে আপনাকে মেম্বার হতে হবে। মাত্র ৳${amount.toStringAsFixed(0)} রিচার্জ করে মেম্বারশিপ সক্রিয় করুন।';
+      actionButtonText = 'মেম্বার হতে রিচার্জ করুন (৳${amount.toStringAsFixed(0)})';
+    }
+
+    Get.dialog(
+      Dialog(
+        backgroundColor: Colors.white,
+        elevation: 10,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+        child: Padding(
+          padding: const EdgeInsets.all(22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icon Header
+              Container(
+                width: 68,
+                height: 68,
+                decoration: BoxDecoration(
+                  color: themeColor.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: themeColor.withValues(alpha: 0.3), width: 1.5),
+                ),
+                child: Icon(icon, color: themeColor, size: 34),
+              ),
+              const SizedBox(height: 16),
+
+              // Title
+              Text(
+                statusTitle,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1E293B),
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // Status Badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: themeColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: themeColor.withValues(alpha: 0.25)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 7,
+                      height: 7,
+                      decoration: BoxDecoration(
+                        color: themeColor,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      statusBadge,
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: themeColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+
+              // Message Body
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 12.5,
+                  color: Colors.grey.shade600,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 22),
+
+              // Action Button
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: themeColor,
+                    foregroundColor: Colors.white,
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  onPressed: () {
+                    Get.back(); // close dialog
+                    Get.toNamed(AppRoutes.initialRecharge);
+                  },
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(icon, size: 18, color: Colors.white),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          actionButtonText,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // Dismiss / Cancel Button
+              TextButton(
+                onPressed: () => Get.back(),
+                child: Text(
+                  'বন্ধ করুন / পরে দেখবো',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    color: Colors.grey.shade500,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12.5,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -104,6 +104,10 @@ class MoreController extends GetxController {
         await storage.setIsDonor(profile.isDonor);
         await storage.setIsVolunteer(profile.isVolunteer);
         await storage.setVolunteerPaymentStatus(profile.volunteerPaymentStatus ?? '');
+        await storage.setHasRecharged(profile.hasCompletedInitialRecharge);
+        if (profile.initialRechargeStatus != null) {
+          await storage.setInitialRechargeStatus(profile.initialRechargeStatus!);
+        }
         if (profile.phone != null) {
           await storage.setUserPhone(profile.phone!);
         }
@@ -145,6 +149,43 @@ class MoreController extends GetxController {
       // Already a donor — do nothing (card is disabled)
       return;
     }
+
+    final storage = Get.find<StorageService>();
+    bool isApproved = storage.hasRecharged || storage.initialRechargeStatus == 'approved';
+
+    if (!isApproved) {
+      // Fetch latest profile to ensure accurate status
+      try {
+        final profileRepository = Get.find<ProfileRepository>();
+        final profile = await profileRepository.getProfile();
+        if (profile != null) {
+          await storage.setHasRecharged(profile.hasCompletedInitialRecharge);
+          if (profile.initialRechargeStatus != null) {
+            await storage.setInitialRechargeStatus(profile.initialRechargeStatus!);
+          }
+
+          if (profile.initialRechargeStatus == 'approved' || profile.hasCompletedInitialRecharge) {
+            isApproved = true;
+          } else {
+            Get.toNamed(AppRoutes.initialRecharge);
+            Get.snackbar(
+              'মেম্বারশিপ প্রয়োজন',
+              'ডোনার হতে হলে আগে ৫০ টাকা রিচার্জ করে মেম্বার হতে হবে।',
+              backgroundColor: const Color(0xFFE53935),
+              colorText: Colors.white,
+            );
+            return;
+          }
+        } else {
+          Get.toNamed(AppRoutes.initialRecharge);
+          return;
+        }
+      } catch (e) {
+        Get.toNamed(AppRoutes.initialRecharge);
+        return;
+      }
+    }
+
     if (isVolunteer.value) {
       // Has volunteer data — show quick confirm screen
       await Get.toNamed(
