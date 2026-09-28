@@ -78,7 +78,8 @@ class SupportView extends GetView<FeedbackSupportController> {
         children: [
           _buildSupportCard(
             title: 'Call Us',
-            subtitle: 'Speak directly with an agent',
+            subtitle: FeedbackSupportController.supportPhone,
+            description: 'Speak directly with our support team',
             icon: Icons.phone_rounded,
             color: Colors.green,
             onTap: () => controller.callSupport(),
@@ -86,7 +87,8 @@ class SupportView extends GetView<FeedbackSupportController> {
           const SizedBox(height: 12),
           _buildSupportCard(
             title: 'Email Support',
-            subtitle: 'Get response within 24 hours',
+            subtitle: FeedbackSupportController.supportEmail,
+            description: 'Send us an email for any queries or help',
             icon: Icons.email_rounded,
             color: Colors.orange,
             onTap: () => controller.emailSupport(),
@@ -99,6 +101,7 @@ class SupportView extends GetView<FeedbackSupportController> {
   Widget _buildSupportCard({
     required String title,
     required String subtitle,
+    required String description,
     required IconData icon,
     required Color color,
     required VoidCallback onTap,
@@ -106,7 +109,7 @@ class SupportView extends GetView<FeedbackSupportController> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: AppColors.white,
           borderRadius: BorderRadius.circular(16),
@@ -122,10 +125,10 @@ class SupportView extends GetView<FeedbackSupportController> {
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: color, size: 24),
             ),
@@ -136,7 +139,17 @@ class SupportView extends GetView<FeedbackSupportController> {
                 children: [
                   Text(title, style: AllStyles.titleTextStyle.copyWith(fontWeight: FontWeight.bold, fontSize: 15)),
                   const SizedBox(height: 2),
-                  Text(subtitle, style: AllStyles.subtitleTextStyle.copyWith(color: AppColors.darkGray, fontSize: 12)),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                      color: color.withValues(alpha: 0.9),
+                    ),
+                  ),
+                  const SizedBox(height: 1),
+                  Text(description, style: AllStyles.subtitleTextStyle.copyWith(color: AppColors.darkGray, fontSize: 11.5)),
                 ],
               ),
             ),

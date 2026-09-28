@@ -115,7 +115,10 @@ class HomeController extends GetxController {
 
           NotificationType notifType;
           String iconStr;
-          if (typeStr.contains('payment')) {
+          if (typeStr.contains('call') || typeStr.contains('missed')) {
+            notifType = NotificationType.call;
+            iconStr = '📞';
+          } else if (typeStr.contains('payment')) {
             notifType = NotificationType.payment;
             iconStr = '💳';
           } else if (typeStr.contains('cashback')) {
@@ -126,7 +129,7 @@ class HomeController extends GetxController {
             iconStr = '🎁';
           } else {
             notifType = NotificationType.urgent;
-            iconStr = '🚨';
+            iconStr = '📢';
           }
 
           return NotificationItem(
@@ -159,6 +162,7 @@ class HomeController extends GetxController {
           id: notif.id,
           title: notif.title,
           message: notif.message,
+          details: notif.details,
           type: notif.type,
           timestamp: notif.timestamp,
           icon: notif.icon,

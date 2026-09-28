@@ -17,7 +17,7 @@ class QuickActionModel {
   });
 }
 
-enum NotificationType { payment, cashback, offer, urgent }
+enum NotificationType { payment, cashback, offer, urgent, call }
 
 class NotificationItem {
   final String id;

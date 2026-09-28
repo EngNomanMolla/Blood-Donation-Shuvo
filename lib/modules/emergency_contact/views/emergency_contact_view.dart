@@ -98,72 +98,117 @@ class EmergencyContactCard extends StatelessWidget {
   /// CALL FUNCTION
   Future<void> makeCall(String number) async {
     final Uri url = Uri.parse("tel:$number");
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url);
+    try {
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url);
+      } else {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      }
+    } catch (e) {
+      debugPrint("Error making call: $e");
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final firstNumber = contact.numbers.isNotEmpty ? contact.numbers.first : '';
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
-          BoxShadow(blurRadius: 6, color: Colors.black12, offset: Offset(0, 3)),
+        boxShadow: [
+          BoxShadow(
+            blurRadius: 10,
+            color: Colors.black.withValues(alpha: 0.04),
+            offset: const Offset(0, 3),
+          ),
         ],
       ),
-      child: Row(
-        children: [
-          /// ICON
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: primaryRed.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(contact.icon, color: primaryRed, size: 28),
-          ),
-
-          const SizedBox(width: 12),
-
-          /// TEXT
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: () => makeCall(firstNumber),
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
               children: [
-                Text(
-                  contact.title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
+                /// ICON
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: primaryRed.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(contact.icon, color: primaryRed, size: 26),
+                ),
+
+                const SizedBox(width: 14),
+
+                /// TEXT
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        contact.title,
+                        style: const TextStyle(
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14.5,
+                          color: Color(0xFF1E293B),
+                        ),
+                      ),
+                      if (contact.description.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          contact.description,
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 5),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: primaryRed.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          'Hotline: $firstNumber',
+                          style: const TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: primaryRed,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 6),
-                ...contact.numbers.map(
-                  (phoneNum) =>
-                      Text(phoneNum, style: const TextStyle(color: Colors.grey)),
+
+                const SizedBox(width: 8),
+
+                /// CALL BUTTON
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: const BoxDecoration(
+                    color: primaryRed,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.call_rounded, color: Colors.white, size: 20),
                 ),
               ],
             ),
           ),
-
-          /// CALL BUTTON (CALL FIRST NUMBER)
-          Material(
-            color: primaryRed.withValues(alpha: 0.1),
-            shape: const CircleBorder(),
-            child: InkWell(
-              onTap: () => makeCall(contact.numbers.first),
-              customBorder: const CircleBorder(),
-              child: const Padding(
-                padding: EdgeInsets.all(12),
-                child: Icon(Icons.call, color: primaryRed),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
