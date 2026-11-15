@@ -163,7 +163,7 @@ class ProfileController extends GetxController {
         _showInsufficientMinutesDialog();
         return;
       }
-
+ 
       final phone = donor.value.phone.trim();
       if (phone.isEmpty) {
         Get.snackbar(

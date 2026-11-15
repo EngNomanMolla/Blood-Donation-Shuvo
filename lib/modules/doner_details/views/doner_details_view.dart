@@ -300,15 +300,17 @@ class DonerDetailsView extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  donor.name,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF1A1A2E),
+                Expanded(
+                  child: Text(
+                    donor.name,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1A1A2E),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -331,22 +333,31 @@ class DonerDetailsView extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 7,
-            height: 7,
-            decoration: const BoxDecoration(
-              color: primaryRed,
-              shape: BoxShape.circle,
+          Padding(
+            padding: const EdgeInsets.only(top: 5),
+            child: Container(
+              width: 7,
+              height: 7,
+              decoration: const BoxDecoration(
+                color: primaryRed,
+                shape: BoxShape.circle,
+              ),
             ),
           ),
           const SizedBox(width: 10),
-          Text(
-            text,
-            style: const TextStyle(
-              fontSize: 13,
-              color: Color(0xFF555555),
-              fontWeight: FontWeight.w500,
+          Expanded(
+            child: Text(
+              text,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 13,
+                color: Color(0xFF555555),
+                fontWeight: FontWeight.w500,
+                height: 1.35,
+              ),
             ),
           ),
         ],
