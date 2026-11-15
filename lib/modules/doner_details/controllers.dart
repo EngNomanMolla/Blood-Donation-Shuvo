@@ -56,13 +56,22 @@ class ProfileController extends GetxController {
         liveSave: 0,
         imageUrl: argDonor.imageUrl,
       );
+
+      String initialDate = '';
+      if (argDonor.lastDonationDate != null && argDonor.lastDonationDate!.isNotEmpty) {
+        final f = _formatDate(argDonor.lastDonationDate);
+        if (f.isNotEmpty) {
+          initialDate = 'Last Donation: $f';
+        }
+      }
+
       donor.value = DonorProfile(
         name: argDonor.name,
         age: argDonor.age,
         gender: argDonor.gender,
         hospital: '',
         location: argDonor.location,
-        date: '',
+        date: initialDate,
         imageUrl: argDonor.imageUrl,
         phone: argDonor.phone,
       );
@@ -327,17 +336,29 @@ class ProfileController extends GetxController {
         locStr = locationMap['full'] ?? locationMap['display'] ?? details['address'] ?? '';
       }
 
-      String formattedDate = '';
-      final createdAtStr = details['created_at'];
-      if (createdAtStr != null) {
-        try {
-          final parsedDate = DateTime.parse(createdAtStr);
-          final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-          formattedDate = '${parsedDate.day} ${months[parsedDate.month - 1]} ${parsedDate.year}';
-        } catch (_) {
-          formattedDate = createdAtStr.toString().split('T').first;
-        }
-      }
+      final donorObj = details['donor'] is Map ? details['donor'] : null;
+      final donorProfileObj = details['donor_profile'] is Map ? details['donor_profile'] : null;
+      final donorInfoObj = details['donor_info'] is Map ? details['donor_info'] : null;
+      final userObj = details['user'] is Map ? details['user'] : null;
+
+      final rawLastDonation = details['last_donation_date'] ??
+          details['last_donation'] ??
+          details['last_donation_at'] ??
+          details['last_donated_at'] ??
+          details['last_donated_date'] ??
+          donorObj?['last_donation_date'] ??
+          donorObj?['last_donation'] ??
+          donorObj?['last_donation_at'] ??
+          donorProfileObj?['last_donation_date'] ??
+          donorProfileObj?['last_donation'] ??
+          donorInfoObj?['last_donation_date'] ??
+          donorInfoObj?['last_donation'] ??
+          userObj?['last_donation_date'];
+
+      String formattedLastDonation = _formatDate(rawLastDonation);
+      String lastDonationDisplay = formattedLastDonation.isNotEmpty
+          ? 'Last Donation: $formattedLastDonation'
+          : 'Last Donation: Unknown';
 
       user.value = UserProfile(
         name: details['name'] ?? '',
@@ -354,7 +375,7 @@ class ProfileController extends GetxController {
         gender: genderVal,
         hospital: details['address'] ?? '',
         location: locStr,
-        date: formattedDate.isNotEmpty ? 'Registered: $formattedDate' : '',
+        date: lastDonationDisplay,
         imageUrl: sanitizedImg,
         phone: details['phone'] ?? '',
       );
@@ -364,4 +385,17 @@ class ProfileController extends GetxController {
       isLoading.value = false;
     }
   }
-}
+
+  static String _formatDate(dynamic rawDate) {
+    if (rawDate == null) return '';
+    final str = rawDate.toString().trim();
+    if (str.isEmpty || str == 'null') return '';
+    try {
+      final parsedDate = DateTime.parse(str);
+      final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return '${parsedDate.day} ${months[parsedDate.month - 1]} ${parsedDate.year}';
+    } catch (_) {
+      return str.split('T').first;
+    }
+  }
+  }

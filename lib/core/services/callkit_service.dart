@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_callkit_incoming/entities/entities.dart';
@@ -7,6 +8,12 @@ import '../../app/routes/app_routes.dart';
 
 class CallKitService extends GetxService {
   static CallKitService get to => Get.find<CallKitService>();
+
+  /// Flag to prevent processing multiple call accepts simultaneously
+  static bool _isProcessingAccept = false;
+
+  /// Flag indicating whether a call is currently active (prevents duplicate incoming calls)
+  static bool isCallActive = false;
 
   Future<CallKitService> init() async {
     _listenToCallEvents();
@@ -28,6 +35,12 @@ class CallKitService extends GetxService {
     required String uid,
     int availableMinutes = 0,
   }) async {
+    // Don't show a new incoming call if already in a call
+    if (isCallActive) {
+      debugPrint("⚠️ [CALLKIT] Already in a call, ignoring new incoming call");
+      return;
+    }
+
     final CallKitParams callKitParams = CallKitParams(
       id: uuid.isNotEmpty ? uuid : DateTime.now().millisecondsSinceEpoch.toString(),
       nameCaller: callerName.isNotEmpty ? callerName : 'Blood Donor / Requester',
@@ -105,13 +118,11 @@ class CallKitService extends GetxService {
           break;
         case CallEventActionCallDecline(:final callKitParams):
           debugPrint("🚫 [CALLKIT] Call declined by user");
-          notifyAgoraDeclined(callKitParams.extra);
-          _endCurrentCall(callKitParams.id);
+          _handleCallDeclined(callKitParams.extra, callKitParams.id);
           break;
         case CallEventActionCallEnded(:final callKitParams):
           debugPrint("🛑 [CALLKIT] Call ended");
-          notifyAgoraDeclined(callKitParams.extra);
-          _endCurrentCall(callKitParams.id);
+          _handleCallDeclined(callKitParams.extra, callKitParams.id);
           break;
         case CallEventActionCallTimeout(:final id):
           debugPrint("⏳ [CALLKIT] Call timed out");
@@ -123,7 +134,14 @@ class CallKitService extends GetxService {
     });
   }
 
-  /// Check if app was started directly by accepting an incoming call
+  /// Handle decline/end from CallKit - notify caller via Agora then clean up
+  void _handleCallDeclined(Map<String, dynamic>? extra, String? callId) {
+    // Notify the caller that this call was declined
+    notifyAgoraDeclined(extra);
+    _endCurrentCall(callId);
+  }
+
+  /// Check if app was started directly by accepting an incoming call (terminated state)
   Future<void> _checkInitialCall() async {
     try {
       final activeCalls = await FlutterCallkitIncoming.activeCalls();
@@ -131,6 +149,9 @@ class CallKitService extends GetxService {
         debugPrint("📱 [CALLKIT] Found active calls on start: ${activeCalls.length}");
         for (final call in activeCalls) {
           if (call.isAccepted && call.extra != null) {
+            // Wait for the app to be fully initialized before navigating
+            // This handles the terminated → accepted race condition
+            await Future.delayed(const Duration(milliseconds: 800));
             _handleCallAccepted(call.extra);
             break;
           }
@@ -144,20 +165,47 @@ class CallKitService extends GetxService {
   /// Handle Call Accepted from CallKit UI -> Direct jump to CallView
   void _handleCallAccepted(Map<String, dynamic>? extra) {
     if (extra == null || extra.isEmpty) return;
+    
+    // Prevent processing multiple accepts simultaneously
+    if (_isProcessingAccept) {
+      debugPrint("⚠️ [CALLKIT] Already processing a call accept, ignoring duplicate");
+      return;
+    }
+    _isProcessingAccept = true;
+    isCallActive = true;
+    
     try {
       debugPrint("🎉 [CALLKIT ACCEPTED] Extra Payload: $extra");
 
-      if (extra['channel_name'] != null && extra['channel_name'].toString().isNotEmpty) {
-        if (Get.currentRoute != AppRoutes.call) {
-          Get.offAllNamed(AppRoutes.call, arguments: extra);
-        }
+      final String channelName = extra['channel_name']?.toString() ?? '';
+      final String agoraAppId = extra['agora_app_id']?.toString() ?? '';
+      final String rtcToken = extra['rtc_token']?.toString() ?? '';
+
+      // Validate required call parameters before navigating
+      if (channelName.isEmpty || agoraAppId.isEmpty || rtcToken.isEmpty) {
+        debugPrint("❌ [CALLKIT] Invalid call parameters - cannot accept call");
+        debugPrint("   Channel: ${channelName.isNotEmpty ? 'OK' : 'EMPTY'}, AppId: ${agoraAppId.isNotEmpty ? 'OK' : 'EMPTY'}, Token: ${rtcToken.isNotEmpty ? 'OK' : 'EMPTY'}");
+        _isProcessingAccept = false;
+        isCallActive = false;
+        return;
+      }
+
+      if (Get.currentRoute != AppRoutes.call) {
+        // End the native CallKit UI before navigating to in-app call screen
+        endAllCalls();
+        Get.offAllNamed(AppRoutes.call, arguments: extra);
       }
     } catch (e) {
       debugPrint("❌ [CALLKIT ERROR] Processing accepted call: $e");
+      isCallActive = false;
+    } finally {
+      _isProcessingAccept = false;
     }
   }
 
   /// Notify caller on Agora channel that receiver declined
+  /// This works by briefly joining and immediately leaving the channel,
+  /// which triggers `onUserOffline` on the caller's side → causing their call to end too
   static Future<void> notifyAgoraDeclined(Map<String, dynamic>? extra) async {
     if (extra == null) return;
     final String appId = extra['agora_app_id'] ?? '';
@@ -172,8 +220,10 @@ class CallKitService extends GetxService {
     }
 
     if (appId.isNotEmpty && channelName.isNotEmpty && rtcToken.isNotEmpty) {
+      RtcEngine? engine;
       try {
-        final engine = createAgoraRtcEngine();
+        debugPrint("📡 [CALLKIT] Notifying caller via Agora join-leave (decline signal)");
+        engine = createAgoraRtcEngine();
         await engine.initialize(RtcEngineContext(appId: appId.trim()));
         await engine.joinChannel(
           token: rtcToken.trim(),
@@ -185,11 +235,18 @@ class CallKitService extends GetxService {
             publishMicrophoneTrack: false,
           ),
         );
-        await Future.delayed(const Duration(milliseconds: 300));
+        // Wait briefly so the caller's Agora engine detects the join
+        await Future.delayed(const Duration(milliseconds: 500));
         await engine.leaveChannel();
         await engine.release();
+        debugPrint("✅ [CALLKIT] Caller notified of decline via Agora");
       } catch (e) {
-        debugPrint("Agora decline notification error: $e");
+        debugPrint("⚠️ [CALLKIT] Agora decline notification error: $e");
+        // Clean up engine even on error
+        try {
+          await engine?.leaveChannel();
+          await engine?.release();
+        } catch (_) {}
       }
     }
   }
@@ -202,6 +259,12 @@ class CallKitService extends GetxService {
     } catch (e) {
       debugPrint("⚠️ [CALLKIT] Error ending calls: $e");
     }
+  }
+
+  /// Mark call as inactive (called from CallController when call ends)
+  static void markCallInactive() {
+    isCallActive = false;
+    _isProcessingAccept = false;
   }
 
   static Future<void> _endCurrentCall(String? id) async {

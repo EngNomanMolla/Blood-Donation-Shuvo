@@ -28,4 +28,5 @@ class AppRoutes {
   static const String initialRecharge = '/initial-recharge';
   static const String privacyPolicy = '/privacy-policy';
   static const String aboutUs = '/about-us';
+  static const String complaintAdvice = '/complaint-advice';
 }

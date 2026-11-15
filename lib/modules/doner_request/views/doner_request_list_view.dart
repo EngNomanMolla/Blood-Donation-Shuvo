@@ -769,21 +769,21 @@ class DonateScreen extends GetView<DonateController> {
       icon = Icons.hourglass_top_rounded;
       statusTitle = 'ভেরিফিকেশন প্রক্রিয়াধীন';
       statusBadge = 'Pending Review';
-      message = 'আপনার ৳${amount.toStringAsFixed(0)} মেম্বারশিপ রিচার্জ ভেরিফিকেশন অ্যাডমিন পর্যালোচনায় রয়েছে। অনুমোদন সম্পন্ন হলে আপনি ডোনারের সম্পূর্ণ প্রোফাইল ও নম্বর দেখতে পারবেন।';
+      message = 'আপনার ৳${amount.toStringAsFixed(0)} মেম্বারশিপ রিচার্জ ভেরিফিকেশন অ্যাডমিন পর্যালোচনায় রয়েছে। অনুমোদন সম্পন্ন হলে এই টাকা আপনার ওয়ালেটে জমা থাকবে এবং আপনি পরবর্তীতে ডোনারদের সাথে কথা বলতে এটি ব্যবহার করতে পারবেন।';
       actionButtonText = 'ভেরিফিকেশন স্ট্যাটাস দেখুন';
     } else if (isRejected) {
       themeColor = const Color(0xFFEF4444);
       icon = Icons.cancel_outlined;
       statusTitle = 'রিচার্জ বাতিল হয়েছে';
       statusBadge = 'Rejected';
-      message = 'আপনার পূর্ববর্তী রিচার্জ রিকোয়েস্টটি গৃহীত হয়নি${(rejectReason != null && rejectReason.isNotEmpty) ? ' (কারণ: $rejectReason)' : ''}। ডোনারের প্রোফাইল দেখতে পুনরায় রিচার্জ করুন।';
+      message = 'আপনার পূর্ববর্তী রিচার্জ রিকোয়েস্টটি গৃহীত হয়নি${(rejectReason != null && rejectReason.isNotEmpty) ? ' (কারণ: $rejectReason)' : ''}। অনুগ্রহ করে পুনরায় রিচার্জ করুন। রিচার্জের টাকা আপনার ওয়ালেটে জমা থাকবে যা দিয়ে ডোনারদের সাথে কথা বলতে পারবেন।';
       actionButtonText = 'পুনরায় রিচার্জ করুন';
     } else {
       themeColor = primaryRed;
       icon = Icons.workspace_premium_rounded;
       statusTitle = 'মেম্বারশিপ প্রয়োজন';
-      statusBadge = '৳${amount.toStringAsFixed(0)} এককালীন রিচার্জ';
-      message = 'ডোনারের সম্পূর্ণ প্রোফাইল, ঠিকানা এবং সরাসরি ফোন নম্বর দেখতে আপনাকে মেম্বার হতে হবে। মাত্র ৳${amount.toStringAsFixed(0)} রিচার্জ করে মেম্বারশিপ সক্রিয় করুন।';
+      statusBadge = '৳${amount.toStringAsFixed(0)} ওয়ালেটে জমা থাকবে';
+      message = 'ডোনারদের সাথে যোগাযোগ করতে মেম্বারশিপ রিচার্জ সম্পন্ন করুন। এই ৳${amount.toStringAsFixed(0)} টাকা আপনার নিজস্ব ওয়ালেটেই জমা থাকবে এবং পরবর্তীতে ডোনারদের সাথে কথা বলতে আপনি এই টাকা ব্যবহার করতে পারবেন।';
       actionButtonText = 'মেম্বার হতে রিচার্জ করুন (৳${amount.toStringAsFixed(0)})';
     }
 

@@ -24,11 +24,13 @@ class HomeController extends GetxController {
   final notifications = <NotificationItem>[].obs;
   final isNotificationsLoading = false.obs;
 
-  // Profile Avatar, Donor/Volunteer status, and Wallet Balance
+  // Profile Avatar, Donor/Volunteer status, Member status, and Wallet Balance
   final avatarUrl = ''.obs;
   final isDonor = false.obs;
   final isVolunteer = false.obs;
   final volunteerPaymentStatus = ''.obs;
+  final isMember = false.obs;
+  final memberStatus = ''.obs;
   final walletBalance = '৳ 0'.obs;
 
   @override
@@ -47,6 +49,8 @@ class HomeController extends GetxController {
       isDonor.value = storage.isDonor;
       isVolunteer.value = storage.isVolunteer;
       volunteerPaymentStatus.value = storage.volunteerPaymentStatus ?? '';
+      isMember.value = storage.hasRecharged || storage.initialRechargeStatus == 'approved';
+      memberStatus.value = storage.initialRechargeStatus ?? '';
     }
   }
 
@@ -194,6 +198,8 @@ class HomeController extends GetxController {
         isDonor.value = profile.isDonor;
         isVolunteer.value = profile.isVolunteer;
         volunteerPaymentStatus.value = profile.volunteerPaymentStatus ?? '';
+        isMember.value = profile.hasCompletedInitialRecharge || profile.initialRechargeStatus == 'approved';
+        memberStatus.value = profile.initialRechargeStatus ?? '';
         final storage = Get.find<StorageService>();
         await storage.setIsDonor(profile.isDonor);
         await storage.setIsVolunteer(profile.isVolunteer);

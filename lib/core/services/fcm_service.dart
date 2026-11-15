@@ -140,6 +140,12 @@ class FCMService extends GetxService {
     final String? type = data['type'] ?? data['notification_type'];
 
     if (type == 'incoming_call') {
+      // Don't show a new incoming call if already in a call
+      if (Get.currentRoute == AppRoutes.call) {
+        debugPrint("⚠️ [FCM] Already in a call, ignoring incoming call notification");
+        return;
+      }
+
       final String channelName = data['channel_name'] ?? data['channel'] ?? '';
       final String callerId = data['caller_id']?.toString() ?? data['sender_id']?.toString() ?? '0';
       final String callerName = data['caller_name'] ?? data['title'] ?? 'Incoming Call';
@@ -157,33 +163,40 @@ class FCMService extends GetxService {
       }
       if (uid.isEmpty) uid = '0';
 
+      // Validate required call parameters
+      if (channelName.isEmpty || agoraAppId.isEmpty || rtcToken.isEmpty) {
+        debugPrint("❌ [FCM] Invalid incoming call data - missing required params");
+        debugPrint("   Channel: ${channelName.isNotEmpty ? 'OK' : 'EMPTY'}, AppId: ${agoraAppId.isNotEmpty ? 'OK' : 'EMPTY'}, Token: ${rtcToken.isNotEmpty ? 'OK' : 'EMPTY'}");
+        return;
+      }
+
       debugPrint("👉 Parsed Incoming Call Details:");
       debugPrint("   • Caller Name : $callerName");
       debugPrint("   • Channel Name: $channelName");
       debugPrint("   • Agora App ID: $agoraAppId");
       debugPrint("   • Target UID  : $uid");
       debugPrint("   • RTC Token   : ${rtcToken.isNotEmpty ? (rtcToken.length > 30 ? '${rtcToken.substring(0, 30)}...' : rtcToken) : 'EMPTY'} (Length: ${rtcToken.length})");
+      debugPrint("   • isForeground: $isForeground");
       debugPrint("-------------------------------------------------------\n");
 
       final int availableMinutes = int.tryParse(data['available_minutes']?.toString() ?? data['remaining_call_minutes']?.toString() ?? '0') ?? 0;
 
-      final callArgs = {
-        'is_incoming': true,
-        'channel_name': channelName,
-        'caller_id': callerId,
-        'caller_name': callerName,
-        'caller_avatar': callerAvatar,
-        'agora_app_id': agoraAppId,
-        'rtc_token': rtcToken,
-        'blood_group': bloodGroup,
-        'uid': uid,
-        'available_minutes': availableMinutes,
-      };
-
-      // Navigate to Incoming Call Screen
-      if (Get.currentRoute != AppRoutes.incomingCall && Get.currentRoute != AppRoutes.call) {
-        Get.toNamed(AppRoutes.incomingCall, arguments: callArgs);
-      }
+      // Always use CallKit native UI for consistent behavior across ALL app states
+      // (foreground, background, terminated)
+      // CallKit shows full-screen native call UI → user accepts → routes to CallView
+      CallKitService.showIncomingCall(
+        uuid: message.messageId ?? DateTime.now().millisecondsSinceEpoch.toString(),
+        callerName: callerName,
+        callerAvatar: callerAvatar,
+        callerNumber: bloodGroup.isNotEmpty ? 'Blood Group: $bloodGroup' : 'Incoming Call',
+        channelName: channelName,
+        callerId: callerId,
+        agoraAppId: agoraAppId,
+        rtcToken: rtcToken,
+        bloodGroup: bloodGroup,
+        uid: uid,
+        availableMinutes: availableMinutes,
+      );
     }
   }
 }

@@ -9,6 +9,7 @@ class Donor {
   final String imageUrl;
   final String phone;
   final String bloodGroup;
+  final String? lastDonationDate;
 
   const Donor({
     required this.id,
@@ -19,6 +20,7 @@ class Donor {
     required this.imageUrl,
     required this.phone,
     required this.bloodGroup,
+    this.lastDonationDate,
   });
 
   factory Donor.fromJson(Map<String, dynamic> json) {
@@ -42,6 +44,14 @@ class Donor {
 
     final String sanitizedImg = ProfileData.sanitizeAvatarUrl(rawAvatar) ?? '';
 
+    // Extract last donation date if provided in list item
+    final donorObj = json['donor'] is Map ? json['donor'] : null;
+    final rawLastDonation = json['last_donation_date'] ??
+        json['last_donation'] ??
+        json['last_donation_at'] ??
+        donorObj?['last_donation_date'] ??
+        donorObj?['last_donation'];
+
     return Donor(
       id: json['id'] ?? 0,
       name: json['name'] ?? '',
@@ -51,6 +61,7 @@ class Donor {
       imageUrl: sanitizedImg,
       phone: json['phone'] ?? '',
       bloodGroup: json['blood_group'] ?? '',
+      lastDonationDate: rawLastDonation?.toString(),
     );
   }
 }

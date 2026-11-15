@@ -33,7 +33,6 @@ class AboutUsView extends StatelessWidget {
         child: Column(
           children: [
             const SizedBox(height: 10),
-            // Logo / App Icon Placeholder
             Container(
               padding: const EdgeInsets.all(16),
               decoration: const BoxDecoration(
@@ -109,7 +108,6 @@ class AboutUsView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            // Core values or details
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),

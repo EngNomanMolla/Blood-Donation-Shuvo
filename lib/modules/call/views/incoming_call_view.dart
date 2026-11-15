@@ -1,10 +1,16 @@
 import 'dart:async';
+import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../app/routes/app_routes.dart';
 import '../../../core/services/callkit_service.dart';
 import '../controllers/call_controller.dart';
 
+/// Incoming Call View — shown when a call arrives while the app is in foreground
+/// and the user needs to accept or decline.
+///
+/// This view also monitors the Agora channel to detect if the caller hangs up
+/// before the receiver answers, so we can dismiss the ringing UI automatically.
 class IncomingCallView extends StatefulWidget {
   const IncomingCallView({super.key});
 
@@ -23,6 +29,10 @@ class _IncomingCallViewState extends State<IncomingCallView> with SingleTickerPr
 
   bool _hasResponded = false;
   Timer? _ringTimeoutTimer;
+
+  /// Agora engine used to monitor if the caller leaves the channel (hangs up)
+  RtcEngine? _monitorEngine;
+  bool _isMonitoringCallerPresence = false;
 
   @override
   void initState() {
@@ -50,13 +60,110 @@ class _IncomingCallViewState extends State<IncomingCallView> with SingleTickerPr
         _declineCall();
       }
     });
+
+    // Start monitoring the Agora channel for caller presence
+    // If the caller leaves before we answer, auto-dismiss the ringing screen
+    _startCallerPresenceMonitor();
   }
 
   @override
   void dispose() {
     _ringTimeoutTimer?.cancel();
     _pulseController.dispose();
+    _cleanupMonitorEngine();
     super.dispose();
+  }
+
+  /// Monitor the Agora channel (read-only) to detect if the caller leaves
+  /// This allows us to dismiss the ringing screen if the caller hangs up
+  Future<void> _startCallerPresenceMonitor() async {
+    final String appId = args['agora_app_id'] ?? '';
+    final String channelName = args['channel_name'] ?? '';
+    final String rtcToken = args['rtc_token'] ?? '';
+    int uid = int.tryParse(args['uid']?.toString() ?? '0') ?? 0;
+
+    // Need valid params to monitor
+    if (appId.isEmpty || channelName.isEmpty || rtcToken.isEmpty) {
+      debugPrint("⚠️ [INCOMING] Cannot monitor caller presence - missing params");
+      return;
+    }
+
+    try {
+      _monitorEngine = createAgoraRtcEngine();
+      await _monitorEngine!.initialize(RtcEngineContext(appId: appId.trim()));
+
+      _monitorEngine!.registerEventHandler(
+        RtcEngineEventHandler(
+          onUserOffline: (RtcConnection connection, int remoteUid, UserOfflineReasonType reason) {
+            debugPrint("📞 [INCOMING MONITOR] Caller left channel (UID: $remoteUid, Reason: $reason)");
+            // Caller hung up before we answered → dismiss the ringing screen
+            if (!_hasResponded && mounted) {
+              _handleCallerHungUp();
+            }
+          },
+          onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
+            debugPrint("📞 [INCOMING MONITOR] Caller detected in channel (UID: $remoteUid)");
+          },
+          onError: (ErrorCodeType err, String msg) {
+            debugPrint("⚠️ [INCOMING MONITOR] Agora error: $err ($msg)");
+          },
+        ),
+      );
+
+      // Join as a silent observer (don't publish audio, just subscribe to detect user events)
+      await _monitorEngine!.joinChannel(
+        token: rtcToken.trim(),
+        channelId: channelName.trim(),
+        uid: uid,
+        options: const ChannelMediaOptions(
+          clientRoleType: ClientRoleType.clientRoleAudience,
+          autoSubscribeAudio: false,
+          publishMicrophoneTrack: false,
+        ),
+      );
+      _isMonitoringCallerPresence = true;
+      debugPrint("✅ [INCOMING] Started monitoring caller presence on channel: $channelName");
+    } catch (e) {
+      debugPrint("⚠️ [INCOMING] Failed to start caller presence monitor: $e");
+      _cleanupMonitorEngine();
+    }
+  }
+
+  /// Clean up the monitoring engine
+  Future<void> _cleanupMonitorEngine() async {
+    if (_monitorEngine != null) {
+      try {
+        if (_isMonitoringCallerPresence) {
+          await _monitorEngine!.leaveChannel();
+        }
+        await _monitorEngine!.release();
+      } catch (e) {
+        debugPrint("⚠️ [INCOMING] Error cleaning up monitor engine: $e");
+      }
+      _monitorEngine = null;
+      _isMonitoringCallerPresence = false;
+    }
+  }
+
+  /// Handle the case where the caller hung up before receiver answered
+  void _handleCallerHungUp() {
+    if (_hasResponded) return;
+    _hasResponded = true;
+    _ringTimeoutTimer?.cancel();
+    CallKitService.endAllCalls();
+    _cleanupMonitorEngine();
+
+    if (mounted) {
+      Get.snackbar(
+        'Missed Call',
+        '$callerName hung up before you could answer.',
+        backgroundColor: Colors.orangeAccent.withValues(alpha: 0.8),
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 3),
+      );
+      Get.back();
+    }
   }
 
   void _declineCall() async {
@@ -65,7 +172,10 @@ class _IncomingCallViewState extends State<IncomingCallView> with SingleTickerPr
     _ringTimeoutTimer?.cancel();
     CallKitService.endAllCalls();
     
-    // Notify caller that receiver declined
+    // Clean up monitor engine before notifying decline
+    await _cleanupMonitorEngine();
+    
+    // Notify caller that receiver declined via Agora join-leave
     CallKitService.notifyAgoraDeclined(args);
     
     if (mounted) {
@@ -78,6 +188,11 @@ class _IncomingCallViewState extends State<IncomingCallView> with SingleTickerPr
     _hasResponded = true;
     _ringTimeoutTimer?.cancel();
     CallKitService.endAllCalls();
+    
+    // Clean up the monitor engine before accepting
+    // The CallController will create its own Agora engine
+    await _cleanupMonitorEngine();
+    
     if (Get.isRegistered<CallController>()) {
       Get.delete<CallController>(force: true);
     }

@@ -18,17 +18,23 @@ class QuickActionsSection extends StatelessWidget {
   static List<QuickActionModel> getDefaultActions() {
     return [
       QuickActionModel(
-        label: "Emergency Contacts",
-        icon: Icons.phone_callback_rounded,
-        iconColor: AppColors.primary,
-        iconBg: const Color(0xFFFCECEE),
+        label: "Emergency",
+        subtitle: "Quick Contacts",
+        icon: Icons.phone_in_talk_rounded,
+        iconColor: const Color(0xFFE53935),
+        iconBg: const Color(0xFFFFF1F3),
+        gradientColors: const [Color(0xFFFFF6F7), Color(0xFFFFF0F2)],
+        borderColor: const Color(0xFFFFD4DC),
         onTap: () => Get.toNamed(AppRoutes.emergencyContacts),
       ),
       QuickActionModel(
         label: "Support",
-        icon: Icons.support_agent_rounded,
-        iconColor: Colors.blueGrey,
-        iconBg: const Color(0xFFECEFF1),
+        subtitle: "24/7 Helpline",
+        icon: Icons.headset_mic_rounded,
+        iconColor: const Color(0xFF0284C7),
+        iconBg: const Color(0xFFF0F9FF),
+        gradientColors: const [Color(0xFFF0F9FF), Color(0xFFE0F2FE)],
+        borderColor: const Color(0xFFBAE6FD),
         onTap: () => Get.toNamed(AppRoutes.support),
       ),
     ];
@@ -53,6 +59,7 @@ class QuickActionsSection extends StatelessWidget {
           GridView.count(
             crossAxisCount: crossAxisCount,
             shrinkWrap: true,
+            padding: EdgeInsets.zero,
             physics: const NeverScrollableScrollPhysics(),
             mainAxisSpacing: spacing,
             crossAxisSpacing: spacing,

@@ -3,16 +3,22 @@ import 'package:flutter/material.dart';
 /// Quick action model for the quick actions grid
 class QuickActionModel {
   final String label;
+  final String? subtitle;
   final IconData icon;
   final Color iconColor;
   final Color iconBg;
+  final List<Color>? gradientColors;
+  final Color? borderColor;
   final VoidCallback? onTap;
 
   QuickActionModel({
     required this.label,
+    this.subtitle,
     required this.icon,
     required this.iconColor,
     required this.iconBg,
+    this.gradientColors,
+    this.borderColor,
     this.onTap,
   });
 }

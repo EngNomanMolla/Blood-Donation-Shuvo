@@ -78,19 +78,24 @@ class _QuickActionCardState extends State<QuickActionCard>
           builder: (context, child) {
             return Container(
               decoration: BoxDecoration(
-                color: widget.action.iconBg,
-                borderRadius: BorderRadius.circular(18),
+                gradient: widget.action.gradientColors != null
+                    ? LinearGradient(
+                        colors: widget.action.gradientColors!,
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      )
+                    : null,
+                color: widget.action.gradientColors == null ? widget.action.iconBg : null,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: widget.action.borderColor ?? widget.action.iconColor.withValues(alpha: 0.15),
+                  width: 1.2,
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    blurRadius: 12 + _elevationAnimation.value,
+                    color: widget.action.iconColor.withValues(alpha: 0.08),
+                    blurRadius: 10 + _elevationAnimation.value,
                     offset: Offset(0, 3 + _elevationAnimation.value * 0.5),
-                    spreadRadius: _elevationAnimation.value * 0.5,
-                  ),
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
-                    blurRadius: 2,
-                    offset: const Offset(0, 1),
                   ),
                 ],
               ),
@@ -98,15 +103,12 @@ class _QuickActionCardState extends State<QuickActionCard>
             );
           },
           child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: isMobile ? 14 : 16,
-              vertical: isMobile ? 12 : 14,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 _buildIconContainer(isMobile),
-                SizedBox(width: isMobile ? 12 : 14),
+                const SizedBox(width: 10),
                 Expanded(
                   child: _buildTextContent(isMobile),
                 ),
@@ -119,34 +121,33 @@ class _QuickActionCardState extends State<QuickActionCard>
   }
 
   Widget _buildIconContainer(bool isMobile) {
-    final iconSize = isMobile ? 48.0 : 54.0;
-    final innerIconSize = isMobile ? 24.0 : 26.0;
-
     return Container(
-      width: iconSize,
-      height: iconSize,
+      width: 42,
+      height: 42,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            widget.action.iconBg,
-            widget.action.iconBg.withValues(alpha: 0.8),
+            widget.action.iconColor,
+            widget.action.iconColor.withValues(alpha: 0.85),
           ],
         ),
         boxShadow: [
           BoxShadow(
-            color: widget.action.iconColor.withValues(alpha: 0.2),
-            blurRadius: 8,
+            color: widget.action.iconColor.withValues(alpha: 0.3),
+            blurRadius: 6,
             offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: Icon(
-        widget.action.icon,
-        color: widget.action.iconColor,
-        size: innerIconSize,
+      child: Center(
+        child: Icon(
+          widget.action.icon,
+          color: Colors.white,
+          size: 20,
+        ),
       ),
     );
   }
@@ -158,16 +159,29 @@ class _QuickActionCardState extends State<QuickActionCard>
       children: [
         Text(
           widget.action.label,
-          maxLines: 2,
+          maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: AllStyles.subtitleTextStyle.copyWith(
+          style: const TextStyle(
+            fontFamily: 'Poppins',
             fontWeight: FontWeight.w700,
-            color: Colors.black87,
-            fontSize: isMobile ? 13 : 14,
-            height: 1.3,
-            letterSpacing: 0.3,
+            color: Color(0xFF1E293B),
+            fontSize: 13,
           ),
         ),
+        if (widget.action.subtitle != null) ...[
+          const SizedBox(height: 2),
+          Text(
+            widget.action.subtitle!,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF64748B),
+              fontSize: 10.5,
+            ),
+          ),
+        ],
       ],
     );
   }

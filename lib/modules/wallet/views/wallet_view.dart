@@ -169,11 +169,12 @@ class WalletView extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 25),
-                    
-                    WalletTransactionSection(
-                      transactions: controller.transactions,
-                    ),
+                    if (controller.transactions.isNotEmpty) ...[
+                      const SizedBox(height: 25),
+                      WalletTransactionSection(
+                        transactions: controller.transactions,
+                      ),
+                    ],
                   ],
                 ),
               ),

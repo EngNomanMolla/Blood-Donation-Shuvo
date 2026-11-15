@@ -36,6 +36,7 @@ import 'package:blood_donation/modules/call/views/call_view.dart';
 import 'package:blood_donation/modules/call/views/incoming_call_view.dart';
 import 'package:blood_donation/modules/initial_recharge/bindings/initial_recharge_binding.dart';
 import 'package:blood_donation/modules/initial_recharge/views/initial_recharge_view.dart';
+import 'package:blood_donation/modules/complaint_advice/views/complaint_advice_view.dart';
 import 'package:get/get.dart';
 
 /// App page routes and bindings configuration
@@ -252,6 +253,14 @@ class AppPages {
     GetPage(
       name: AppRoutes.aboutUs,
       page: () => const AboutUsView(),
+      transition: Transition.cupertino,
+      transitionDuration: const Duration(milliseconds: 400),
+    ),
+
+    // Complaint & Advice Screen
+    GetPage(
+      name: AppRoutes.complaintAdvice,
+      page: () => const ComplaintAdviceView(),
       transition: Transition.cupertino,
       transitionDuration: const Duration(milliseconds: 400),
     ),

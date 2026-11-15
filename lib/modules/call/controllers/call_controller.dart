@@ -10,6 +10,9 @@ import '../../../core/services/callkit_service.dart';
 
 import '../../../data/repositories/profile_repository.dart';
 
+/// Call state transitions:
+/// Outgoing: connecting → ringing → connected → ended
+/// Incoming: connecting → connected → ended
 enum CallState { connecting, ringing, connected, ended, error }
 
 class CallController extends GetxController {
@@ -49,6 +52,9 @@ class CallController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    // Mark that a call is now active
+    CallKitService.isCallActive = true;
+
     final Map<String, dynamic> args = Get.arguments is Map
         ? Map<String, dynamic>.from(Get.arguments as Map)
         : <String, dynamic>{};
@@ -263,22 +269,52 @@ class CallController extends GetxController {
           },
           onUserOffline: (RtcConnection connection, int remoteUid, UserOfflineReasonType reason) {
             debugPrint("Agora Remote User Offline -> RemoteUid: $remoteUid, Reason: $reason");
-            final bool wasRealConversation = (callState.value == CallState.connected && callDurationSeconds.value > 1);
+            if (_isEndingCall) return; // Already ending, ignore
+            
+            // Capture previous state BEFORE changing it
+            final previousState = callState.value;
+            final bool wasConnected = previousState == CallState.connected;
+            final bool wasRinging = previousState == CallState.ringing;
+            final bool wasRealConversation = wasConnected && callDurationSeconds.value > 1;
             remoteUserJoined.value = false;
             _ringingTimeoutTimer?.cancel();
             debugStep.value = 'Remote User Left ($reason)';
             callState.value = CallState.ended;
-            callStatusText.value = wasRealConversation ? 'Call Ended' : 'Call Declined';
+            
+            // Different messages based on call state when remote user left
+            String title;
+            String message;
+            if (wasRealConversation) {
+              title = 'Call Ended';
+              message = 'The call has ended.';
+              callStatusText.value = 'Call Ended';
+            } else if (wasConnected) {
+              // Connected but very short (< 2 seconds)
+              title = 'Call Ended';
+              message = 'The call was ended by the other person.';
+              callStatusText.value = 'Call Ended';
+            } else if (wasRinging || !isIncoming.value) {
+              // Outgoing call: the receiver declined or didn't answer
+              title = 'Call Declined';
+              message = 'The call was declined by the donor.';
+              callStatusText.value = 'Call Declined';
+            } else {
+              // Incoming call: the caller hung up before we answered
+              title = 'Call Ended';
+              message = 'The caller has hung up.';
+              callStatusText.value = 'Caller Hung Up';
+            }
             
             Get.snackbar(
-              wasRealConversation ? 'Call Ended' : 'Call Declined',
-              wasRealConversation ? 'Call was ended by the other person' : 'Call was declined by the user',
+              title,
+              message,
               backgroundColor: Colors.redAccent.withValues(alpha: 0.8),
               colorText: Colors.white,
               snackPosition: SnackPosition.BOTTOM,
               duration: const Duration(seconds: 2),
             );
 
+            // End call on this side → both sides are now disconnected
             endCall();
           },
           onLeaveChannel: (RtcConnection connection, RtcStats stats) {
@@ -441,6 +477,8 @@ class CallController extends GetxController {
     if (_isEndingCall) return;
     _isEndingCall = true;
 
+    debugPrint("📞 [CALL] endCall() called - cleaning up...");
+
     _callTimer?.cancel();
     _ringingTimeoutTimer?.cancel();
     callState.value = CallState.ended;
@@ -448,30 +486,62 @@ class CallController extends GetxController {
 
     // End any active native CallKit UI
     CallKitService.endAllCalls();
+    // Mark call as no longer active so new calls can come through
+    CallKitService.markCallInactive();
 
-    // 1. Instant Navigation - Pop screen immediately so user experiences zero lag
-    try {
-      if (Get.isDialogOpen ?? false) {
-        Get.back();
-      }
-      if (Get.key.currentState?.canPop() ?? false) {
-        Get.back();
-      } else {
-        Get.offAllNamed(AppRoutes.home);
-      }
-    } catch (e) {
-      debugPrint("Error popping call view: $e");
-    }
-
-    // 2. Non-blocking Agora Engine cleanup in background
+    // 1. Non-blocking Agora Engine cleanup FIRST (so remote side gets notified via onUserOffline)
     if (_isEngineInitialized) {
       _isEngineInitialized = false;
       try {
-        _engine.leaveChannel().catchError((e) => debugPrint("leaveChannel err: $e"));
-        _engine.release().catchError((e) => debugPrint("release err: $e"));
+        // leaveChannel triggers onUserOffline on the other side → their call ends too
+        await _engine.leaveChannel().timeout(
+          const Duration(seconds: 2),
+          onTimeout: () {
+            debugPrint("⚠️ [CALL] leaveChannel timed out");
+          },
+        );
+        await _engine.release().timeout(
+          const Duration(seconds: 2),
+          onTimeout: () {
+            debugPrint("⚠️ [CALL] release timed out");
+          },
+        );
       } catch (e) {
         debugPrint("Background Agora release error: $e");
       }
+    }
+
+    // 2. Navigate away from call screen
+    // Small delay to ensure the Agora leave is processed before UI changes
+    await Future.delayed(const Duration(milliseconds: 100));
+    _navigateAway();
+  }
+
+  /// Safely navigate away from the call screen, handling all edge cases
+  void _navigateAway() {
+    try {
+      // Close any open dialogs first
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
+
+      // Check if we're still on the call screen
+      final currentRoute = Get.currentRoute;
+      if (currentRoute == AppRoutes.call || currentRoute == AppRoutes.incomingCall) {
+        // Try to go back to previous screen
+        if (Get.key.currentState?.canPop() ?? false) {
+          Get.back();
+        } else {
+          // If can't pop (e.g., call was opened from terminated state), go to home
+          Get.offAllNamed(AppRoutes.home);
+        }
+      }
+    } catch (e) {
+      debugPrint("Error navigating away from call: $e");
+      // Last resort: try to go home
+      try {
+        Get.offAllNamed(AppRoutes.home);
+      } catch (_) {}
     }
   }
 
@@ -480,6 +550,7 @@ class CallController extends GetxController {
     _callTimer?.cancel();
     _ringingTimeoutTimer?.cancel();
     _isEndingCall = true;
+    CallKitService.markCallInactive();
     if (_isEngineInitialized) {
       _isEngineInitialized = false;
       try {
