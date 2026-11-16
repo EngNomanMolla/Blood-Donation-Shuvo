@@ -18,4 +18,5 @@ class ApiConstants {
   static const String agoraToken = '/user/calls/agora-token';
   static const String profile = '/user/profile';
   static const String volunteerRequest = '/user/volunteer-request';
+  static const String complaints = '/user/complaints';
 }

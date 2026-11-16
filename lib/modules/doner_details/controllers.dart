@@ -132,7 +132,6 @@ class ProfileController extends GetxController {
     try {
       // Re-fetch latest minutes from wallet
       await fetchCallerMinutes();
-
       final int minutes = remainingMinutes.value ?? 0;
       if (minutes <= 0) {
         _showInsufficientMinutesDialog();
@@ -163,7 +162,6 @@ class ProfileController extends GetxController {
         _showInsufficientMinutesDialog();
         return;
       }
- 
       final phone = donor.value.phone.trim();
       if (phone.isEmpty) {
         Get.snackbar(

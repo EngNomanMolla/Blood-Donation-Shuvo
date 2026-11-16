@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/utils/app_colors.dart';
+import '../../../../data/providers/complaint_provider.dart';
 import '../../../../data/providers/profile_provider.dart';
+import '../../../../data/repositories/complaint_repository.dart';
 import '../../../../data/repositories/profile_repository.dart';
 
 class ComplaintAdviceView extends StatefulWidget {
@@ -124,13 +126,38 @@ class _ComplaintAdviceViewState extends State<ComplaintAdviceView> {
 
     setState(() => _isLoading = true);
 
-    // Simulate network delay / submit
-    await Future.delayed(const Duration(milliseconds: 600));
+    try {
+      final complaintProvider = Get.isRegistered<ComplaintProvider>()
+          ? Get.find<ComplaintProvider>()
+          : Get.put(ComplaintProvider());
+      final complaintRepo = Get.isRegistered<ComplaintRepository>()
+          ? Get.find<ComplaintRepository>()
+          : Get.put(ComplaintRepository(provider: complaintProvider));
 
-    if (!mounted) return;
-    setState(() => _isLoading = false);
+      await complaintRepo.submitComplaint(
+        name: name,
+        phone: phone,
+        address: address.isNotEmpty ? address : null,
+        message: message,
+      );
 
-    _showSuccessDialog();
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+
+      _showSuccessDialog();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+
+      Get.snackbar(
+        'ত্রুটি',
+        e.toString().replaceAll('Exception: ', ''),
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+      );
+    }
   }
 
   void _showSuccessDialog() {
