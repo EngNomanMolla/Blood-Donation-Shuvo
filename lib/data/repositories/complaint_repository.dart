@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../../modules/complaint_advice/models/complaint_model.dart';
 import '../providers/complaint_provider.dart';
 
 class ComplaintRepository {
@@ -37,6 +38,54 @@ class ComplaintRepository {
         errorMessage = decoded['message'] ?? decoded['error'] ?? errorMessage;
       }
       throw Exception(errorMessage);
+    }
+  }
+
+  Future<ComplaintListResponse> getComplaints({int page = 1}) async {
+    final response = await provider.getComplaints(page: page);
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final dynamic decoded = jsonDecode(response.body);
+      List<dynamic> list = [];
+      int currentPage = page;
+      int lastPage = page;
+      int total = 0;
+
+      if (decoded is Map) {
+        final dataContainer = decoded['data'];
+        if (dataContainer is Map) {
+          if (dataContainer['data'] is List) {
+            list = dataContainer['data'];
+          }
+          if (dataContainer['meta'] is Map) {
+            currentPage = dataContainer['meta']['current_page'] ?? page;
+            lastPage = dataContainer['meta']['last_page'] ?? page;
+            total = dataContainer['meta']['total'] ?? list.length;
+          }
+        } else if (dataContainer is List) {
+          list = dataContainer;
+        }
+
+        if (decoded['meta'] is Map) {
+          currentPage = decoded['meta']['current_page'] ?? currentPage;
+          lastPage = decoded['meta']['last_page'] ?? lastPage;
+          total = decoded['meta']['total'] ?? list.length;
+        }
+      }
+
+      final complaints = list
+          .whereType<Map>()
+          .map((item) => ComplaintItem.fromJson(Map<String, dynamic>.from(item)))
+          .toList();
+
+      return ComplaintListResponse(
+        complaints: complaints,
+        currentPage: currentPage,
+        lastPage: lastPage,
+        total: total,
+      );
+    } else {
+      throw Exception('অভিযোগ তালিকা লোড করা সম্ভব হয়নি (${response.statusCode})');
     }
   }
 }

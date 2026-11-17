@@ -64,6 +64,7 @@ class MoreController extends GetxController {
     }
 
     list.addAll([
+      const MoreMenuItem(icon: Icons.rate_review_outlined, title: 'Complaints & Advice', route: AppRoutes.complaintAdvice),
       const MoreMenuItem(icon: Icons.headset_mic_outlined, title: 'Help & Support', route: AppRoutes.support),
       const MoreMenuItem(icon: Icons.lock_outline, title: 'Privacy Policy', route: AppRoutes.privacyPolicy),
       const MoreMenuItem(icon: Icons.info_outline, title: 'About Us', route: AppRoutes.aboutUs),

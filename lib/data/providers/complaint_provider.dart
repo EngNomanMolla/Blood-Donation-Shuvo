@@ -43,5 +43,24 @@ class ComplaintProvider {
       body: jsonEncode(body),
     );
   }
+
+  Future<http.Response> getComplaints({int page = 1}) async {
+    final url = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.complaints}?page=$page');
+
+    final Map<String, String> headers = {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    };
+
+    if (Get.isRegistered<StorageService>()) {
+      final storage = Get.find<StorageService>();
+      final token = storage.userToken;
+      if (token != null && token.isNotEmpty) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+    }
+
+    return await client.get(url, headers: headers);
+  }
 }
 
