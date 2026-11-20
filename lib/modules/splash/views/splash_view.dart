@@ -8,6 +8,7 @@ import 'package:get/get.dart';
 
 import '../../../core/utils/app_colors.dart';
 import '../../../core/utils/text_styles.dart';
+import '../../../core/widgets/blocked_user_dialog.dart';
 
 class SplashView extends StatefulWidget {
   const SplashView({super.key});
@@ -48,6 +49,13 @@ class _SplashViewState extends State<SplashView> {
           
           final profile = await profileRepository.getProfile();
           if (profile != null) {
+            if (profile.isBlocked) {
+              debugPrint("Splash: User account is blocked. Logging out and showing blocked dialog.");
+              await storage.clearAuth();
+              BlockedUserDialog.show();
+              return;
+            }
+
             await storage.setIsDonor(profile.isDonor);
             await storage.setIsVolunteer(profile.isVolunteer);
             await storage.setHasRecharged(profile.hasCompletedInitialRecharge);

@@ -1,13 +1,14 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:blood_donation/data/repositories/call_repository.dart';
 import 'package:blood_donation/modules/call/models/call_model.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../../app/routes/app_routes.dart';
 import '../../../core/services/callkit_service.dart';
-
 import '../../../data/repositories/profile_repository.dart';
 
 /// Call state transitions:
@@ -48,6 +49,45 @@ class CallController extends GetxController {
 
   late RtcEngine _engine;
   bool _isEngineInitialized = false;
+  bool _isRingbackPlaying = false;
+
+  Future<String> _getRingbackTonePath() async {
+    final tempFile = File('${Directory.systemTemp.path}/bloodlink_ringback_tone.wav');
+    if (!await tempFile.exists()) {
+      final byteData = await rootBundle.load('assets/audio/ringback_tone.wav');
+      await tempFile.writeAsBytes(byteData.buffer.asUint8List(), flush: true);
+    }
+    return tempFile.path;
+  }
+
+  Future<void> _playRingbackTone() async {
+    if (!_isEngineInitialized || isIncoming.value || _isRingbackPlaying || _isEndingCall) return;
+    try {
+      final filePath = await _getRingbackTonePath();
+      debugPrint("🎵 [AGORA] Starting Ringback Tone: $filePath");
+      await _engine.startAudioMixing(
+        filePath: filePath,
+        loopback: true, // Only local user hears the dialing tone
+        cycle: -1,      // Infinite loop until answered
+      );
+      _isRingbackPlaying = true;
+    } catch (e) {
+      debugPrint("⚠️ [AGORA] Error playing ringback tone: $e");
+    }
+  }
+
+  Future<void> _stopRingbackTone() async {
+    if (!_isRingbackPlaying) return;
+    _isRingbackPlaying = false;
+    try {
+      if (_isEngineInitialized) {
+        debugPrint("🛑 [AGORA] Stopping Ringback Tone");
+        await _engine.stopAudioMixing();
+      }
+    } catch (e) {
+      debugPrint("⚠️ [AGORA] Error stopping ringback tone: $e");
+    }
+  }
 
   @override
   void onInit() {
@@ -98,6 +138,9 @@ class CallController extends GetxController {
           colorText: Colors.white,
           snackPosition: SnackPosition.BOTTOM,
         );
+        Future.delayed(const Duration(seconds: 2), () {
+          endCall();
+        });
         return;
       }
 
@@ -185,6 +228,7 @@ class CallController extends GetxController {
               if (remoteUserJoined.value) {
                 callState.value = CallState.connected;
                 callStatusText.value = 'Connected';
+                _stopRingbackTone();
                 _startCallTimer();
               } else if (isIncoming.value) {
                 callState.value = CallState.connecting;
@@ -192,8 +236,10 @@ class CallController extends GetxController {
               } else {
                 callState.value = CallState.ringing;
                 callStatusText.value = 'Ringing...';
+                _playRingbackTone();
               }
             } else if (state == ConnectionStateType.connectionStateFailed) {
+              _stopRingbackTone();
               callState.value = CallState.error;
               callStatusText.value = 'Connection failed';
               debugError.value = 'Connection failed: $reason';
@@ -213,6 +259,7 @@ class CallController extends GetxController {
             if (remoteUserJoined.value) {
               callState.value = CallState.connected;
               callStatusText.value = 'Connected';
+              _stopRingbackTone();
               _ringingTimeoutTimer?.cancel();
               _startCallTimer();
             } else if (isIncoming.value) {
@@ -238,11 +285,13 @@ class CallController extends GetxController {
             } else {
               callState.value = CallState.ringing;
               callStatusText.value = 'Ringing...';
+              _playRingbackTone();
               
               // 45-second Ringing Timeout for Outgoing Calls
               _ringingTimeoutTimer?.cancel();
               _ringingTimeoutTimer = Timer(const Duration(seconds: 45), () {
                 if (callState.value != CallState.connected && !_isEndingCall) {
+                  _stopRingbackTone();
                   callState.value = CallState.ended;
                   callStatusText.value = 'No Answer';
                   Get.snackbar(
@@ -262,6 +311,7 @@ class CallController extends GetxController {
             debugPrint("Agora Remote User Joined -> RemoteUid: $remoteUid");
             remoteUserJoined.value = true;
             _ringingTimeoutTimer?.cancel();
+            _stopRingbackTone();
             debugStep.value = 'Remote User Joined (UID: $remoteUid)';
             callState.value = CallState.connected;
             callStatusText.value = 'Connected';
@@ -270,6 +320,8 @@ class CallController extends GetxController {
           onUserOffline: (RtcConnection connection, int remoteUid, UserOfflineReasonType reason) {
             debugPrint("Agora Remote User Offline -> RemoteUid: $remoteUid, Reason: $reason");
             if (_isEndingCall) return; // Already ending, ignore
+            
+            _stopRingbackTone();
             
             // Capture previous state BEFORE changing it
             final previousState = callState.value;
@@ -481,6 +533,7 @@ class CallController extends GetxController {
 
     _callTimer?.cancel();
     _ringingTimeoutTimer?.cancel();
+    _stopRingbackTone();
     callState.value = CallState.ended;
     callStatusText.value = 'Call Ended';
 
@@ -549,6 +602,7 @@ class CallController extends GetxController {
   void onClose() {
     _callTimer?.cancel();
     _ringingTimeoutTimer?.cancel();
+    _stopRingbackTone();
     _isEndingCall = true;
     CallKitService.markCallInactive();
     if (_isEngineInitialized) {

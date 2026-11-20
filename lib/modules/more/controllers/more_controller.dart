@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:blood_donation/app/routes/app_routes.dart';
 import 'package:blood_donation/core/services/storage_service.dart';
+import 'package:blood_donation/core/widgets/blocked_user_dialog.dart';
 import '../../../data/providers/profile_provider.dart';
 import '../../../data/repositories/profile_repository.dart';
 import '../../home/controllers/home_controller.dart';
@@ -88,6 +89,13 @@ class MoreController extends GetxController {
       final profileRepository = Get.find<ProfileRepository>();
       final profile = await profileRepository.getProfile();
       if (profile != null) {
+        if (profile.isBlocked) {
+          final storage = Get.find<StorageService>();
+          await storage.clearAuth();
+          BlockedUserDialog.show();
+          return;
+        }
+
         name.value = profile.name;
         email.value = profile.email ?? '';
         phone.value = profile.phone ?? '';

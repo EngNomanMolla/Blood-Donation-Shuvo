@@ -21,6 +21,7 @@ class ProfileData {
   final int donationsCount;
   final int livesSavedCount;
   final String? status;
+  final bool isBlocked;
   final bool hasCompletedInitialRecharge;
   final double initialRechargeAmount;
   final String? initialRechargeStatus;
@@ -45,6 +46,7 @@ class ProfileData {
     required this.donationsCount,
     required this.livesSavedCount,
     this.status,
+    this.isBlocked = false,
     required this.hasCompletedInitialRecharge,
     required this.initialRechargeAmount,
     this.initialRechargeStatus,
@@ -133,9 +135,17 @@ class ProfileRepository {
             0;
         final donationsCount = int.tryParse(rawDonations.toString()) ?? 0;
 
+        final isBlocked = data['is_blocked'] == true ||
+            data['is_blocked'] == 1 ||
+            data['is_blocked'] == 'true' ||
+            data['is_blocked'] == '1' ||
+            (data['status'] != null && data['status'].toString().toLowerCase() == 'blocked') ||
+            (userObj != null && (userObj['is_blocked'] == true || userObj['is_blocked'] == 1 || userObj['status'] == 'blocked'));
+
         return ProfileData(
           isDonor: data['is_donor'] == true || data['is_donor'] == 1 || data['is_donor'] == '1' || data['is_donor'] == 'true' || donorObj != null,
           isVolunteer: data['is_volunteer'] == true || data['is_volunteer'] == 1 || data['is_volunteer'] == '1' || data['is_volunteer'] == 'true',
+          isBlocked: isBlocked,
           name: data['name'] ?? '',
           phone: data['phone'],
           bloodGroup: bloodGroup?.toString(),

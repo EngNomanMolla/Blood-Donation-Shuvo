@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/services/storage_service.dart';
+import '../../../core/widgets/blocked_user_dialog.dart';
 import '../../../data/repositories/home_repository.dart';
 import '../../../data/repositories/profile_repository.dart';
 import '../../../data/providers/wallet_provider.dart';
@@ -194,6 +195,13 @@ class HomeController extends GetxController {
     try {
       final profile = await profileRepository.getProfile();
       if (profile != null) {
+        if (profile.isBlocked) {
+          final storage = Get.find<StorageService>();
+          await storage.clearAuth();
+          BlockedUserDialog.show();
+          return;
+        }
+
         avatarUrl.value = profile.avatar ?? '';
         isDonor.value = profile.isDonor;
         isVolunteer.value = profile.isVolunteer;

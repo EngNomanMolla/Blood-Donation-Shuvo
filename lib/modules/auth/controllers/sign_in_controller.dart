@@ -4,7 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:blood_donation/app/routes/app_routes.dart';
 import 'package:blood_donation/core/services/storage_service.dart';
+import 'package:blood_donation/core/widgets/blocked_user_dialog.dart';
+import 'package:blood_donation/data/providers/profile_provider.dart';
 import 'package:blood_donation/data/repositories/auth_repository.dart';
+import 'package:blood_donation/data/repositories/profile_repository.dart';
 
 class SignInController extends GetxController {
   final AuthRepository authRepository;
@@ -130,7 +133,6 @@ class SignInController extends GetxController {
 
       if (isSuccess) {
         final storage = Get.find<StorageService>();
-        await storage.setIsLoggedIn(true);
         final token = responseData['token'] ?? responseData['data']?['token'] ?? 'dummy_token';
         await storage.setUserToken(token);
         await storage.setUserPhone(formattedPhone);
@@ -138,7 +140,49 @@ class SignInController extends GetxController {
           await storage.setFcmToken(fcmToken);
         }
 
-        final user = responseData['user'] as Map<String, dynamic>?;
+        final user = (responseData['user'] as Map<String, dynamic>?) ??
+            (responseData['data'] is Map ? responseData['data'] as Map<String, dynamic> : null);
+
+        // 1. Direct block check from verify response payload
+        final bool isDirectlyBlocked = user != null &&
+            (user['is_blocked'] == true ||
+                user['is_blocked'] == 1 ||
+                user['is_blocked'] == 'true' ||
+                user['is_blocked'] == '1' ||
+                (user['status'] != null && user['status'].toString().toLowerCase() == 'blocked'));
+
+        // 2. Fresh profile check via /user/me
+        bool isProfileBlocked = false;
+        try {
+          final profileProvider = Get.isRegistered<ProfileProvider>()
+              ? Get.find<ProfileProvider>()
+              : Get.put(ProfileProvider());
+          final profileRepository = Get.isRegistered<ProfileRepository>()
+              ? Get.find<ProfileRepository>()
+              : Get.put(ProfileRepository(provider: profileProvider));
+          final profile = await profileRepository.getProfile();
+          if (profile != null) {
+            isProfileBlocked = profile.isBlocked;
+            await storage.setIsDonor(profile.isDonor);
+            await storage.setIsVolunteer(profile.isVolunteer);
+            await storage.setHasRecharged(profile.hasCompletedInitialRecharge);
+            if (profile.initialRechargeStatus != null) {
+              await storage.setInitialRechargeStatus(profile.initialRechargeStatus!);
+            }
+          }
+        } catch (profileErr) {
+          debugPrint("Profile fetch during login error: $profileErr");
+        }
+
+        // 3. If user is blocked, reject login completely
+        if (isDirectlyBlocked || isProfileBlocked) {
+          await storage.clearAuth();
+          BlockedUserDialog.show();
+          return;
+        }
+
+        await storage.setIsLoggedIn(true);
+
         if (user != null) {
           final isDonor = user['is_donor'] == true || user['is_donor'] == 1 || user['is_donor'] == '1' || user['is_donor'] == 'true';
           final isVolunteer = user['is_volunteer'] == true || user['is_volunteer'] == 1 || user['is_volunteer'] == '1' || user['is_volunteer'] == 'true';
@@ -158,6 +202,17 @@ class SignInController extends GetxController {
             backgroundColor: const Color(0xFFE53935), colorText: Colors.white);
       } else {
         final errorMsg = responseData['message'] ?? 'Verification failed (Status: ${response.statusCode})';
+        final lowerMsg = errorMsg.toString().toLowerCase();
+
+        // Check if error response indicates user is blocked
+        if (response.statusCode == 403 ||
+            lowerMsg.contains('block') ||
+            lowerMsg.contains('suspend') ||
+            lowerMsg.contains('banned')) {
+          BlockedUserDialog.show(customMessage: errorMsg);
+          return;
+        }
+
         Get.snackbar('Error', errorMsg,
             backgroundColor: Colors.redAccent, colorText: Colors.white);
       }

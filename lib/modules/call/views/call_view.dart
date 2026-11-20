@@ -66,36 +66,42 @@ class CallView extends GetView<CallController> {
               ),
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.12),
-                width: 1,
+          Obx(() {
+            final hasLimit = controller.availableMinutes.value > 0;
+            final isConnected = controller.callState.value == CallState.connected;
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.12),
+                  width: 1,
+                ),
               ),
-            ),
-            child: const Row(
-              children: [
-                Icon(
-                  Icons.phone_in_talk_rounded,
-                  color: Color(0xFF4ADE80),
-                  size: 15,
-                ),
-                SizedBox(width: 6),
-                Text(
-                  'Voice Call',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.phone_in_talk_rounded,
+                    color: isConnected ? const Color(0xFF4ADE80) : Colors.amberAccent,
+                    size: 15,
                   ),
-                ),
-              ],
-            ),
-          ),
+                  const SizedBox(width: 6),
+                  Text(
+                    hasLimit && isConnected
+                        ? 'Time Left: ${controller.formattedRemainingTime}'
+                        : 'Voice Call',
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
         ],
       ),
     );

@@ -27,6 +27,13 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   final data = message.data;
   final String? type = data['type'] ?? data['notification_type'];
 
+  if (type == 'call_ended' || type == 'cancel_call' || type == 'call_cancelled' || type == 'call_rejected') {
+    debugPrint("🛑 [BACKGROUND FCM] Call cancelled by caller, dismissing CallKit UI");
+    await CallKitService.endAllCalls();
+    CallKitService.markCallInactive();
+    return;
+  }
+
   if (type == 'incoming_call') {
     final String channelName = data['channel_name'] ?? data['channel'] ?? '';
     final String callerId = data['caller_id']?.toString() ?? data['sender_id']?.toString() ?? '0';
@@ -138,6 +145,16 @@ class FCMService extends GetxService {
     debugPrint("=======================================================\n");
 
     final String? type = data['type'] ?? data['notification_type'];
+
+    if (type == 'call_ended' || type == 'cancel_call' || type == 'call_cancelled' || type == 'call_rejected') {
+      debugPrint("🛑 [FCM] Call cancelled/ended by caller, dismissing CallKit UI");
+      CallKitService.endAllCalls();
+      CallKitService.markCallInactive();
+      if (Get.currentRoute == AppRoutes.incomingCall) {
+        Get.back();
+      }
+      return;
+    }
 
     if (type == 'incoming_call') {
       // Don't show a new incoming call if already in a call

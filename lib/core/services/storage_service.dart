@@ -20,6 +20,7 @@ class StorageService extends GetxService {
   static const String _keyVolunteerPaymentStatus = 'volunteer_payment_status';
 
   static const String _keyInitialRechargeStatus = 'initial_recharge_status';
+  static const String _keyIsBlocked = 'is_blocked';
 
   bool get hasShownOnboarding => _prefs.getBool(_keyHasShownOnboarding) ?? false;
   
@@ -81,6 +82,12 @@ class StorageService extends GetxService {
     return await _prefs.setBool(_keyHasRecharged, value);
   }
 
+  bool get isBlocked => _prefs.getBool(_keyIsBlocked) ?? false;
+
+  Future<bool> setIsBlocked(bool value) async {
+    return await _prefs.setBool(_keyIsBlocked, value);
+  }
+
   Future<void> clearAuth() async {
     await _prefs.remove(_keyIsLoggedIn);
     await _prefs.remove(_keyUserToken);
@@ -91,6 +98,7 @@ class StorageService extends GetxService {
     await _prefs.remove(_keyUserPhone);
     await _prefs.remove(_keyVolunteerPaymentStatus);
     await _prefs.remove(_keyFcmToken);
+    await _prefs.remove(_keyIsBlocked);
   }
 }
 
